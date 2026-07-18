@@ -1,0 +1,4 @@
+interface:
+  display_name: "PocketPilot Project Rules"
+  short_description: "Apply PocketPilot engineering conventions"
+  default_prompt: "Use $pocketpilot-project-rules to implement this PocketPilot change."

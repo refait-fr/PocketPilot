@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f3f0e7;
+  --foreground: #17352f;
+  --ink-soft: #5d6d67;
+  --paper: #fffdf7;
+  --line: #d8d7ca;
+  --accent: #b84820;
+  --accent-dark: #913718;
+  --forest: #17352f;
+  --sage: #c9d5c3;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+::selection {
+  background: #f1b89b;
+  color: var(--forest);
+}
+
+.font-display {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.paper-grid {
+  background-image:
+    linear-gradient(to right, rgb(23 53 47 / 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(23 53 47 / 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.dashboard-grid {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 82% 7%, rgb(230 111 58 / 0.11), transparent 24rem),
+    linear-gradient(to right, rgb(23 53 47 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(23 53 47 / 0.035) 1px, transparent 1px);
+  background-size: auto, 32px 32px, 32px 32px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid ButtonText;
+  }
+}

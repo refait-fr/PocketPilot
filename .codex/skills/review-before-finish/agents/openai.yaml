@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Before Finish"
+  short_description: "Run PocketPilot completion checks"
+  default_prompt: "Use $review-before-finish before completing this PocketPilot task."

@@ -1,0 +1,6 @@
+# Local browser-test artifacts
+/.playwright-mcp/
+/*-anonymous-desktop.png
+/*-anonymous-mobile.png
+/pocketpilot-auth-desktop.png
+/pocketpilot-auth-mobile.png

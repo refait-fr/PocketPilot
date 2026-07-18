@@ -1,0 +1,4 @@
+interface:
+  display_name: "PocketPilot Finance Domain"
+  short_description: "Protect financial calculations and projections"
+  default_prompt: "Use $finance-domain for this PocketPilot financial change."
