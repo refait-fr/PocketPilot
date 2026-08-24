@@ -38,13 +38,13 @@ export function PasswordUpdateForm({
       {state.status !== "idle" ? (
         <div
           aria-live="polite"
-          className={`rounded-xl border px-4 py-3 text-sm leading-6 ${
+          className={
             isSuccess
-              ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+              ? "ui-feedback-success"
               : needsReauthentication || needsCurrentPassword
-                ? "border-amber-200 bg-amber-50 text-amber-900"
-                : "border-red-200 bg-red-50 text-red-800"
-          }`}
+                ? "ui-feedback-warning"
+                : "ui-feedback-error"
+          }
           role={
             isSuccess || needsReauthentication || needsCurrentPassword
               ? "status"
@@ -57,13 +57,13 @@ export function PasswordUpdateForm({
 
       {!isSuccess && !isSessionInvalid ? (
         <form action={formAction} className="grid gap-5">
-          <label className="grid gap-2 text-sm font-semibold" htmlFor="new-password">
+          <label className="ui-label" htmlFor="new-password">
             Nouveau mot de passe
             <input
               aria-describedby={state.fieldErrors.password ? "new-password-error" : undefined}
               aria-invalid={Boolean(state.fieldErrors.password)}
               autoComplete="new-password"
-              className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-base font-normal outline-none transition focus:border-[var(--forest)] focus:ring-3 focus:ring-[#c9d5c380]"
+              className="ui-input"
               disabled={isPending}
               id="new-password"
               maxLength={72}
@@ -79,13 +79,13 @@ export function PasswordUpdateForm({
             ) : null}
           </label>
 
-          <label className="grid gap-2 text-sm font-semibold" htmlFor="password-confirmation">
+          <label className="ui-label" htmlFor="password-confirmation">
             Confirmer le nouveau mot de passe
             <input
               aria-describedby={state.fieldErrors.passwordConfirmation ? "password-confirmation-error" : undefined}
               aria-invalid={Boolean(state.fieldErrors.passwordConfirmation)}
               autoComplete="new-password"
-              className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-base font-normal outline-none transition focus:border-[var(--forest)] focus:ring-3 focus:ring-[#c9d5c380]"
+              className="ui-input"
               disabled={isPending}
               id="password-confirmation"
               maxLength={72}
@@ -102,13 +102,13 @@ export function PasswordUpdateForm({
           </label>
 
           {needsReauthentication ? (
-            <label className="grid gap-2 text-sm font-semibold" htmlFor="reauthentication-nonce">
+            <label className="ui-label" htmlFor="reauthentication-nonce">
               Code de sécurité
               <input
                 aria-describedby={state.fieldErrors.nonce ? "reauthentication-nonce-error" : undefined}
                 aria-invalid={Boolean(state.fieldErrors.nonce)}
                 autoComplete="one-time-code"
-                className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-base font-normal tracking-[0.2em] outline-none transition focus:border-[var(--forest)] focus:ring-3 focus:ring-[#c9d5c380]"
+                className="ui-input tracking-[0.2em]"
                 disabled={isPending}
                 id="reauthentication-nonce"
                 inputMode="numeric"
@@ -127,13 +127,13 @@ export function PasswordUpdateForm({
           ) : null}
 
           {needsCurrentPassword ? (
-            <label className="grid gap-2 text-sm font-semibold" htmlFor="current-password">
+            <label className="ui-label" htmlFor="current-password">
               Mot de passe actuel
               <input
                 aria-describedby={state.fieldErrors.currentPassword ? "current-password-error" : undefined}
                 aria-invalid={Boolean(state.fieldErrors.currentPassword)}
                 autoComplete="current-password"
-                className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-base font-normal outline-none transition focus:border-[var(--forest)] focus:ring-3 focus:ring-[#c9d5c380]"
+                className="ui-input"
                 disabled={isPending}
                 id="current-password"
                 maxLength={72}
@@ -150,7 +150,7 @@ export function PasswordUpdateForm({
           ) : null}
 
           <button
-            className="flex min-h-12 items-center justify-center rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#244c43] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)] disabled:cursor-wait disabled:opacity-70"
+            className="ui-button-primary min-h-12 px-5 py-3"
             disabled={isPending}
             type="submit"
           >
@@ -161,7 +161,7 @@ export function PasswordUpdateForm({
 
       {(isSuccess || isSessionInvalid) ? (
         <Link
-          className="w-fit rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#244c43] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--forest)]"
+          className="ui-button-primary w-fit"
           href={isSessionInvalid ? "/auth" : returnHref}
         >
           {isSessionInvalid ? "Revenir à la connexion" : returnLabel}

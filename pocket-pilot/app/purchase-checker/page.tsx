@@ -14,6 +14,7 @@ export default async function PurchaseCheckerPage() {
 
   return (
     <AppShell
+      activePath="/purchase-checker"
       description="Mesurez l’impact d’un achat sur votre mois avant de décider de l’enregistrer."
       eyebrow="Décision du mois"
       profile={profile}

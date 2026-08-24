@@ -7,7 +7,7 @@ export function SignOutButton() {
 
   return (
     <button
-      className="rounded-full border border-[var(--line)] px-3 py-2 text-xs font-semibold transition-all duration-200 ease-in-out hover:border-[var(--forest)] hover:bg-[var(--paper)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)] disabled:cursor-wait disabled:opacity-65 sm:px-4 sm:text-sm"
+      className="ui-button-quiet min-h-10 w-full px-3 py-2 text-xs sm:w-auto"
       disabled={pending}
       type="submit"
     >

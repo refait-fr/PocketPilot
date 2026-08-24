@@ -46,11 +46,11 @@ test("les budgets par catégorie suivent les transactions du mois", async ({
   await createForm.getByLabel("Plafond mensuel").fill("100,00");
   await createForm.getByRole("button", { name: "Ajouter ce budget" }).click();
   await expect(createForm.getByRole("status")).toContainText("a été ajouté");
-  await expect(budgetRow(page, "Shopping")).toContainText(/0,00\s*€\s*\/\s*100,00\s*€/);
+  await expect(budgetRow(page, "Shopping")).toContainText(/0,00\s*€\s*sur\s*100,00\s*€/);
 
   await createTransaction(page, "40,00", "Shopping 40 E2E");
   await page.getByRole("link", { name: "Budgets" }).click();
-  await expect(budgetRow(page, "Shopping")).toContainText(/40,00\s*€\s*\/\s*100,00\s*€/);
+  await expect(budgetRow(page, "Shopping")).toContainText(/40,00\s*€\s*sur\s*100,00\s*€/);
   await expect(budgetRow(page, "Shopping").getByText("Dans le budget")).toBeVisible();
 
   await createTransaction(page, "35,00", "Shopping 35 E2E");
@@ -65,10 +65,18 @@ test("les budgets par catégorie suivent les transactions du mois", async ({
   await expect(budgetRow(page, "Shopping").getByText("Dépassé", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Vue d’ensemble" }).click();
-  await expect(page.getByRole("heading", { name: "Shopping est la plus consommée" })).toBeVisible();
-  await expect(page.getByText(/1 catégorie dépassée/)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "À surveiller ce mois-ci" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { exact: true, name: "Shopping" }),
+  ).toBeVisible();
+  await expect(page.getByText("Budget dépassé")).toBeVisible();
+  await expect(page.getByText(/Dépassé de 5,00\s*€/)).toBeVisible();
 
-  await page.getByRole("link", { name: "Vérifier un achat" }).click();
+  await page
+    .getByRole("link", { exact: true, name: "Vérifier un achat" })
+    .click();
   await page.getByLabel("Nom de l’achat").fill("Achat catégorie E2E");
   await page.getByLabel("Prix").fill("10,00");
   await page.getByRole("button", { name: "Vérifier cet achat" }).click();
@@ -93,10 +101,10 @@ test("les budgets par catégorie suivent les transactions du mois", async ({
   await listRow(page, "Shopping 35 E2E").getByRole("button", { name: "Supprimer" }).click();
   await listRow(page, "Shopping 35 E2E").getByRole("button", { name: "Confirmer la suppression" }).click();
   await page.getByRole("link", { name: "Budgets" }).click();
-  await expect(budgetRow(page, "Shopping")).toContainText(/40,00\s*€\s*\/\s*100,00\s*€/);
+  await expect(budgetRow(page, "Shopping")).toContainText(/40,00\s*€\s*sur\s*100,00\s*€/);
 
   await page.getByRole("link", { name: "Mois précédent" }).click();
-  await expect(budgetRow(page, "Shopping")).toContainText(/0,00\s*€\s*\/\s*100,00\s*€/);
+  await expect(budgetRow(page, "Shopping")).toContainText(/0,00\s*€\s*sur\s*100,00\s*€/);
   await page.getByRole("link", { name: "Mois actuel" }).click();
 
   await budgetRow(page, "Shopping").getByRole("button", { name: "Modifier" }).click();
@@ -104,7 +112,7 @@ test("les budgets par catégorie suivent les transactions du mois", async ({
   await editBudget.getByLabel("Plafond mensuel").fill("120,00");
   await editBudget.getByRole("button", { name: "Enregistrer le plafond" }).click();
   await editBudget.getByRole("button", { name: "Annuler" }).click();
-  await expect(budgetRow(page, "Shopping")).toContainText(/40,00\s*€\s*\/\s*120,00\s*€/);
+  await expect(budgetRow(page, "Shopping")).toContainText(/40,00\s*€\s*sur\s*120,00\s*€/);
 
   await budgetRow(page, "Shopping").getByRole("button", { name: "Supprimer" }).click();
   await budgetRow(page, "Shopping").getByRole("button", { name: "Confirmer la suppression" }).click();

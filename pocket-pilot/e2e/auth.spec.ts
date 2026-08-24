@@ -18,7 +18,7 @@ test("inscription, confirmation, onboarding, déconnexion et reconnexion", async
   await page.goto("/auth");
   await expect(
     page.getByRole("heading", {
-      name: "Votre prochain objectif vous attend.",
+      name: "Reprends le fil de ton mois.",
     }),
   ).toBeVisible();
 

@@ -2,15 +2,25 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   calculateCategoryBudgetUsages,
-  summarizeCategoryBudgets,
 } from "@/lib/budgets/category-budget";
 import {
+  getCalendarDateInTimeZone,
   getCalendarMonthInTimeZone,
   getCalendarMonthRange,
 } from "@/lib/finance/calendar-month";
+import {
+  buildMonthlyBalanceTrend,
+  buildMonthlyInsights,
+  rankCategoryBudgets,
+  selectFeaturedGoal,
+} from "@/lib/dashboard/monthly-cockpit";
 import { calculateMonthlySnapshot } from "@/lib/finance/monthly-snapshot";
 import { readStoredCents } from "@/lib/finance/money";
 import { isTransactionCategory } from "@/lib/transactions/categories";
+import {
+  isValidTransactionDate,
+  MAX_TRANSACTION_DESCRIPTION_LENGTH,
+} from "@/lib/transactions/transaction-input";
 
 export async function loadCurrentMonthOverview({
   supabase,
@@ -43,12 +53,13 @@ export async function loadCurrentMonthOverview({
       supabase
         .from("savings_goals")
         .select(
-          "current_amount_cents, target_amount_cents, monthly_allocation_cents",
+          "name, current_amount_cents, target_amount_cents, monthly_allocation_cents, created_at",
         )
-        .eq("user_id", userId),
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }),
       supabase
         .from("transactions")
-        .select("amount_cents, category")
+        .select("amount_cents, category, description, transaction_date")
         .eq("user_id", userId)
         .gte("transaction_date", currentMonthRange.startInclusive)
         .lt("transaction_date", currentMonthRange.endExclusive),
@@ -73,8 +84,14 @@ export async function loadCurrentMonthOverview({
   const expenses = expensesResult.data ?? [];
   const transactions = transactionsResult.data ?? [];
   const categoryTransactions = transactions.map((transaction) => {
-    if (!isTransactionCategory(transaction.category)) {
-      throw new Error("Une transaction contient une catégorie invalide.");
+    if (
+      !isTransactionCategory(transaction.category) ||
+      typeof transaction.description !== "string" ||
+      transaction.description.trim().length >
+        MAX_TRANSACTION_DESCRIPTION_LENGTH ||
+      !isValidTransactionDate(transaction.transaction_date)
+    ) {
+      throw new Error("Une transaction contient des données invalides.");
     }
     return {
       amountCents: readStoredCents(transaction.amount_cents, {
@@ -82,6 +99,7 @@ export async function loadCurrentMonthOverview({
         fieldName: "La transaction",
       }),
       category: transaction.category,
+      transactionDate: transaction.transaction_date,
     };
   });
   const categoryBudgets = (budgetsResult.data ?? []).map((budget) => {
@@ -117,6 +135,35 @@ export async function loadCurrentMonthOverview({
       (transaction) => transaction.amountCents,
     ),
   });
+  const dashboardGoals = goals.map((goal) => {
+    if (
+      typeof goal.name !== "string" ||
+      goal.name.trim().length === 0 ||
+      goal.name.length > 100
+    ) {
+      throw new Error("Un objectif d’épargne contient des données invalides.");
+    }
+
+    return {
+      currentAmountCents: goal.current_amount_cents,
+      monthlyAllocationCents: goal.monthly_allocation_cents,
+      name: goal.name,
+      targetAmountCents: goal.target_amount_cents,
+    };
+  });
+  const featuredGoal = selectFeaturedGoal(dashboardGoals);
+  const rankedCategoryBudgets = rankCategoryBudgets(categoryBudgetUsages);
+  const monthDate = getCalendarDateInTimeZone(new Date(), timeZone);
+  const balanceTrend = buildMonthlyBalanceTrend({
+    availableCents: snapshot.availableCents,
+    monthDate,
+    transactions: categoryTransactions,
+  });
+  const insights = buildMonthlyInsights({
+    categoryBudgets: categoryBudgetUsages,
+    featuredGoal,
+    realAvailableCents: snapshot.realAvailableCents,
+  });
 
   return {
     activeExpenseCount: activeExpenses.length,
@@ -124,8 +171,12 @@ export async function loadCurrentMonthOverview({
     expenseCount: expenses.length,
     goalCount: goals.length,
     incomeCount: incomes.length,
-    categoryBudgetSummary: summarizeCategoryBudgets(categoryBudgetUsages),
     categoryBudgetUsages,
+    balanceTrend,
+    currentDay: Number(monthDate.slice(8, 10)),
+    featuredGoal,
+    insights,
+    rankedCategoryBudgets,
     snapshot,
     transactionCount: transactions.length,
   };

@@ -14,13 +14,15 @@ export async function expectDashboard(page: Page): Promise<void> {
   await expect(
     page.getByRole("heading", { name: "Votre mois, en un coup d’œil." }),
   ).toBeVisible();
-  await expect(page.getByText("Reste réel aujourd’hui")).toBeVisible();
+  await expect(page.getByText("Reste réel", { exact: true })).toBeVisible();
 }
 
 export async function completeOnboarding(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/onboarding$/);
   await expect(
-    page.getByRole("heading", { name: "Deux repères, puis on trace la route." }),
+    page.getByRole("heading", {
+      name: "PocketPilot calcule ce qu’il te reste réellement chaque mois.",
+    }),
   ).toBeVisible();
   await page.getByLabel("Devise de référence").selectOption("EUR");
   await page.getByLabel("Fuseau horaire").fill("Europe/Paris");

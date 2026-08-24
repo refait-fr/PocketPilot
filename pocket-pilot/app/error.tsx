@@ -4,15 +4,15 @@ import type { ErrorInfo } from "next/error";
 
 export default function ErrorPage({ retry }: ErrorInfo) {
   return (
-    <main className="paper-grid grid min-h-screen place-items-center px-5 py-12">
-      <section className="w-full max-w-xl rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-8 text-center shadow-[0_20px_70px_rgba(23,53,47,0.1)] sm:p-12">
-        <span className="mx-auto grid size-11 place-items-center rounded-full bg-[var(--forest)] font-display text-xl font-bold text-white">
+    <main className="grid min-h-screen place-items-center bg-[var(--canvas)] px-5 py-12">
+      <section className="ui-panel w-full max-w-xl p-8 text-center sm:p-12">
+        <span className="brand-mark mx-auto">
           P
         </span>
-        <p className="mt-8 text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-dark)]">
+        <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.17em] text-[var(--accent)]">
           Chargement interrompu
         </p>
-        <h1 className="font-display mt-3 text-4xl tracking-[-0.045em]">
+        <h1 className="font-display mt-3 text-4xl font-medium tracking-[-0.045em]">
           PocketPilot n’est pas disponible pour le moment.
         </h1>
         <p className="mt-4 leading-7 text-[var(--ink-soft)]">
@@ -20,7 +20,7 @@ export default function ErrorPage({ retry }: ErrorInfo) {
           n’a été modifié. Réessayez dans un instant.
         </p>
         <button
-          className="mt-8 rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition-all duration-200 ease-in-out hover:bg-[#214b42] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--forest)]"
+          className="ui-button-primary mt-8"
           onClick={retry}
           type="button"
         >

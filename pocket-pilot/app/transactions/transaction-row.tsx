@@ -32,7 +32,7 @@ function DeleteButton() {
 
   return (
     <button
-      className="min-h-10 rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-800 transition-all duration-200 ease-in-out hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700 disabled:cursor-wait disabled:opacity-65"
+      className="ui-button-danger min-h-10 px-3 py-2 text-xs"
       disabled={pending}
       type="submit"
     >
@@ -57,12 +57,12 @@ export function TransactionRow({
 
   if (isEditing) {
     return (
-      <li className="rounded-[1.5rem] border border-[var(--forest)] bg-[var(--paper)] p-5 shadow-[0_14px_40px_rgba(23,53,47,0.08)] sm:p-6">
+      <li className="bg-[var(--accent-soft)] p-5 sm:p-6">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-display text-2xl font-bold tracking-[-0.035em]">
+          <h3 className="font-display text-2xl font-medium tracking-[-0.035em]">
             Modifier la transaction
           </h3>
-          <span className="rounded-full bg-[var(--sage)] px-3 py-1 text-xs font-bold text-[var(--forest)]">
+          <span className="ui-badge bg-white text-[var(--accent-dark)]">
             Édition
           </span>
         </div>
@@ -84,18 +84,18 @@ export function TransactionRow({
   const title = transaction.description || transaction.category;
 
   return (
-    <li className="rounded-[1.5rem] border border-[var(--line)] bg-[var(--paper)] p-5 shadow-[0_14px_40px_rgba(23,53,47,0.06)] sm:p-6">
+    <li className="bg-[var(--paper)] p-5 sm:p-6">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="break-words font-display text-2xl font-bold tracking-[-0.035em]">
+            <h3 className="break-words text-base font-extrabold">
               {title}
             </h3>
-            <span className="rounded-full bg-[#f7d4c1] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#8b3518]">
+            <span className="ui-badge bg-[var(--surface-muted)] text-[var(--ink-soft)]">
               {transaction.category}
             </span>
           </div>
-          <p className="mt-2 break-words text-xl font-bold text-[var(--forest)]">
+          <p className="font-amount mt-2 break-words text-2xl font-extrabold">
             {formatCents(transaction.amountCents, currencyCode)}
           </p>
           <p className="mt-1 text-sm text-[var(--ink-soft)]">
@@ -105,14 +105,14 @@ export function TransactionRow({
 
         <div className="flex flex-wrap gap-2 sm:justify-end">
           <button
-            className="min-h-10 rounded-lg border border-[var(--line)] px-3 py-2 text-xs font-bold transition-all duration-200 ease-in-out hover:border-[var(--forest)] hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)]"
+            className="ui-button-quiet min-h-10 px-3 py-2 text-xs"
             onClick={() => setIsEditing(true)}
             type="button"
           >
             Modifier
           </button>
           <button
-            className="min-h-10 rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-800 transition-all duration-200 ease-in-out hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
+            className="ui-button-danger min-h-10 px-3 py-2 text-xs"
             onClick={() => setIsConfirmingDelete(true)}
             type="button"
           >
@@ -130,7 +130,7 @@ export function TransactionRow({
       {isConfirmingDelete ? (
         <div
           aria-labelledby={`delete-transaction-${transaction.id}`}
-          className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4"
+          className="ui-feedback-error mt-5 p-4"
           role="group"
         >
           <p className="text-sm font-bold text-red-900" id={`delete-transaction-${transaction.id}`}>
@@ -144,7 +144,7 @@ export function TransactionRow({
               <DeleteButton />
             </form>
             <button
-              className="min-h-10 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-xs font-bold transition-all duration-200 ease-in-out hover:border-[var(--forest)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)]"
+              className="ui-button-secondary min-h-10 px-3 py-2 text-xs"
               onClick={() => setIsConfirmingDelete(false)}
               type="button"
             >

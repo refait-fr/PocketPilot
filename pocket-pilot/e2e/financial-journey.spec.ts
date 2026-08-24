@@ -16,9 +16,8 @@ function formForButton(page: Page, buttonName: string): Locator {
 
 function availableBudget(page: Page): Locator {
   return page
-    .locator("section")
-    .filter({ hasText: "Reste réel aujourd’hui" })
-    .first();
+    .getByText("Reste réel", { exact: true })
+    .locator("xpath=ancestor::article");
 }
 
 function dashboardAmount(page: Page, label: string): Locator {
@@ -44,7 +43,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     "Aucun objectif d’épargne enregistré.",
   );
 
-  await page.getByRole("link", { name: "Revenus" }).click();
+  await page.getByRole("link", { exact: true, name: "Revenus" }).click();
   const incomeCreateForm = formForButton(page, "Ajouter ce revenu");
   await incomeCreateForm.getByLabel("Libellé").fill("Salaire E2E");
   await incomeCreateForm.getByLabel("Montant mensuel").fill("montant invalide");
@@ -93,7 +92,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
   await expect(
     listRow(page, "Salaire principal E2E").getByText("En pause"),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Vue d’ensemble" }).click();
+  await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(dashboardMetric(page, "Revenus mensuels")).toContainText(
     "Votre revenu récurrent est désactivé.",
   );
@@ -101,19 +100,19 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     /0,00\s*€/,
   );
 
-  await page.getByRole("link", { name: "Revenus" }).click();
+  await page.getByRole("link", { exact: true, name: "Revenus" }).click();
   await listRow(page, "Salaire principal E2E")
     .getByRole("button", { name: "Activer" })
     .click();
   await expect(
     listRow(page, "Salaire principal E2E").getByText("Actif", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Vue d’ensemble" }).click();
+  await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(dashboardMetric(page, "Revenus mensuels")).toContainText(
     /1\s*200,00\s*€/,
   );
 
-  await page.getByRole("link", { name: "Dépenses" }).click();
+  await page.getByRole("link", { exact: true, name: "Charges" }).click();
   const expenseCreateForm = formForButton(page, "Ajouter cette dépense");
   await expenseCreateForm.getByLabel("Libellé").fill("Loyer E2E");
   await expenseCreateForm.getByLabel("Montant mensuel").fill("400,00");
@@ -143,23 +142,23 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
   await listRow(page, "Loyer principal E2E")
     .getByRole("button", { name: "Désactiver" })
     .click();
-  await page.getByRole("link", { name: "Vue d’ensemble" }).click();
+  await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(dashboardMetric(page, "Dépenses fixes")).toContainText(
     "Votre dépense fixe est désactivée.",
   );
   await expect(availableBudget(page)).toContainText(/1\s*200,00\s*€/);
 
-  await page.getByRole("link", { name: "Dépenses" }).click();
+  await page.getByRole("link", { exact: true, name: "Charges" }).click();
   await listRow(page, "Loyer principal E2E")
     .getByRole("button", { name: "Activer" })
     .click();
-  await page.getByRole("link", { name: "Vue d’ensemble" }).click();
+  await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(dashboardMetric(page, "Dépenses fixes")).toContainText(
     /450,00\s*€/,
   );
   await expect(availableBudget(page)).toContainText(/750,00\s*€/);
 
-  await page.getByRole("link", { name: "Objectifs" }).click();
+  await page.getByRole("link", { exact: true, name: "Objectifs" }).click();
   const goalCreateForm = formForButton(page, "Créer cet objectif");
   await goalCreateForm.getByLabel("Nom de l’objectif").fill("Voyage E2E");
   await goalCreateForm
@@ -196,7 +195,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
   await expect(goalRow).toContainText(/1\s*000,00\s*€/);
   await expect(goalRow).toContainText(/5 mois/);
 
-  await page.getByRole("link", { name: "Vue d’ensemble" }).click();
+  await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(dashboardAmount(page, "Budget disponible")).toContainText(
     /550,00\s*€/,
   );
@@ -205,7 +204,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
   );
   await expect(availableBudget(page)).toContainText(/550,00\s*€/);
 
-  await page.getByRole("link", { name: "Transactions" }).click();
+  await page.getByRole("link", { exact: true, name: "Transactions" }).click();
   const transactionCreateForm = formForButton(page, "Ajouter la transaction");
   const defaultTransactionDate = await transactionCreateForm
     .getByLabel("Date")
@@ -227,7 +226,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
   await expect(listRow(page, "Courses E2E")).toContainText(/137,00\s*€/);
   await expect(page.getByRole("heading", { name: /Dépensé : 137,00\s*€/ })).toBeVisible();
 
-  await page.getByRole("link", { name: "Vue d’ensemble" }).click();
+  await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(dashboardAmount(page, "Budget disponible")).toContainText(
     /550,00\s*€/,
   );
@@ -236,7 +235,9 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
   );
   await expect(availableBudget(page)).toContainText(/413,00\s*€/);
 
-  await page.getByRole("link", { name: "Vérifier un achat" }).click();
+  await page
+    .getByRole("link", { exact: true, name: "Vérifier un achat" })
+    .click();
   await expect(
     page.getByRole("heading", {
       name: "Est-ce que cet achat rentre dans votre mois ?",
@@ -279,7 +280,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
   );
   await expect(availableBudget(page)).toContainText(/333,00\s*€/);
 
-  await page.getByRole("link", { name: "Transactions" }).click();
+  await page.getByRole("link", { exact: true, name: "Transactions" }).click();
   await listRow(page, "Courses E2E")
     .getByRole("button", { name: "Modifier" })
     .click();
@@ -316,13 +317,13 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     .click();
   await expect(page.getByText("Aucune transaction ce mois-ci")).toBeVisible();
 
-  await page.getByRole("link", { name: "Vue d’ensemble" }).click();
+  await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(dashboardAmount(page, "Dépensé ce mois")).toContainText(
     /0,00\s*€/,
   );
   await expect(availableBudget(page)).toContainText(/550,00\s*€/);
 
-  await page.getByRole("link", { name: "Objectifs" }).click();
+  await page.getByRole("link", { exact: true, name: "Objectifs" }).click();
 
   await goalRow
     .getByRole("button", { name: "Modifier / actualiser" })
@@ -346,14 +347,14 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
   await expect(goalRow).toContainText(/50,00\s*€/);
   await expect(goalRow).toContainText(/1 mois/);
 
-  await page.getByRole("link", { name: "Vue d’ensemble" }).click();
+  await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(availableBudget(page)).toContainText(/700,00\s*€/);
   await expect(page.getByText("Épargne prévue").locator("..")).toContainText(
     /50,00\s*€/,
   );
   await expect(dashboardMetric(page, "Objectifs actifs")).toContainText("1");
 
-  await page.getByRole("link", { name: "Objectifs" }).click();
+  await page.getByRole("link", { exact: true, name: "Objectifs" }).click();
   await listRow(page, "Voyage E2E")
     .getByRole("button", { name: "Modifier / actualiser" })
     .click();
@@ -369,7 +370,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     listRow(page, "Voyage E2E").getByText("Atteint", { exact: true }),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Vue d’ensemble" }).click();
+  await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(availableBudget(page)).toContainText(/750,00\s*€/);
   await expect(page.getByText("Épargne prévue").locator("..")).toContainText(
     /0,00\s*€/,
@@ -378,7 +379,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     "Tous vos objectifs sont atteints.",
   );
 
-  await page.getByRole("link", { name: "Objectifs" }).click();
+  await page.getByRole("link", { exact: true, name: "Objectifs" }).click();
   await listRow(page, "Voyage E2E")
     .getByRole("button", { name: "Supprimer" })
     .click();
@@ -387,7 +388,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     .click();
   await expect(page.getByText("Aucun objectif défini")).toBeVisible();
 
-  await page.getByRole("link", { name: "Dépenses" }).click();
+  await page.getByRole("link", { exact: true, name: "Charges" }).click();
   await listRow(page, "Loyer principal E2E")
     .getByRole("button", { name: "Supprimer" })
     .click();
@@ -396,7 +397,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     .click();
   await expect(page.getByText("Aucune dépense enregistrée")).toBeVisible();
 
-  await page.getByRole("link", { name: "Revenus" }).click();
+  await page.getByRole("link", { exact: true, name: "Revenus" }).click();
   await listRow(page, "Salaire principal E2E")
     .getByRole("button", { name: "Supprimer" })
     .click();
@@ -405,7 +406,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     .click();
   await expect(page.getByText("Aucun revenu enregistré")).toBeVisible();
 
-  await page.getByRole("link", { name: "Vue d’ensemble" }).click();
+  await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(dashboardMetric(page, "Revenus mensuels")).toContainText(
     "Aucun revenu récurrent enregistré.",
   );

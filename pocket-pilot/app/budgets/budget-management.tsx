@@ -27,10 +27,10 @@ export function BudgetManagement({
   );
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(300px,0.72fr)_minmax(0,1.28fr)] xl:items-start">
-      <section className="rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-6 shadow-[0_16px_50px_rgba(23,53,47,0.08)] sm:p-8 xl:sticky xl:top-8">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent-dark)]">Nouveau plafond</p>
-        <h2 className="font-display mt-3 text-3xl font-bold">Cadrez une catégorie.</h2>
+    <div className="management-grid">
+      <section className="ui-panel management-form-panel">
+        <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">Nouveau plafond</p>
+        <h2 className="font-display mt-2 text-3xl font-medium">Cadrez une catégorie.</h2>
         <p className="mb-7 mt-3 text-sm leading-6 text-[var(--ink-soft)]">
           Le même plafond s’applique à chaque mois. Il n’enlève rien au reste réel global.
         </p>
@@ -42,36 +42,35 @@ export function BudgetManagement({
             mode="create"
           />
         ) : (
-          <p className="rounded-xl bg-[var(--sage)] p-4 text-sm font-semibold text-[var(--forest)]">
+          <p className="ui-feedback-success">
             Toutes les catégories ont déjà un budget.
           </p>
         )}
       </section>
 
       <section aria-labelledby="budget-list-title" className="min-w-0">
-        <div className="rounded-[1.5rem] border border-[var(--line)] bg-[var(--paper)] p-4 shadow-[0_10px_35px_rgba(23,53,47,0.05)] sm:p-5">
+        <div className="ui-panel-flat p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-soft)]">{isCurrentMonth ? "Mois actuel" : "Mois consulté"}</p>
-              <p className="font-display mt-1 text-2xl font-bold capitalize">{monthLabel}</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--ink-soft)]">{isCurrentMonth ? "Mois actuel" : "Mois consulté"}</p>
+              <p className="font-display mt-1 text-2xl font-medium capitalize">{monthLabel}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link className="min-h-10 rounded-lg border border-[var(--line)] px-3 py-2 text-xs font-bold hover:bg-white" href={previousMonthHref}>← Mois précédent</Link>
-              {!isCurrentMonth ? <Link className="min-h-10 rounded-lg bg-[var(--forest)] px-3 py-2 text-xs font-bold text-white" href="/budgets">Mois actuel</Link> : null}
-              <Link className="min-h-10 rounded-lg border border-[var(--line)] px-3 py-2 text-xs font-bold hover:bg-white" href={nextMonthHref}>Mois suivant →</Link>
+              <Link className="ui-button-secondary min-h-10 px-3 py-2 text-xs" href={previousMonthHref}>← Mois précédent</Link>
+              {!isCurrentMonth ? <Link className="ui-button-primary min-h-10 px-3 py-2 text-xs" href="/budgets">Mois actuel</Link> : null}
+              <Link className="ui-button-secondary min-h-10 px-3 py-2 text-xs" href={nextMonthHref}>Mois suivant →</Link>
             </div>
           </div>
         </div>
 
         <div className="mb-4 mt-6">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-soft)]">{budgets.length} budget{budgets.length > 1 ? "s" : ""}</p>
-          <h2 className="font-display mt-1 text-3xl font-bold" id="budget-list-title">Suivi par catégorie</h2>
+          <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--ink-soft)]">{budgets.length} budget{budgets.length > 1 ? "s" : ""}</p>
+          <h2 className="font-display mt-1 text-3xl font-medium" id="budget-list-title">Suivi par catégorie</h2>
         </div>
 
         {budgets.length === 0 ? (
-          <div className="rounded-[1.5rem] border border-dashed border-[var(--line)] bg-white/60 p-8 text-center sm:p-12">
-            <span className="mx-auto grid size-12 place-items-center rounded-full bg-[var(--sage)] font-display text-2xl font-bold">0</span>
-            <h3 className="font-display mt-5 text-2xl font-bold">Aucun budget configuré</h3>
+          <div className="ui-empty">
+            <h3 className="font-display text-2xl font-medium">Aucun budget configuré</h3>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[var(--ink-soft)]">Commencez par une catégorie que vous souhaitez surveiller ce mois-ci.</p>
           </div>
         ) : (

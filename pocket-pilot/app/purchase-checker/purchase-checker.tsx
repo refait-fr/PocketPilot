@@ -23,20 +23,27 @@ const classificationPresentation = {
   comfortable: {
     label: "Achat confortable",
     message: "Cet achat semble compatible avec ton budget actuel.",
+    tone: "bg-[var(--positive-soft)] text-[var(--positive)]",
   },
   significant: {
     label: "Impact significatif",
     message: "Cet achat utiliserait une part notable de ton reste disponible ce mois-ci.",
+    tone: "bg-[var(--accent-soft)] text-[var(--accent-dark)]",
   },
   tight: {
     label: "Budget serré",
     message: "Cet achat est possible, mais il réduirait fortement ton reste disponible ce mois-ci.",
+    tone: "bg-[var(--warning-soft)] text-[var(--warning)]",
   },
   "over-budget": {
     label: "Dépassement",
     message: "",
+    tone: "bg-[var(--danger-soft)] text-[var(--danger)]",
   },
-} satisfies Record<PurchaseClassification, { label: string; message: string }>;
+} satisfies Record<
+  PurchaseClassification,
+  { label: string; message: string; tone: string }
+>;
 
 export function PurchaseChecker({
   categoryBudgets,
@@ -105,13 +112,13 @@ export function PurchaseChecker({
       : presentation?.message;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start">
-      <section className="rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-6 shadow-[0_16px_50px_rgba(23,53,47,0.08)] sm:p-8">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent-dark)]">
+    <div className="purchase-layout">
+      <section className="ui-panel purchase-input-panel">
+        <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">
           Achat à vérifier
         </p>
-        <h2 className="font-display mt-3 text-3xl font-bold tracking-[-0.04em]">
-          Testez l’impact, sans rien enregistrer.
+        <h2 className="font-display mt-2 text-3xl font-medium tracking-[-0.04em]">
+          Tu veux acheter quoi ?
         </h2>
         <p className="mt-3 text-sm leading-6 text-[var(--ink-soft)]">
           Votre reste réel actuel est de {formatCents(currentRealAvailableCents, currencyCode)}.
@@ -119,17 +126,17 @@ export function PurchaseChecker({
 
         <form className="mt-7 grid gap-5" onSubmit={handleSubmit}>
           {formError ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+            <div className="ui-feedback-error" role="alert">
               {formError}
             </div>
           ) : null}
 
-          <label className="grid gap-2 text-sm font-semibold" htmlFor="purchase-name">
+          <label className="ui-label" htmlFor="purchase-name">
             Nom de l’achat
             <input
               aria-describedby={fieldErrors.name ? "purchase-name-error" : "purchase-name-hint"}
               aria-invalid={Boolean(fieldErrors.name)}
-              className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-base font-normal outline-none transition-all focus:border-[var(--forest)] focus:ring-3 focus:ring-[#c9d5c380]"
+              className="ui-input"
               id="purchase-name"
               maxLength={MAX_PURCHASE_NAME_LENGTH}
               onChange={(event) => {
@@ -148,12 +155,12 @@ export function PurchaseChecker({
             </span>
           </label>
 
-          <label className="grid gap-2 text-sm font-semibold" htmlFor="purchase-price">
+          <label className="ui-label" htmlFor="purchase-price">
             Prix
             <input
               aria-describedby={fieldErrors.price ? "purchase-price-error" : "purchase-price-hint"}
               aria-invalid={Boolean(fieldErrors.price)}
-              className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-base font-normal outline-none transition-all focus:border-[var(--forest)] focus:ring-3 focus:ring-[#c9d5c380]"
+              className="ui-input font-amount text-xl"
               id="purchase-price"
               inputMode="decimal"
               maxLength={32}
@@ -174,7 +181,7 @@ export function PurchaseChecker({
           </label>
 
           <button
-            className="min-h-12 rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-[#214b42] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)]"
+            className="ui-button-primary min-h-12 px-5 py-3"
             type="submit"
           >
             Vérifier cet achat
@@ -184,32 +191,40 @@ export function PurchaseChecker({
 
       <section
         aria-live="polite"
-        className="min-h-80 rounded-[1.75rem] border border-[var(--line)] bg-[color:rgba(255,253,247,0.72)] p-6 shadow-[0_14px_45px_rgba(23,53,47,0.06)] sm:p-8"
+        className={`purchase-result-panel ${result ? "has-result" : ""}`}
       >
         {result && presentation ? (
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent-dark)]">
+            <p className={`ui-badge ${presentation.tone}`}>
               {presentation.label}
             </p>
-            <h2 className="font-display mt-3 text-3xl font-bold tracking-[-0.04em]">
+            <p className="font-amount mt-6 break-words text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold leading-none tracking-[-0.07em]">
+              {formatCents(result.priceCents, currencyCode)}
+            </p>
+            <h2 className="font-display mt-3 text-3xl font-medium tracking-[-0.04em]">
               {result.name}
             </h2>
-            <dl className="mt-7 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl bg-white p-4">
+            <dl className="purchase-impact-grid">
+              <div className="p-4 sm:border-r sm:border-[var(--line)]">
                 <dt className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">Reste actuel</dt>
-                <dd className="mt-2 break-words font-display text-xl font-bold">{formatCents(currentRealAvailableCents, currencyCode)}</dd>
+                <dd className="font-amount mt-2 break-words text-xl font-extrabold">{formatCents(currentRealAvailableCents, currencyCode)}</dd>
               </div>
-              <div className="rounded-2xl bg-white p-4">
+              <div className="border-t border-[var(--line)] p-4 sm:border-r sm:border-t-0">
                 <dt className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">Prix</dt>
-                <dd className="mt-2 break-words font-display text-xl font-bold">{formatCents(result.priceCents, currencyCode)}</dd>
+                <dd className="font-amount mt-2 break-words text-xl font-extrabold">{formatCents(result.priceCents, currencyCode)}</dd>
               </div>
-              <div className="rounded-2xl bg-white p-4">
+              <div className="border-t border-[var(--line)] p-4 sm:border-t-0">
                 <dt className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">Reste après achat</dt>
-                <dd className="mt-2 break-words font-display text-xl font-bold">{formatCents(result.remainingAfterPurchaseCents, currencyCode)}</dd>
+                <dd className="font-amount mt-2 break-words text-xl font-extrabold">{formatCents(result.remainingAfterPurchaseCents, currencyCode)}</dd>
               </div>
             </dl>
-            <p className="my-6 rounded-2xl bg-[var(--sage)] p-5 text-sm font-semibold leading-6 text-[var(--forest)]">
+            <p className={`my-6 rounded-2xl p-5 text-sm font-semibold leading-6 ${presentation.tone}`}>
               {resultMessage}
+            </p>
+            <p className="mb-5 text-xs leading-5 text-[var(--ink-soft)]">
+              {categoryBudgets.length > 0
+                ? "Choisissez une catégorie lors de l’enregistrement pour voir l’impact exact sur son plafond."
+                : "Aucun budget de catégorie n’est configuré : l’impact concerne uniquement votre reste réel."}
             </p>
             <PurchaseTransactionConfirmation
               categoryBudgets={categoryBudgets}
@@ -221,10 +236,10 @@ export function PurchaseChecker({
             />
           </div>
         ) : (
-          <div className="grid min-h-64 place-items-center text-center">
+          <div className="grid min-h-[27rem] place-items-center text-center">
             <div>
-              <span className="mx-auto grid size-12 place-items-center rounded-full bg-[var(--sage)] font-display text-2xl font-bold">?</span>
-              <h2 className="font-display mt-5 text-2xl font-bold">Votre résultat apparaîtra ici.</h2>
+              <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">Avant de décider</p>
+              <h2 className="font-display mt-3 text-3xl font-medium">Voyez l’impact sur votre mois.</h2>
               <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[var(--ink-soft)]">
                 Le calcul utilise le snapshot du mois : plan récurrent, épargne prévue et transactions déjà enregistrées.
               </p>

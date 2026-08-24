@@ -22,21 +22,28 @@ test("les parcours essentiels restent utilisables en 390 × 844", async ({
   await expectNoHorizontalOverflow(page);
 
   const navigation = page.getByRole("navigation", {
-    name: "Navigation principale",
+    name: "Navigation principale mobile",
   });
   for (const label of [
-    "Vue d’ensemble",
-    "Revenus",
-    "Dépenses",
+    "Accueil",
     "Transactions",
     "Budgets",
     "Objectifs",
-    "Réglages",
+    "Achat",
   ]) {
     await expect(navigation.getByRole("link", { name: label })).toBeVisible();
   }
 
-  await navigation.getByRole("link", { name: "Revenus" }).click();
+  await page.getByText("Menu", { exact: true }).click();
+  const secondaryNavigation = page.getByRole("navigation", {
+    name: "Navigation secondaire",
+  });
+  for (const label of ["Revenus", "Charges", "Objectifs", "Paramètres"]) {
+    await expect(
+      secondaryNavigation.getByRole("link", { name: label }),
+    ).toBeVisible();
+  }
+  await secondaryNavigation.getByRole("link", { name: "Revenus" }).click();
   await expectNoHorizontalOverflow(page);
   const createForm = page
     .getByRole("button", { name: "Ajouter ce revenu" })
@@ -57,7 +64,7 @@ test("les parcours essentiels restent utilisables en 390 × 844", async ({
   ).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
-  await navigation.getByRole("link", { name: "Vue d’ensemble" }).click();
+  await navigation.getByRole("link", { name: "Accueil" }).click();
   await expectDashboard(page);
   await expectNoHorizontalOverflow(page);
 
@@ -92,13 +99,14 @@ test("les parcours essentiels restent utilisables en 390 × 844", async ({
   const transportBudget = page.getByRole("listitem").filter({
     has: page.getByRole("heading", { name: "Transport", exact: true }),
   });
-  await expect(transportBudget).toContainText(/18,50\s*€\s*\/\s*100,00\s*€/);
+  await expect(transportBudget).toContainText(/18,50\s*€\s*sur\s*100,00\s*€/);
   await expect(transportBudget.getByRole("button", { name: "Modifier" })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
-  await navigation.getByRole("link", { name: "Vue d’ensemble" }).click();
-  const purchaseCheckerLink = page.getByRole("link", {
-    name: "Vérifier un achat",
+  await navigation.getByRole("link", { name: "Accueil" }).click();
+  const purchaseCheckerLink = navigation.getByRole("link", {
+    exact: true,
+    name: "Achat",
   });
   await purchaseCheckerLink.scrollIntoViewIfNeeded();
   await expect(purchaseCheckerLink).toBeInViewport();

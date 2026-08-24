@@ -51,10 +51,18 @@ export default defineConfig({
     },
     {
       name: "mobile-chromium",
-      testMatch: /mobile\.spec\.ts/,
+      testMatch: /(mobile|visual-review)\.spec\.ts/,
       use: {
         ...devices["Pixel 5"],
         viewport: { height: 844, width: 390 },
+      },
+    },
+    {
+      name: "tablet-chromium",
+      testMatch: /visual-review\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { height: 1080, width: 820 },
       },
     },
   ],

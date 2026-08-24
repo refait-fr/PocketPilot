@@ -31,11 +31,11 @@ export function EmailActionForm({ mode }: { mode: EmailActionMode }) {
       {state.status !== "idle" ? (
         <div
           aria-live="polite"
-          className={`rounded-xl border px-4 py-3 text-sm leading-6 ${
+          className={
             isSuccess
-              ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-              : "border-red-200 bg-red-50 text-red-800"
-          }`}
+              ? "ui-feedback-success"
+              : "ui-feedback-error"
+          }
           role={isSuccess ? "status" : "alert"}
         >
           {state.message}
@@ -44,11 +44,11 @@ export function EmailActionForm({ mode }: { mode: EmailActionMode }) {
 
       {!isSuccess ? (
         <form action={formAction} className="grid gap-5">
-          <label className="grid gap-2 text-sm font-semibold" htmlFor={inputId}>
+          <label className="ui-label" htmlFor={inputId}>
             Adresse email
             <input
               autoComplete="email"
-              className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-base font-normal outline-none transition placeholder:text-stone-400 focus:border-[var(--forest)] focus:ring-3 focus:ring-[#c9d5c380]"
+              className="ui-input"
               defaultValue={state.email}
               disabled={isPending}
               id={inputId}
@@ -60,7 +60,7 @@ export function EmailActionForm({ mode }: { mode: EmailActionMode }) {
             />
           </label>
           <button
-            className="flex min-h-12 items-center justify-center rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#244c43] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)] disabled:cursor-wait disabled:opacity-70"
+            className="ui-button-primary min-h-12 px-5 py-3"
             disabled={isPending}
             type="submit"
           >

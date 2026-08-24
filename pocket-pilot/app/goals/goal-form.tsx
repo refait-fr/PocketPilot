@@ -48,7 +48,7 @@ function SubmitButton({ mode }: { mode: GoalFormProps["mode"] }) {
 
   return (
     <button
-      className="min-h-12 rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-bold text-white transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:bg-[var(--accent-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-dark)] disabled:cursor-wait disabled:opacity-65"
+      className="ui-button-primary min-h-12 px-5 py-3"
       disabled={pending}
       type="submit"
     >
@@ -76,14 +76,14 @@ function AmountField({
 
   return (
     <label
-      className="grid min-w-0 gap-2 text-sm font-semibold"
+      className="ui-label min-w-0"
       htmlFor={id}
     >
       {copy.label}
       <input
         aria-describedby={error ? `${id}-error` : `${id}-hint`}
         aria-invalid={Boolean(error)}
-        className="min-h-12 w-full min-w-0 rounded-xl border border-[var(--line)] bg-white px-4 text-base font-normal outline-none transition-all duration-200 ease-in-out placeholder:text-stone-400 focus:border-[var(--forest)] focus:ring-3 focus:ring-[#c9d5c380]"
+        className="ui-input min-w-0"
         defaultValue={defaultValue}
         id={id}
         inputMode="decimal"
@@ -145,25 +145,25 @@ export function GoalForm({
       {state.status !== "idle" ? (
         <div
           aria-live="polite"
-          className={`rounded-xl border px-4 py-3 text-sm leading-6 ${
+          className={
             state.status === "error"
-              ? "border-red-200 bg-red-50 text-red-800"
-              : "border-emerald-200 bg-emerald-50 text-emerald-900"
-          }`}
+              ? "ui-feedback-error"
+              : "ui-feedback-success"
+          }
           role={state.status === "error" ? "alert" : "status"}
         >
           {state.message}
         </div>
       ) : null}
 
-      <label className="grid gap-2 text-sm font-semibold" htmlFor={nameId}>
+      <label className="ui-label" htmlFor={nameId}>
         Nom de l’objectif
         <input
           aria-describedby={
             state.fieldErrors.name ? `${nameId}-error` : `${nameId}-hint`
           }
           aria-invalid={Boolean(state.fieldErrors.name)}
-          className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-base font-normal outline-none transition-all duration-200 ease-in-out placeholder:text-stone-400 focus:border-[var(--forest)] focus:ring-3 focus:ring-[#c9d5c380]"
+          className="ui-input"
           defaultValue={state.values.name}
           id={nameId}
           maxLength={MAX_SAVINGS_GOAL_NAME_LENGTH}
@@ -204,7 +204,7 @@ export function GoalForm({
         id={`${idPrefix}-monthlyAllocation`}
       />
 
-      <p className="rounded-xl border border-[var(--line)] bg-[#f5f1e7] px-4 py-3 text-xs leading-5 text-[var(--ink-soft)]">
+      <p className="ui-feedback-info text-xs">
         Hypothèse de projection : {FIRST_ALLOCATION_CONVENTION.toLowerCase()}{" "}
         L’estimation reste indicative et ne constitue pas une garantie.
       </p>
@@ -213,7 +213,7 @@ export function GoalForm({
         <SubmitButton mode={mode} />
         {cancelEditing ? (
           <button
-            className="min-h-12 rounded-xl border border-[var(--line)] px-5 py-3 text-sm font-bold transition-all duration-200 ease-in-out hover:border-[var(--forest)] hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)]"
+            className="ui-button-secondary min-h-12 px-5 py-3"
             onClick={cancelEditing}
             type="button"
           >

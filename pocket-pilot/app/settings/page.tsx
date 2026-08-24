@@ -15,40 +15,45 @@ export default async function SettingsPage() {
       profile={profile}
       title="Votre cadre de calcul."
     >
-      <section className="rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-7 shadow-[0_16px_50px_rgba(23,53,47,0.08)] sm:p-10">
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-[var(--line)] bg-white/60 p-5">
-            <dt className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-soft)]">
+      <div className="settings-grid">
+      <section className="ui-panel overflow-hidden">
+        <div className="border-b border-[var(--line)] px-6 py-5 sm:px-8">
+          <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">Préférences du profil</p>
+          <h2 className="font-display mt-2 text-3xl font-medium">Repères de calcul</h2>
+        </div>
+        <dl className="ui-divider-list">
+          <div className="grid gap-2 px-6 py-5 sm:grid-cols-[180px_1fr] sm:items-center sm:px-8">
+            <dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--ink-soft)]">
               Devise
             </dt>
-            <dd className="font-display mt-3 text-3xl font-bold">
+            <dd className="font-amount text-xl font-extrabold">
               {profile.currencyCode}
             </dd>
           </div>
-          <div className="rounded-xl border border-[var(--line)] bg-white/60 p-5">
-            <dt className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-soft)]">
+          <div className="grid gap-2 px-6 py-5 sm:grid-cols-[180px_1fr] sm:items-center sm:px-8">
+            <dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--ink-soft)]">
               Fuseau horaire
             </dt>
-            <dd className="mt-3 break-words text-lg font-bold">
+            <dd className="break-words text-base font-extrabold">
               {profile.timeZone}
             </dd>
           </div>
         </dl>
-        <p className="mt-6 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">
+        <p className="mx-6 mt-6 max-w-2xl text-sm leading-6 text-[var(--ink-soft)] sm:mx-8">
           La modification de ces réglages sera ajoutée avec les prochains formulaires.
         </p>
         <Link
-          className="mt-8 inline-flex rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition-all duration-200 ease-in-out hover:bg-[#214b42] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--forest)]"
+          className="ui-button-secondary mx-6 mb-7 mt-6 sm:mx-8"
           href="/"
         >
           Retour au tableau de bord
         </Link>
       </section>
-      <section className="mt-6 rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-7 shadow-[0_16px_50px_rgba(23,53,47,0.08)] sm:p-10">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent-dark)]">
+      <section className="ui-panel p-6 sm:p-8">
+        <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">
           Sécurité du compte
         </p>
-        <h2 className="font-display mt-3 text-3xl font-bold tracking-[-0.035em]">
+        <h2 className="font-display mt-2 text-3xl font-medium tracking-[-0.035em]">
           Changer de mot de passe
         </h2>
         <p className="mb-7 mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">
@@ -63,6 +68,7 @@ export default async function SettingsPage() {
           />
         </div>
       </section>
+      </div>
     </AppShell>
   );
 }

@@ -19,7 +19,7 @@ function ConfirmationSubmitButton() {
 
   return (
     <button
-      className="min-h-12 rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[var(--accent-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-dark)] disabled:cursor-wait disabled:opacity-65"
+      className="ui-button-primary min-h-12 px-5 py-3"
       disabled={pending}
       type="submit"
     >
@@ -74,7 +74,7 @@ export function PurchaseTransactionConfirmation({
   if (state.status === "success") {
     return (
       <div
-        className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-950"
+        className="ui-feedback-success p-5"
         role="status"
       >
         <p className="font-bold">{state.message}</p>
@@ -82,7 +82,7 @@ export function PurchaseTransactionConfirmation({
           Le dashboard tiendra compte de cet achat dans le reste réel du mois.
         </p>
         <Link
-          className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-[var(--forest)] px-4 py-2 text-sm font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)]"
+          className="ui-button-primary mt-4"
           href="/"
         >
           Voir le dashboard
@@ -94,7 +94,7 @@ export function PurchaseTransactionConfirmation({
   if (!isConfirming) {
     return (
       <button
-        className="min-h-12 rounded-xl border border-[var(--forest)] px-5 py-3 text-sm font-bold text-[var(--forest)] transition-all hover:bg-[var(--forest)] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)]"
+        className="ui-button-primary min-h-12 px-5 py-3"
         onClick={() => setIsConfirming(true)}
         type="button"
       >
@@ -106,7 +106,7 @@ export function PurchaseTransactionConfirmation({
   return (
     <form
       action={formAction}
-      className="grid gap-4 rounded-2xl border border-[var(--line)] bg-white/70 p-5"
+      className="grid gap-4 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-muted)] p-5"
     >
       <div>
         <p className="font-display text-xl font-bold">Confirmer la transaction</p>
@@ -117,7 +117,7 @@ export function PurchaseTransactionConfirmation({
 
       {state.status === "error" ? (
         <div
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          className="ui-feedback-error"
           role="alert"
         >
           {state.message}
@@ -136,10 +136,10 @@ export function PurchaseTransactionConfirmation({
         value={initialState.values.transactionDate}
       />
 
-      <label className="grid gap-2 text-sm font-semibold">
+      <label className="ui-label">
         Catégorie
         <select
-          className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-base font-normal outline-none transition-all focus:border-[var(--forest)] focus:ring-3 focus:ring-[#c9d5c380]"
+          className="ui-select"
           defaultValue="Autre"
           name="category"
           onChange={(event) => setSelectedCategory(event.target.value)}
@@ -153,15 +153,16 @@ export function PurchaseTransactionConfirmation({
       </label>
 
       {selectedBudget && projectedBudget ? (
-        <p className="rounded-xl bg-[var(--sage)] p-4 text-sm leading-6 text-[var(--forest)]">
-          Ce montant ferait passer {selectedBudget.category} de {formatCents(selectedBudget.spentCents, currencyCode)} / {formatCents(selectedBudget.monthlyBudgetCents, currencyCode)} à {formatCents(projectedBudget.spentCents, currencyCode)} / {formatCents(projectedBudget.monthlyBudgetCents, currencyCode)}.
-        </p>
+        <div className="ui-feedback-info">
+          <p className="text-xs font-extrabold uppercase tracking-[0.12em]">Impact sur le budget {selectedBudget.category}</p>
+          <p className="mt-2">Ce montant ferait passer {selectedBudget.category} de {formatCents(selectedBudget.spentCents, currencyCode)} / {formatCents(selectedBudget.monthlyBudgetCents, currencyCode)} à {formatCents(projectedBudget.spentCents, currencyCode)} / {formatCents(projectedBudget.monthlyBudgetCents, currencyCode)}.</p>
+        </div>
       ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <ConfirmationSubmitButton />
         <button
-          className="min-h-12 rounded-xl border border-[var(--line)] px-5 py-3 text-sm font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)]"
+          className="ui-button-secondary min-h-12 px-5 py-3"
           onClick={() => setIsConfirming(false)}
           type="button"
         >

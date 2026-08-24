@@ -22,11 +22,15 @@ export default async function Home() {
       <DashboardOverview
         activeExpenseCount={overview.activeExpenseCount}
         activeIncomeCount={overview.activeIncomeCount}
+        balanceTrend={overview.balanceTrend}
         currencyCode={profile.currencyCode}
-        categoryBudgetSummary={overview.categoryBudgetSummary}
+        categoryBudgets={overview.rankedCategoryBudgets}
+        currentDay={overview.currentDay}
         expenseCount={overview.expenseCount}
+        featuredGoal={overview.featuredGoal}
         goalCount={overview.goalCount}
         incomeCount={overview.incomeCount}
+        insights={overview.insights}
         snapshot={overview.snapshot}
         transactionCount={overview.transactionCount}
       />
