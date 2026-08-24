@@ -13,7 +13,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit",
-    "test:unit": "node --test --experimental-strip-types e2e/support/environment.test.ts lib/auth/auth-input.test.ts lib/auth/auth-messages.test.ts lib/auth/auth-notice.test.ts lib/auth/auth-redirect-url.test.ts lib/auth/safe-next-path.test.ts lib/dashboard/recurring-entry-detail.test.ts lib/finance/monthly-snapshot.test.ts lib/finance/recurring-entry-input.test.ts lib/finance/savings-goal.test.ts lib/profile-options.test.ts",
+    "test:unit": "node --test --experimental-strip-types e2e/support/environment.test.ts lib/auth/auth-input.test.ts lib/auth/auth-messages.test.ts lib/auth/auth-notice.test.ts lib/auth/auth-redirect-url.test.ts lib/auth/safe-next-path.test.ts lib/dashboard/recurring-entry-detail.test.ts lib/finance/calendar-month.test.ts lib/finance/monthly-snapshot.test.ts lib/finance/purchase-checker.test.ts lib/finance/recurring-entry-input.test.ts lib/finance/savings-goal.test.ts lib/profile-options.test.ts lib/transactions/transaction-input.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:local": "node scripts/run-local-e2e.mjs",
     "test:e2e:local:stable": "npm run test:e2e:local && npm run test:e2e:local",

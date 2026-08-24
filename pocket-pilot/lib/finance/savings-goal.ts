@@ -1,3 +1,12 @@
+import type { CalendarMonth } from "./calendar-month.ts";
+import {
+  formatCentsForInput,
+  parseMoneyInput,
+  readStoredCents as readMoneyStoredCents,
+} from "./money.ts";
+
+export { formatCalendarMonth, getCalendarMonthInTimeZone } from "./calendar-month.ts";
+
 export const MAX_SAVINGS_GOAL_NAME_LENGTH = 100;
 
 export const FIRST_ALLOCATION_CONVENTION =
@@ -38,11 +47,6 @@ export type SavingsGoalPlan = {
   remainingAmountCents: number;
 };
 
-export type CalendarMonth = {
-  month: number;
-  year: number;
-};
-
 function readText(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
@@ -51,62 +55,11 @@ function parseAmount(
   value: string,
   { allowZero, fieldLabel }: { allowZero: boolean; fieldLabel: string },
 ): { valid: true; amountCents: number } | { valid: false; message: string } {
-  const amount = value.trim();
-
-  if (!amount) {
-    return { valid: false, message: `Saisissez ${fieldLabel}.` };
-  }
-
-  if (amount.startsWith("-")) {
-    return {
-      valid: false,
-      message: allowZero
-        ? "Le montant ne peut pas être négatif."
-        : "Le montant doit être strictement supérieur à 0.",
-    };
-  }
-
-  if (amount.length > 32) {
-    return {
-      valid: false,
-      message: "Ce montant dépasse la précision autorisée.",
-    };
-  }
-
-  if (/^\d+[.,]\d{3,}$/.test(amount)) {
-    return {
-      valid: false,
-      message: "Utilisez au maximum deux chiffres après la virgule.",
-    };
-  }
-
-  if (!/^\d+(?:[.,]\d{1,2})?$/.test(amount)) {
-    return {
-      valid: false,
-      message: "Saisissez un montant numérique, par exemple 5000,00.",
-    };
-  }
-
-  const [wholePart, fractionalPart = ""] = amount.replace(",", ".").split(".");
-  const cents =
-    BigInt(wholePart) * BigInt(100) +
-    BigInt(fractionalPart.padEnd(2, "0"));
-
-  if ((!allowZero && cents === BigInt(0)) || cents < BigInt(0)) {
-    return {
-      valid: false,
-      message: "Le montant doit être strictement supérieur à 0.",
-    };
-  }
-
-  if (cents > BigInt(Number.MAX_SAFE_INTEGER)) {
-    return {
-      valid: false,
-      message: "Ce montant dépasse la précision autorisée.",
-    };
-  }
-
-  return { valid: true, amountCents: Number(cents) };
+  return parseMoneyInput(value, {
+    allowZero,
+    emptyMessage: `Saisissez ${fieldLabel}.`,
+    invalidMessage: "Saisissez un montant numérique, par exemple 5000,00.",
+  });
 }
 
 export function validateSavingsGoalInput(input: {
@@ -197,19 +150,7 @@ function readStoredCents(
   value: unknown,
   { allowZero, fieldName }: { allowZero: boolean; fieldName: string },
 ): number {
-  const amount =
-    typeof value === "string" && /^\d+$/.test(value) ? Number(value) : value;
-
-  if (
-    typeof amount !== "number" ||
-    !Number.isSafeInteger(amount) ||
-    amount < 0 ||
-    (!allowZero && amount === 0)
-  ) {
-    throw new Error(`${fieldName} doit être un entier sûr en centimes.`);
-  }
-
-  return amount;
+  return readMoneyStoredCents(value, { allowZero, fieldName });
 }
 
 export function readStoredSavingsGoalAmounts(input: {
@@ -326,46 +267,9 @@ export function estimateCompletionMonth(
   };
 }
 
-export function getCalendarMonthInTimeZone(
-  referenceDate: Date,
-  timeZone: string,
-): CalendarMonth {
-  if (Number.isNaN(referenceDate.getTime())) {
-    throw new Error("La date de référence est invalide.");
-  }
-
-  const parts = new Intl.DateTimeFormat("en-US", {
-    month: "numeric",
-    timeZone,
-    year: "numeric",
-  }).formatToParts(referenceDate);
-  const year = Number(parts.find((part) => part.type === "year")?.value);
-  const month = Number(parts.find((part) => part.type === "month")?.value);
-
-  if (!Number.isInteger(year) || !Number.isInteger(month)) {
-    throw new Error("Le mois de référence est invalide.");
-  }
-
-  return { year, month };
-}
-
-export function formatCalendarMonth(calendarMonth: CalendarMonth): string {
-  const { year, month } = estimateCompletionMonth(calendarMonth, 1);
-
-  return new Intl.DateTimeFormat("fr-FR", {
-    month: "long",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(new Date(Date.UTC(year, month - 1, 1)));
-}
-
 export function formatSavingsGoalCentsForInput(amountCents: number): string {
-  const amount = readStoredCents(amountCents, {
+  return formatCentsForInput(amountCents, {
     allowZero: true,
     fieldName: "Le montant",
   });
-  const wholePart = Math.floor(amount / 100);
-  const fractionalPart = String(amount % 100).padStart(2, "0");
-
-  return `${wholePart},${fractionalPart}`;
 }

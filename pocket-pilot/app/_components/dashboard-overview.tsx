@@ -12,6 +12,7 @@ type DashboardOverviewProps = {
   goalCount: number;
   incomeCount: number;
   snapshot: MonthlySnapshot;
+  transactionCount: number;
 };
 
 type MetricCardProps = {
@@ -72,14 +73,15 @@ export function DashboardOverview({
   goalCount,
   incomeCount,
   snapshot,
+  transactionCount,
 }: DashboardOverviewProps) {
-  const availableIsPositive = snapshot.availableCents >= 0;
+  const realAvailableIsPositive = snapshot.realAvailableCents >= 0;
 
   return (
     <div className="space-y-5 sm:space-y-6">
       <section
         className={`relative overflow-hidden rounded-[1.75rem] border p-6 shadow-[0_18px_60px_rgba(23,53,47,0.12)] sm:p-8 lg:p-10 ${
-          availableIsPositive
+          realAvailableIsPositive
             ? "border-[#214b42] bg-[var(--forest)] text-white"
             : "border-[#a63d1d] bg-[#7f3019] text-white"
         }`}
@@ -88,31 +90,46 @@ export function DashboardOverview({
         <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#f0b69b]">
-              Reste mensuel disponible
+              Reste réel aujourd’hui
             </p>
             <p className="font-display mt-4 break-words text-5xl font-bold leading-none tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-              {formatCents(snapshot.availableCents, currencyCode)}
+              {formatCents(snapshot.realAvailableCents, currencyCode)}
             </p>
             <p className="mt-5 max-w-xl text-sm leading-6 text-[#d9e2dd] sm:text-base">
-              {availableIsPositive
-                ? "Après vos charges fixes et les allocations prévues pour vos objectifs."
-                : "Vos charges fixes et allocations dépassent actuellement vos revenus récurrents."}
+              {realAvailableIsPositive
+                ? "Après le plan mensuel et les dépenses ponctuelles déjà enregistrées ce mois-ci."
+                : "Vos dépenses du mois dépassent actuellement le budget disponible."}
             </p>
+            <Link
+              className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-white px-4 py-2 text-sm font-bold text-[var(--forest)] transition-all hover:-translate-y-0.5 hover:bg-[#f8eee7] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+              href="/purchase-checker"
+            >
+              Vérifier un achat
+            </Link>
           </div>
 
           <dl className="grid grid-cols-2 gap-x-8 gap-y-4 border-t border-white/20 pt-5 text-sm lg:min-w-72 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
             <div>
-              <dt className="text-[#b9ccc4]">Devise</dt>
-              <dd className="mt-1 font-bold">{currencyCode}</dd>
+              <dt className="text-[#b9ccc4]">Budget disponible</dt>
+              <dd className="mt-1 font-bold">
+                {formatCents(snapshot.availableCents, currencyCode)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[#b9ccc4]">Dépensé ce mois</dt>
+              <dd className="mt-1 font-bold">
+                {formatCents(snapshot.totalTransactionsCents, currencyCode)}
+              </dd>
             </div>
             <div>
               <dt className="text-[#b9ccc4]">Épargne prévue</dt>
               <dd className="mt-1 font-bold">
-                {formatCents(
-                  snapshot.totalGoalAllocationsCents,
-                  currencyCode,
-                )}
+                {formatCents(snapshot.totalGoalAllocationsCents, currencyCode)}
               </dd>
+            </div>
+            <div>
+              <dt className="text-[#b9ccc4]">Devise</dt>
+              <dd className="mt-1 font-bold">{currencyCode}</dd>
             </div>
           </dl>
         </div>
@@ -131,7 +148,7 @@ export function DashboardOverview({
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             accent="sage"
             detail={getRecurringEntryDashboardDetail("income", {
@@ -154,6 +171,17 @@ export function DashboardOverview({
               snapshot.totalFixedExpensesCents,
               currencyCode,
             )}
+          />
+          <MetricCard
+            accent="orange"
+            detail={
+              transactionCount === 0
+                ? "Aucune transaction enregistrée ce mois-ci."
+                : `${transactionCount} transaction${transactionCount > 1 ? "s" : ""} ce mois-ci.`
+            }
+            href="/transactions"
+            label="Dépenses ponctuelles"
+            value={formatCents(snapshot.totalTransactionsCents, currencyCode)}
           />
           <MetricCard
             accent="forest"

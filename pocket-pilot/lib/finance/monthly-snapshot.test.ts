@@ -16,6 +16,8 @@ test("calcule un mois vide sans approximation", () => {
       totalGoalAllocationsCents: 0,
       availableCents: 0,
       activeGoalCount: 0,
+      realAvailableCents: 0,
+      totalTransactionsCents: 0,
     },
   );
 });
@@ -44,6 +46,8 @@ test("soustrait les charges et les allocations des objectifs actifs", () => {
       totalGoalAllocationsCents: 15_000,
       availableCents: 60_000,
       activeGoalCount: 1,
+      realAvailableCents: 60_000,
+      totalTransactionsCents: 0,
     },
   );
 });
@@ -169,6 +173,63 @@ test("conserve un reste négatif explicite", () => {
   });
 
   assert.equal(snapshot.availableCents, -15_000);
+});
+
+test("calcule le total des transactions et le reste réel", () => {
+  const snapshot = calculateMonthlySnapshot({
+    fixedExpenseAmountsCents: [45_000],
+    goals: [
+      {
+        currentAmountCents: 0,
+        monthlyAllocationCents: 20_000,
+        targetAmountCents: 100_000,
+      },
+    ],
+    incomeAmountsCents: [120_000],
+    transactionAmountsCents: [10_000, 3_700],
+  });
+
+  assert.equal(snapshot.availableCents, 55_000);
+  assert.equal(snapshot.totalTransactionsCents, 13_700);
+  assert.equal(snapshot.realAvailableCents, 41_300);
+});
+
+test("conserve un reste réel négatif et gère zéro transaction", () => {
+  const withoutTransactions = calculateMonthlySnapshot({
+    fixedExpenseAmountsCents: [],
+    goals: [],
+    incomeAmountsCents: [5_000],
+    transactionAmountsCents: [],
+  });
+  const overspent = calculateMonthlySnapshot({
+    fixedExpenseAmountsCents: [],
+    goals: [],
+    incomeAmountsCents: [5_000],
+    transactionAmountsCents: [7_500],
+  });
+
+  assert.equal(withoutTransactions.totalTransactionsCents, 0);
+  assert.equal(withoutTransactions.realAvailableCents, 5_000);
+  assert.equal(overspent.realAvailableCents, -2_500);
+});
+
+test("refuse un total de transactions dépassant la précision sûre", () => {
+  assert.throws(() =>
+    calculateMonthlySnapshot({
+      fixedExpenseAmountsCents: [],
+      goals: [],
+      incomeAmountsCents: [],
+      transactionAmountsCents: [Number.MAX_SAFE_INTEGER, 1],
+    }),
+  );
+  assert.throws(() =>
+    calculateMonthlySnapshot({
+      fixedExpenseAmountsCents: [],
+      goals: [],
+      incomeAmountsCents: [],
+      transactionAmountsCents: [0],
+    }),
+  );
 });
 
 test("recalcule le dashboard après une modification de revenu", () => {

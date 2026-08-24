@@ -1,3 +1,11 @@
+import {
+  addCents,
+  readStoredCents,
+  subtractCents,
+  sumPositiveStoredCents,
+  sumStoredCents,
+} from "./money.ts";
+
 export type SavingsGoalAmounts = {
   currentAmountCents: unknown;
   targetAmountCents: unknown;
@@ -10,57 +18,39 @@ export type MonthlySnapshot = {
   totalGoalAllocationsCents: number;
   availableCents: number;
   activeGoalCount: number;
+  realAvailableCents: number;
+  totalTransactionsCents: number;
 };
 
 type MonthlySnapshotInput = {
   incomeAmountsCents: readonly unknown[];
   fixedExpenseAmountsCents: readonly unknown[];
   goals: readonly SavingsGoalAmounts[];
+  transactionAmountsCents?: readonly unknown[];
 };
 
 function readNonNegativeCents(value: unknown, fieldName: string): number {
-  const amount =
-    typeof value === "string" && /^\d+$/.test(value)
-      ? Number(value)
-      : value;
-
-  if (
-    typeof amount !== "number" ||
-    !Number.isSafeInteger(amount) ||
-    amount < 0
-  ) {
-    throw new Error(`${fieldName} doit être un montant entier sûr en centimes.`);
-  }
-
-  return amount;
-}
-
-function addCents(total: number, amount: number): number {
-  const result = total + amount;
-
-  if (!Number.isSafeInteger(result)) {
-    throw new Error("Le total financier dépasse la précision entière disponible.");
-  }
-
-  return result;
+  return readStoredCents(value, { allowZero: true, fieldName });
 }
 
 function sumCents(values: readonly unknown[], fieldName: string): number {
-  return values.reduce<number>(
-    (total, value) => addCents(total, readNonNegativeCents(value, fieldName)),
-    0,
-  );
+  return sumStoredCents(values, fieldName);
 }
 
 export function calculateMonthlySnapshot({
   incomeAmountsCents,
   fixedExpenseAmountsCents,
   goals,
+  transactionAmountsCents = [],
 }: MonthlySnapshotInput): MonthlySnapshot {
   const totalIncomeCents = sumCents(incomeAmountsCents, "Le revenu");
   const totalFixedExpensesCents = sumCents(
     fixedExpenseAmountsCents,
     "La dépense fixe",
+  );
+  const totalTransactionsCents = sumPositiveStoredCents(
+    transactionAmountsCents,
+    "La transaction",
   );
 
   let activeGoalCount = 0;
@@ -107,6 +97,10 @@ export function calculateMonthlySnapshot({
   if (!Number.isSafeInteger(availableCents)) {
     throw new Error("Le reste mensuel dépasse la précision entière disponible.");
   }
+  const realAvailableCents = subtractCents(
+    availableCents,
+    totalTransactionsCents,
+  );
 
   return {
     totalIncomeCents,
@@ -114,5 +108,7 @@ export function calculateMonthlySnapshot({
     totalGoalAllocationsCents,
     availableCents,
     activeGoalCount,
+    realAvailableCents,
+    totalTransactionsCents,
   };
 }

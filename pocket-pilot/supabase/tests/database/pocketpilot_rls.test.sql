@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(19);
+select plan(24);
 
 insert into auth.users (id, email)
 values
@@ -36,6 +36,17 @@ values
   ('11111111-1111-1111-1111-111111111111', 'Goal A', 500000, 100000, 25000),
   ('22222222-2222-2222-2222-222222222222', 'Goal B', 600000, 200000, 30000);
 
+insert into public.transactions (
+  user_id,
+  amount_cents,
+  category,
+  description,
+  transaction_date
+)
+values
+  ('11111111-1111-1111-1111-111111111111', 13700, 'Alimentation', 'Transaction A', '2026-08-24'),
+  ('22222222-2222-2222-2222-222222222222', 4200, 'Transport', 'Transaction B', '2026-08-23');
+
 set local role authenticated;
 set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 
@@ -59,6 +70,11 @@ select results_eq(
   array[1::bigint],
   'A can read their own goal'
 );
+select results_eq(
+  $$select count(*) from public.transactions where user_id = '11111111-1111-1111-1111-111111111111'$$,
+  array[1::bigint],
+  'A can read their own transaction'
+);
 
 select is_empty(
   $$select user_id from public.profiles where user_id = '22222222-2222-2222-2222-222222222222'$$,
@@ -75,6 +91,10 @@ select is_empty(
 select is_empty(
   $$select user_id from public.savings_goals where user_id = '22222222-2222-2222-2222-222222222222'$$,
   'A cannot read B goal'
+);
+select is_empty(
+  $$select user_id from public.transactions where user_id = '22222222-2222-2222-2222-222222222222'$$,
+  'A cannot read B transaction'
 );
 
 select is_empty(
@@ -93,6 +113,10 @@ select is_empty(
   $$update public.savings_goals set name = 'Changed' where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
   'A cannot update B goal'
 );
+select is_empty(
+  $$update public.transactions set description = 'Changed' where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
+  'A cannot update B transaction'
+);
 
 select is_empty(
   $$delete from public.profiles where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
@@ -109,6 +133,10 @@ select is_empty(
 select is_empty(
   $$delete from public.savings_goals where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
   'A cannot delete B goal'
+);
+select is_empty(
+  $$delete from public.transactions where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
+  'A cannot delete B transaction'
 );
 
 select throws_ok(
@@ -128,6 +156,12 @@ select throws_ok(
   '42501',
   null,
   'A cannot create a goal owned by B'
+);
+select throws_ok(
+  $$insert into public.transactions (user_id, amount_cents, category, transaction_date) values ('22222222-2222-2222-2222-222222222222', 1, 'Autre', '2026-08-24')$$,
+  '42501',
+  null,
+  'A cannot create a transaction owned by B'
 );
 
 select * from finish();

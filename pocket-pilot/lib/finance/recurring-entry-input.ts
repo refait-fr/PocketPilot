@@ -1,3 +1,9 @@
+import {
+  formatCentsForInput as formatMoneyCentsForInput,
+  parseMoneyInput,
+  readStoredCents,
+} from "./money.ts";
+
 export const MAX_RECURRING_ENTRY_LABEL_LENGTH = 100;
 
 export type RecurringEntryInputValues = {
@@ -29,63 +35,11 @@ function readText(value: unknown): string {
 function parsePositiveMonthlyAmount(value: string):
   | { valid: true; amountCents: number }
   | { valid: false; message: string } {
-  const amount = value.trim();
-
-  if (!amount) {
-    return {
-      valid: false,
-      message: "Saisissez un montant mensuel.",
-    };
-  }
-
-  if (amount.startsWith("-")) {
-    return {
-      valid: false,
-      message: "Le montant doit être strictement supérieur à 0.",
-    };
-  }
-
-  if (amount.length > 32) {
-    return {
-      valid: false,
-      message: "Ce montant dépasse la précision autorisée.",
-    };
-  }
-
-  if (/^\d+[.,]\d{3,}$/.test(amount)) {
-    return {
-      valid: false,
-      message: "Utilisez au maximum deux chiffres après la virgule.",
-    };
-  }
-
-  if (!/^\d+(?:[.,]\d{1,2})?$/.test(amount)) {
-    return {
-      valid: false,
-      message: "Saisissez un montant numérique, par exemple 1250,00.",
-    };
-  }
-
-  const [wholePart, fractionalPart = ""] = amount.replace(",", ".").split(".");
-  const cents =
-    BigInt(wholePart) * BigInt(100) +
-    BigInt(fractionalPart.padEnd(2, "0"));
-
-  if (cents <= BigInt(0)) {
-    return {
-      valid: false,
-      message: "Le montant doit être strictement supérieur à 0.",
-    };
-  }
-
-  if (cents > BigInt(Number.MAX_SAFE_INTEGER)) {
-    return {
-      valid: false,
-      message: "Ce montant dépasse la précision autorisée.",
-    };
-  }
-
-  return { valid: true, amountCents: Number(cents) };
+  return parseMoneyInput(value, {
+    allowZero: false,
+    emptyMessage: "Saisissez un montant mensuel.",
+    invalidMessage: "Saisissez un montant numérique, par exemple 1250,00.",
+  });
 }
 
 export function validateRecurringEntryInput(input: {
@@ -123,24 +77,15 @@ export function validateRecurringEntryInput(input: {
 }
 
 export function readPositiveStoredCents(value: unknown): number {
-  const amount =
-    typeof value === "string" && /^\d+$/.test(value) ? Number(value) : value;
-
-  if (
-    typeof amount !== "number" ||
-    !Number.isSafeInteger(amount) ||
-    amount <= 0
-  ) {
-    throw new Error("Le montant stocké doit être un entier positif en centimes.");
-  }
-
-  return amount;
+  return readStoredCents(value, {
+    allowZero: false,
+    fieldName: "Le montant stocké",
+  });
 }
 
 export function formatCentsForInput(amountCents: number): string {
-  const amount = readPositiveStoredCents(amountCents);
-  const wholePart = Math.floor(amount / 100);
-  const fractionalPart = String(amount % 100).padStart(2, "0");
-
-  return `${wholePart},${fractionalPart}`;
+  return formatMoneyCentsForInput(amountCents, {
+    allowZero: false,
+    fieldName: "Le montant stocké",
+  });
 }

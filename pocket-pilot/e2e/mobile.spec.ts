@@ -28,6 +28,7 @@ test("les parcours essentiels restent utilisables en 390 × 844", async ({
     "Vue d’ensemble",
     "Revenus",
     "Dépenses",
+    "Transactions",
     "Objectifs",
     "Réglages",
   ]) {
@@ -57,5 +58,47 @@ test("les parcours essentiels restent utilisables en 390 × 844", async ({
 
   await navigation.getByRole("link", { name: "Vue d’ensemble" }).click();
   await expectDashboard(page);
+  await expectNoHorizontalOverflow(page);
+
+  await navigation.getByRole("link", { name: "Transactions" }).click();
+  await expectNoHorizontalOverflow(page);
+  const transactionForm = page
+    .getByRole("button", { name: "Ajouter la transaction" })
+    .locator("xpath=ancestor::form");
+  await transactionForm.getByLabel("Montant").fill("18,50");
+  await transactionForm.getByLabel("Catégorie").selectOption("Transport");
+  await transactionForm.getByLabel(/Description/).fill("Métro mobile E2E");
+  const transactionSubmit = transactionForm.getByRole("button", {
+    name: "Ajouter la transaction",
+  });
+  await transactionSubmit.scrollIntoViewIfNeeded();
+  await expect(transactionSubmit).toBeInViewport();
+  await transactionSubmit.click();
+  await expect(listRow(page, "Métro mobile E2E")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await navigation.getByRole("link", { name: "Vue d’ensemble" }).click();
+  const purchaseCheckerLink = page.getByRole("link", {
+    name: "Vérifier un achat",
+  });
+  await purchaseCheckerLink.scrollIntoViewIfNeeded();
+  await expect(purchaseCheckerLink).toBeInViewport();
+  await purchaseCheckerLink.click();
+  await expectNoHorizontalOverflow(page);
+  await page.getByLabel("Nom de l’achat").fill("Livre mobile E2E");
+  await page.getByLabel("Prix").fill("20,00");
+  const checkPurchaseButton = page.getByRole("button", {
+    name: "Vérifier cet achat",
+  });
+  await checkPurchaseButton.scrollIntoViewIfNeeded();
+  await expect(checkPurchaseButton).toBeInViewport();
+  await checkPurchaseButton.click();
+  await expect(page.getByText("Achat confortable", { exact: true })).toBeVisible();
+  await expect(page.getByText("Reste après achat").locator("..")).toContainText(
+    /287,00\s*€/,
+  );
+  await expect(
+    page.getByRole("button", { name: "Ajouter comme transaction" }),
+  ).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });

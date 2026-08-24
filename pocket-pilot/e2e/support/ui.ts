@@ -14,7 +14,7 @@ export async function expectDashboard(page: Page): Promise<void> {
   await expect(
     page.getByRole("heading", { name: "Votre mois, en un coup d’œil." }),
   ).toBeVisible();
-  await expect(page.getByText("Reste mensuel disponible")).toBeVisible();
+  await expect(page.getByText("Reste réel aujourd’hui")).toBeVisible();
 }
 
 export async function completeOnboarding(page: Page): Promise<void> {
