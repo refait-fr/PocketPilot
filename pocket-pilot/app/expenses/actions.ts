@@ -11,12 +11,15 @@ export type ExpenseActionState = RecurringEntryActionState;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function invalidExpenseState(message: string): ExpenseActionState {
+function invalidExpenseState(
+  message: string,
+  values: ExpenseActionState["values"] = { label: "", monthlyAmount: "" },
+): ExpenseActionState {
   return {
     status: "error",
     message,
     fieldErrors: {},
-    values: { label: "", monthlyAmount: "" },
+    values,
   };
 }
 
@@ -54,6 +57,7 @@ export async function createExpense(
   if (error) {
     return invalidExpenseState(
       "La dépense n’a pas pu être créée. Réessayez dans un instant.",
+      validation.values,
     );
   }
 
@@ -105,6 +109,7 @@ export async function updateExpense(
   if (error || !data) {
     return invalidExpenseState(
       "La dépense n’a pas pu être modifiée. Elle est peut-être introuvable.",
+      validation.values,
     );
   }
 

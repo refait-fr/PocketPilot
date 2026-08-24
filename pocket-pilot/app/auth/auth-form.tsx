@@ -1,9 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { useFormStatus } from "react-dom";
 
 import { signIn, signUp, type AuthActionState } from "@/app/auth/actions";
+import type { AuthNotice } from "@/lib/auth/auth-notice";
 
 type AuthMode = "login" | "signup";
 
@@ -68,7 +70,7 @@ function Fields({
   );
 }
 
-export function AuthForm({ initialNotice }: { initialNotice?: { kind: "error" | "success"; message: string } }) {
+export function AuthForm({ initialNotice }: { initialNotice?: AuthNotice }) {
   const [mode, setMode] = useState<AuthMode>("login");
   const [loginState, loginAction] = useActionState(signIn, initialState);
   const [signupState, signupAction] = useActionState(signUp, initialState);
@@ -104,6 +106,22 @@ export function AuthForm({ initialNotice }: { initialNotice?: { kind: "error" | 
         {mode === "signup" ? <p className="-mt-2 text-xs leading-5 text-[var(--ink-soft)]">Un lien de confirmation vous sera envoyé avant la première connexion.</p> : null}
         <SubmitButton mode={mode} />
       </form>
+      <div className="mt-5 flex flex-col gap-3 text-sm sm:flex-row sm:flex-wrap sm:justify-between">
+        {mode === "login" ? (
+          <Link
+            className="w-fit rounded-md font-bold text-[var(--forest)] underline decoration-[var(--accent)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--forest)]"
+            href="/auth/forgot-password"
+          >
+            Mot de passe oublié ?
+          </Link>
+        ) : null}
+        <Link
+          className="w-fit rounded-md font-bold text-[var(--forest)] underline decoration-[var(--accent)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--forest)]"
+          href="/auth/resend-confirmation"
+        >
+          Renvoyer l’email de confirmation
+        </Link>
+      </div>
     </div>
   );
 }

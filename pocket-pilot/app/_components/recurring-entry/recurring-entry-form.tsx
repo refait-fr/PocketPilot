@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId } from "react";
+import { useActionState, useEffect, useId, useRef } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
@@ -59,12 +59,19 @@ export function RecurringEntryForm({
     values: defaultValues,
   };
   const [state, formAction] = useActionState(action, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
   const idPrefix = useId();
   const labelId = `${idPrefix}-label`;
   const amountId = `${idPrefix}-amount`;
 
+  useEffect(() => {
+    if (mode === "create" && state.status === "success") {
+      formRef.current?.reset();
+    }
+  }, [mode, state]);
+
   return (
-    <form action={formAction} className="grid gap-5">
+    <form action={formAction} className="grid gap-5" ref={formRef}>
       {state.status !== "idle" ? (
         <div
           aria-live="polite"

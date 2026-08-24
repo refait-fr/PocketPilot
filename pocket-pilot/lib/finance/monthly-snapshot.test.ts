@@ -94,6 +94,73 @@ test("exclut l’allocation d’un objectif atteint", () => {
   assert.equal(snapshot.availableCents, 80_000);
 });
 
+test("conserve l’allocation mensuelle quand l’objectif est loin de la cible", () => {
+  const snapshot = calculateMonthlySnapshot({
+    incomeAmountsCents: [200_000],
+    fixedExpenseAmountsCents: [],
+    goals: [
+      {
+        currentAmountCents: 10_000,
+        targetAmountCents: 100_000,
+        monthlyAllocationCents: 25_000,
+      },
+    ],
+  });
+
+  assert.equal(snapshot.totalGoalAllocationsCents, 25_000);
+  assert.equal(snapshot.availableCents, 175_000);
+});
+
+test("plafonne l’allocation du dernier mois au montant restant", () => {
+  const snapshot = calculateMonthlySnapshot({
+    incomeAmountsCents: [200_000],
+    fixedExpenseAmountsCents: [],
+    goals: [
+      {
+        currentAmountCents: 95_000,
+        targetAmountCents: 100_000,
+        monthlyAllocationCents: 10_000,
+      },
+    ],
+  });
+
+  assert.equal(snapshot.totalGoalAllocationsCents, 5_000);
+  assert.equal(snapshot.availableCents, 195_000);
+});
+
+test("conserve une allocation exactement egale au montant restant", () => {
+  const snapshot = calculateMonthlySnapshot({
+    incomeAmountsCents: [200_000],
+    fixedExpenseAmountsCents: [],
+    goals: [
+      {
+        currentAmountCents: 90_000,
+        targetAmountCents: 100_000,
+        monthlyAllocationCents: 10_000,
+      },
+    ],
+  });
+
+  assert.equal(snapshot.totalGoalAllocationsCents, 10_000);
+  assert.equal(snapshot.availableCents, 190_000);
+});
+
+test("refuse un objectif dont le montant actuel depasse la cible", () => {
+  assert.throws(() =>
+    calculateMonthlySnapshot({
+      incomeAmountsCents: [],
+      fixedExpenseAmountsCents: [],
+      goals: [
+        {
+          currentAmountCents: 100_001,
+          targetAmountCents: 100_000,
+          monthlyAllocationCents: 10_000,
+        },
+      ],
+    }),
+  );
+});
+
 test("conserve un reste négatif explicite", () => {
   const snapshot = calculateMonthlySnapshot({
     incomeAmountsCents: [50_000],

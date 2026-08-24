@@ -4,10 +4,19 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function OnboardingPage() {
   const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
+  if (claimsError) throw new Error("Impossible de vérifier la session utilisateur.");
+
   const userId = claimsData?.claims.sub;
   if (!userId) redirect("/auth");
-  const { data: profile } = await supabase.from("profiles").select("user_id").eq("user_id", userId).maybeSingle();
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw new Error("Impossible de vérifier le profil utilisateur.");
   if (profile) redirect("/");
 
   return (

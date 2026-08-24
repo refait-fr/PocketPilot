@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AppShell } from "@/app/_components/app-shell";
+import { PasswordUpdateForm } from "@/app/auth/password-update-form";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
 
 export default async function SettingsPage() {
@@ -42,6 +43,25 @@ export default async function SettingsPage() {
         >
           Retour au tableau de bord
         </Link>
+      </section>
+      <section className="mt-6 rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-7 shadow-[0_16px_50px_rgba(23,53,47,0.08)] sm:p-10">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent-dark)]">
+          Sécurité du compte
+        </p>
+        <h2 className="font-display mt-3 text-3xl font-bold tracking-[-0.035em]">
+          Changer de mot de passe
+        </h2>
+        <p className="mb-7 mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">
+          Choisissez un nouveau mot de passe et confirmez-le. Une vérification
+          supplémentaire pourra être demandée par Supabase si votre session est
+          ancienne.
+        </p>
+        <div className="max-w-lg">
+          <PasswordUpdateForm
+            returnHref="/settings"
+            returnLabel="Rester dans les réglages"
+          />
+        </div>
       </section>
     </AppShell>
   );

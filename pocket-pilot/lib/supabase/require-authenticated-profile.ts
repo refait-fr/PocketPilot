@@ -1,15 +1,26 @@
 import { redirect } from "next/navigation";
 
+import {
+  type CurrencyCode,
+  isCurrencyCode,
+  isValidTimeZone,
+} from "@/lib/profile-options";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthenticatedProfile = {
-  currencyCode: string;
+  currencyCode: CurrencyCode;
   timeZone: string;
 };
 
 export async function requireAuthenticatedProfile() {
   const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
+
+  if (claimsError) {
+    throw new Error("Impossible de vérifier la session utilisateur.");
+  }
+
   const userId = claimsData?.claims.sub;
 
   if (!userId) {
@@ -31,10 +42,8 @@ export async function requireAuthenticatedProfile() {
   }
 
   if (
-    typeof profile.currency_code !== "string" ||
-    !/^[A-Z]{3}$/.test(profile.currency_code) ||
-    typeof profile.time_zone !== "string" ||
-    profile.time_zone.length === 0
+    !isCurrencyCode(profile.currency_code) ||
+    !isValidTimeZone(profile.time_zone)
   ) {
     throw new Error("Le profil financier est invalide.");
   }

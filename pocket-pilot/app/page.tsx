@@ -9,14 +9,12 @@ export default async function Home() {
   const [incomesResult, expensesResult, goalsResult] = await Promise.all([
     supabase
       .from("recurring_incomes")
-      .select("amount_cents")
-      .eq("user_id", userId)
-      .eq("is_active", true),
+      .select("amount_cents, is_active")
+      .eq("user_id", userId),
     supabase
       .from("recurring_fixed_expenses")
-      .select("amount_cents")
-      .eq("user_id", userId)
-      .eq("is_active", true),
+      .select("amount_cents, is_active")
+      .eq("user_id", userId),
     supabase
       .from("savings_goals")
       .select(
@@ -30,11 +28,13 @@ export default async function Home() {
   }
 
   const goals = goalsResult.data ?? [];
+  const incomes = incomesResult.data ?? [];
+  const expenses = expensesResult.data ?? [];
+  const activeIncomes = incomes.filter((income) => income.is_active);
+  const activeExpenses = expenses.filter((expense) => expense.is_active);
   const snapshot = calculateMonthlySnapshot({
-    incomeAmountsCents: (incomesResult.data ?? []).map(
-      (income) => income.amount_cents,
-    ),
-    fixedExpenseAmountsCents: (expensesResult.data ?? []).map(
+    incomeAmountsCents: activeIncomes.map((income) => income.amount_cents),
+    fixedExpenseAmountsCents: activeExpenses.map(
       (expense) => expense.amount_cents,
     ),
     goals: goals.map((goal) => ({
@@ -53,10 +53,12 @@ export default async function Home() {
       title="Votre mois, en un coup d’œil."
     >
       <DashboardOverview
+        activeExpenseCount={activeExpenses.length}
+        activeIncomeCount={activeIncomes.length}
         currencyCode={profile.currencyCode}
-        expenseCount={expensesResult.data?.length ?? 0}
+        expenseCount={expenses.length}
         goalCount={goals.length}
-        incomeCount={incomesResult.data?.length ?? 0}
+        incomeCount={incomes.length}
         snapshot={snapshot}
       />
     </AppShell>

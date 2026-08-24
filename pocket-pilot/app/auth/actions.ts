@@ -2,6 +2,11 @@
 
 import { redirect } from "next/navigation";
 
+import {
+  getPasswordValidationMessage,
+  readEmailAddress,
+} from "@/lib/auth/auth-input";
+import { getAuthEmailRedirectUrl } from "@/lib/auth/auth-redirect-url";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = {
@@ -49,28 +54,28 @@ function getSignUpErrorMessage(error: SignUpError): string {
 }
 
 function readCredentials(formData: FormData): CredentialsResult {
-  const email = String(formData.get("email") ?? "")
-    .trim()
-    .toLowerCase();
+  const emailResult = readEmailAddress(formData.get("email"));
   const password = String(formData.get("password") ?? "");
 
-  if (!email || email.length > 254 || !email.includes("@")) {
+  if (!emailResult.valid) {
     return {
       valid: false,
-      email,
-      message: "Saisissez une adresse email valide.",
+      email: emailResult.email,
+      message: emailResult.message,
     };
   }
 
-  if (password.length < 8 || password.length > 72) {
+  const passwordMessage = getPasswordValidationMessage(password);
+
+  if (passwordMessage) {
     return {
       valid: false,
-      email,
-      message: "Le mot de passe doit contenir entre 8 et 72 caractères.",
+      email: emailResult.email,
+      message: passwordMessage,
     };
   }
 
-  return { valid: true, email, password };
+  return { valid: true, email: emailResult.email, password };
 }
 
 export async function signIn(
@@ -115,8 +120,24 @@ export async function signUp(
     };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp(credentials);
+  let supabase;
+  let emailRedirectTo;
+
+  try {
+    supabase = await createClient();
+    emailRedirectTo = getAuthEmailRedirectUrl("confirmation");
+  } catch {
+    return {
+      status: "error",
+      message: DEFAULT_SIGN_UP_ERROR_MESSAGE,
+      email: credentials.email,
+    };
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    ...credentials,
+    options: { emailRedirectTo },
+  });
 
   if (error) {
     return {
@@ -141,5 +162,5 @@ export async function signUp(
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/auth?message=Vous%20êtes%20déconnecté.");
+  redirect("/auth?notice=signed-out");
 }

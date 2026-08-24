@@ -38,6 +38,22 @@ test("refuse les montants nuls, négatifs et non numériques", () => {
   }
 });
 
+test("conserve les valeurs saisies lorsqu’une correction est nécessaire", () => {
+  const result = validateRecurringEntryInput({
+    label: "  Stage été  ",
+    monthlyAmount: "12,345",
+  });
+
+  assert.equal(result.valid, false);
+
+  if (!result.valid) {
+    assert.deepEqual(result.values, {
+      label: "  Stage été  ",
+      monthlyAmount: "12,345",
+    });
+  }
+});
+
 test("refuse les sous-centimes et les dépassements de précision", () => {
   for (const monthlyAmount of ["12,345", "90071992547409,92"]) {
     const result = validateRecurringEntryInput({

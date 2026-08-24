@@ -9,17 +9,22 @@ import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticate
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function invalidGoalState(message: string): GoalActionState {
+const emptyGoalValues: GoalActionState["values"] = {
+  name: "",
+  targetAmount: "",
+  currentAmount: "0,00",
+  monthlyAllocation: "0,00",
+};
+
+function invalidGoalState(
+  message: string,
+  values: GoalActionState["values"] = emptyGoalValues,
+): GoalActionState {
   return {
     status: "error",
     message,
     fieldErrors: {},
-    values: {
-      name: "",
-      targetAmount: "",
-      currentAmount: "0,00",
-      monthlyAllocation: "0,00",
-    },
+    values,
   };
 }
 
@@ -64,6 +69,7 @@ export async function createGoal(
   if (error) {
     return invalidGoalState(
       "L’objectif n’a pas pu être créé. Réessayez dans un instant.",
+      validation.values,
     );
   }
 
@@ -119,6 +125,7 @@ export async function updateGoal(
   if (error || !data) {
     return invalidGoalState(
       "L’objectif n’a pas pu être modifié. Il est peut-être introuvable.",
+      validation.values,
     );
   }
 

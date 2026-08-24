@@ -1,10 +1,13 @@
 import { AuthForm } from "@/app/auth/auth-form";
+import { getAuthNotice } from "@/lib/auth/auth-notice";
 
-type AuthPageProps = { searchParams: Promise<{ error?: string; message?: string }> };
+type AuthPageProps = {
+  searchParams: Promise<{ notice?: string | string[] }>;
+};
 
 export default async function AuthPage({ searchParams }: AuthPageProps) {
-  const { error, message } = await searchParams;
-  const initialNotice = error ? { kind: "error" as const, message: error } : message ? { kind: "success" as const, message } : undefined;
+  const { notice } = await searchParams;
+  const initialNotice = getAuthNotice(notice);
 
   return (
     <main className="min-h-screen bg-[var(--background)] lg:grid lg:grid-cols-[1.08fr_0.92fr]">

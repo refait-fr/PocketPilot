@@ -13,12 +13,15 @@ export type IncomeActionState = RecurringEntryActionState;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function invalidIncomeState(message: string): IncomeActionState {
+function invalidIncomeState(
+  message: string,
+  values: IncomeActionState["values"] = { label: "", monthlyAmount: "" },
+): IncomeActionState {
   return {
     status: "error",
     message,
     fieldErrors: {},
-    values: { label: "", monthlyAmount: "" },
+    values,
   };
 }
 
@@ -56,6 +59,7 @@ export async function createIncome(
   if (error) {
     return invalidIncomeState(
       "Le revenu n’a pas pu être créé. Réessayez dans un instant.",
+      validation.values,
     );
   }
 
@@ -107,6 +111,7 @@ export async function updateIncome(
   if (error || !data) {
     return invalidIncomeState(
       "Le revenu n’a pas pu être modifié. Il est peut-être introuvable.",
+      validation.values,
     );
   }
 

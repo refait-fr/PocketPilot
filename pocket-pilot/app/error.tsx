@@ -1,6 +1,8 @@
 "use client";
 
-export default function ErrorPage({ reset }: { reset: () => void }) {
+import type { ErrorInfo } from "next/error";
+
+export default function ErrorPage({ retry }: ErrorInfo) {
   return (
     <main className="paper-grid grid min-h-screen place-items-center px-5 py-12">
       <section className="w-full max-w-xl rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-8 text-center shadow-[0_20px_70px_rgba(23,53,47,0.1)] sm:p-12">
@@ -14,14 +16,15 @@ export default function ErrorPage({ reset }: { reset: () => void }) {
           PocketPilot n’est pas disponible pour le moment.
         </h1>
         <p className="mt-4 leading-7 text-[var(--ink-soft)]">
-          Vos données n’ont pas été modifiées. Réessayez dans un instant.
+          PocketPilot ne peut pas charger votre profil ou vos données. Rien
+          n’a été modifié. Réessayez dans un instant.
         </p>
         <button
           className="mt-8 rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition-all duration-200 ease-in-out hover:bg-[#214b42] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--forest)]"
-          onClick={reset}
+          onClick={retry}
           type="button"
         >
-          Réessayer
+          Recharger les données
         </button>
       </section>
     </main>

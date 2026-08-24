@@ -40,6 +40,22 @@ test("refuse une cible nulle, négative ou non numérique", () => {
   }
 });
 
+test("conserve les valeurs d’objectif lorsqu’une correction est nécessaire", () => {
+  const values = {
+    name: "  Voyage  ",
+    targetAmount: "1000,001",
+    currentAmount: "125,50",
+    monthlyAllocation: "75,00",
+  };
+  const result = validateSavingsGoalInput(values);
+
+  assert.equal(result.valid, false);
+
+  if (!result.valid) {
+    assert.deepEqual(result.values, values);
+  }
+});
+
 test("refuse un montant actuel négatif ou supérieur à la cible", () => {
   for (const currentAmount of ["-0,01", "1000,01"]) {
     const result = validateSavingsGoalInput({
@@ -111,6 +127,17 @@ test("arrondit une estimation au mois supérieur", () => {
   assert.equal(plan.estimatedMonths, 5);
 });
 
+test("conserve une projection d’un mois quand l’allocation dépasse le reste", () => {
+  const plan = calculateSavingsGoalPlan({
+    currentAmountCents: 95_000,
+    targetAmountCents: 100_000,
+    monthlyAllocationCents: 10_000,
+  });
+
+  assert.equal(plan.remainingAmountCents, 5_000);
+  assert.equal(plan.estimatedMonths, 1);
+});
+
 test("compte le mois courant comme premier mois d’allocation", () => {
   assert.deepEqual(estimateCompletionMonth({ year: 2026, month: 7 }, 1), {
     year: 2026,
@@ -135,12 +162,12 @@ test("refuse les sous-centimes et les valeurs dépassant la précision sûre", (
   }
 });
 
-test("accepte exactement la cible monétaire sûre maximale", () => {
+test("accepte exactement la valeur monétaire sûre maximale", () => {
   const result = validateSavingsGoalInput({
     name: "a".repeat(100),
     targetAmount: "90071992547409,91",
     currentAmount: "90071992547409,91",
-    monthlyAllocation: "0",
+    monthlyAllocation: "90071992547409,91",
   });
 
   assert.equal(result.valid, true);
@@ -148,7 +175,39 @@ test("accepte exactement la cible monétaire sûre maximale", () => {
   if (result.valid) {
     assert.equal(result.data.targetAmountCents, Number.MAX_SAFE_INTEGER);
     assert.equal(result.data.currentAmountCents, Number.MAX_SAFE_INTEGER);
+    assert.equal(
+      result.data.monthlyAllocationCents,
+      Number.MAX_SAFE_INTEGER,
+    );
     assert.equal(result.data.name.length, 100);
+  }
+});
+
+test("refuse un dépassement de précision dans chaque montant d’objectif", () => {
+  const amountOverLimit = "90071992547409,92";
+  const cases = [
+    {
+      targetAmount: amountOverLimit,
+      currentAmount: "0",
+      monthlyAllocation: "0",
+    },
+    {
+      targetAmount: "90071992547409,91",
+      currentAmount: amountOverLimit,
+      monthlyAllocation: "0",
+    },
+    {
+      targetAmount: "1",
+      currentAmount: "0",
+      monthlyAllocation: amountOverLimit,
+    },
+  ];
+
+  for (const amounts of cases) {
+    assert.equal(
+      validateSavingsGoalInput({ name: "Projet", ...amounts }).valid,
+      false,
+    );
   }
 });
 

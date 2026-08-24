@@ -36,11 +36,21 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data: claimsData } = await supabase.auth.getClaims();
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
+
+  if (claimsError) return response;
+
   const userId = claimsData?.claims.sub;
   const pathname = request.nextUrl.pathname;
   const isAuthPage = pathname === "/auth";
-  const isAuthEndpoint = pathname.startsWith("/auth/confirm") || pathname.startsWith("/auth/callback");
+  const isAuthEndpoint = [
+    "/auth/confirm",
+    "/auth/callback",
+    "/auth/forgot-password",
+    "/auth/resend-confirmation",
+    "/auth/reset-password",
+  ].includes(pathname);
 
   if (!userId) {
     if (!isAuthPage && !isAuthEndpoint) return redirectWithCookies(request, "/auth", response);
@@ -49,7 +59,12 @@ export async function proxy(request: NextRequest) {
 
   if (isAuthEndpoint) return response;
 
-  const { data: profile } = await supabase.from("profiles").select("user_id").eq("user_id", userId).maybeSingle();
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (profileError) return response;
   if (!profile && pathname !== "/onboarding") return redirectWithCookies(request, "/onboarding", response);
   if (profile && (isAuthPage || pathname === "/onboarding")) return redirectWithCookies(request, "/", response);
 

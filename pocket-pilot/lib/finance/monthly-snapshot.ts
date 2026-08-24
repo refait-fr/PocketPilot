@@ -85,10 +85,16 @@ export function calculateMonthlySnapshot({
     }
 
     if (currentAmountCents < targetAmountCents) {
+      const remainingAmountCents = targetAmountCents - currentAmountCents;
+      const effectiveAllocationCents = Math.min(
+        monthlyAllocationCents,
+        remainingAmountCents,
+      );
+
       activeGoalCount += 1;
       totalGoalAllocationsCents = addCents(
         totalGoalAllocationsCents,
-        monthlyAllocationCents,
+        effectiveAllocationCents,
       );
     }
   }

@@ -1,9 +1,12 @@
 import Link from "next/link";
 
+import { getRecurringEntryDashboardDetail } from "@/lib/dashboard/recurring-entry-detail";
 import { formatCents } from "@/lib/finance/format-cents";
 import type { MonthlySnapshot } from "@/lib/finance/monthly-snapshot";
 
 type DashboardOverviewProps = {
+  activeExpenseCount: number;
+  activeIncomeCount: number;
   currencyCode: string;
   expenseCount: number;
   goalCount: number;
@@ -62,6 +65,8 @@ function MetricCard({
 }
 
 export function DashboardOverview({
+  activeExpenseCount,
+  activeIncomeCount,
   currencyCode,
   expenseCount,
   goalCount,
@@ -129,22 +134,20 @@ export function DashboardOverview({
         <div className="grid gap-4 md:grid-cols-3">
           <MetricCard
             accent="sage"
-            detail={
-              incomeCount === 0
-                ? "Aucun revenu récurrent enregistré."
-                : `${incomeCount} revenu${incomeCount > 1 ? "s" : ""} actif${incomeCount > 1 ? "s" : ""}.`
-            }
+            detail={getRecurringEntryDashboardDetail("income", {
+              activeCount: activeIncomeCount,
+              totalCount: incomeCount,
+            })}
             href="/incomes"
             label="Revenus mensuels"
             value={formatCents(snapshot.totalIncomeCents, currencyCode)}
           />
           <MetricCard
             accent="orange"
-            detail={
-              expenseCount === 0
-                ? "Aucune dépense fixe enregistrée."
-                : `${expenseCount} dépense${expenseCount > 1 ? "s" : ""} fixe${expenseCount > 1 ? "s" : ""} active${expenseCount > 1 ? "s" : ""}.`
-            }
+            detail={getRecurringEntryDashboardDetail("expense", {
+              activeCount: activeExpenseCount,
+              totalCount: expenseCount,
+            })}
             href="/expenses"
             label="Dépenses fixes"
             value={formatCents(
