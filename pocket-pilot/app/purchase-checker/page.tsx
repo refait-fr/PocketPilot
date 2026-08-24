@@ -20,6 +20,7 @@ export default async function PurchaseCheckerPage() {
       title="Est-ce que cet achat rentre dans votre mois ?"
     >
       <PurchaseChecker
+        categoryBudgets={overview.categoryBudgetUsages}
         currentDate={getCalendarDateInTimeZone(new Date(), profile.timeZone)}
         currentRealAvailableCents={overview.snapshot.realAvailableCents}
         currencyCode={profile.currencyCode}

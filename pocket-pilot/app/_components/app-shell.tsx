@@ -10,8 +10,9 @@ const navigationItems = [
   { href: "/incomes", label: "Revenus", number: "02" },
   { href: "/expenses", label: "Dépenses", number: "03" },
   { href: "/transactions", label: "Transactions", number: "04" },
-  { href: "/goals", label: "Objectifs", number: "05" },
-  { href: "/settings", label: "Réglages", number: "06" },
+  { href: "/budgets", label: "Budgets", number: "05" },
+  { href: "/goals", label: "Objectifs", number: "06" },
+  { href: "/settings", label: "Réglages", number: "07" },
 ] as const;
 
 type AppShellProps = {
@@ -67,7 +68,7 @@ export function AppShell({
       <div className="mx-auto grid w-full max-w-[1440px] gap-8 px-5 py-6 sm:px-8 sm:py-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12 lg:px-10 lg:py-12">
         <aside className="min-w-0 lg:sticky lg:top-8 lg:self-start">
           <nav aria-label="Navigation principale">
-            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-6 lg:grid-cols-1">
+            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
               {navigationItems.map((item) => {
                 const isActive = item.href === activePath;
 

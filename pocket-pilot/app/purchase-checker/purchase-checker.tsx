@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import { PurchaseTransactionConfirmation } from "@/app/purchase-checker/purchase-transaction-confirmation";
+import type { CategoryBudgetUsage } from "@/lib/budgets/category-budget";
 import { formatCents } from "@/lib/finance/format-cents";
 import {
   calculatePurchaseImpact,
@@ -38,10 +39,12 @@ const classificationPresentation = {
 } satisfies Record<PurchaseClassification, { label: string; message: string }>;
 
 export function PurchaseChecker({
+  categoryBudgets,
   currencyCode,
   currentDate,
   currentRealAvailableCents,
 }: {
+  categoryBudgets: CategoryBudgetUsage[];
   currencyCode: string;
   currentDate: string;
   currentRealAvailableCents: number;
@@ -209,6 +212,8 @@ export function PurchaseChecker({
               {resultMessage}
             </p>
             <PurchaseTransactionConfirmation
+              categoryBudgets={categoryBudgets}
+              currencyCode={currencyCode}
               currentDate={currentDate}
               key={`${result.name}-${result.priceCents}`}
               name={result.name}

@@ -32,6 +32,15 @@ test("un utilisateur ne voit jamais les données financières d’un autre", asy
     .click();
   await expect(listRow(page, privateTransaction)).toBeVisible();
 
+  await page.getByRole("link", { name: "Budgets" }).click();
+  const budgetForm = page
+    .getByRole("button", { name: "Ajouter ce budget" })
+    .locator("xpath=ancestor::form");
+  await budgetForm.getByLabel("Catégorie").selectOption("Shopping");
+  await budgetForm.getByLabel("Plafond mensuel").fill("100,00");
+  await budgetForm.getByRole("button", { name: "Ajouter ce budget" }).click();
+  await expect(page.getByRole("heading", { name: "Shopping", exact: true })).toBeVisible();
+
   await page.getByRole("button", { name: "Déconnexion" }).click();
   await expect(page).toHaveURL(/\/auth\?notice=signed-out$/);
   await login(page, accountB);
@@ -47,4 +56,7 @@ test("un utilisateur ne voit jamais les données financières d’un autre", asy
   await page.getByRole("link", { name: "Transactions" }).click();
   await expect(page.getByText("Aucune transaction ce mois-ci")).toBeVisible();
   await expect(page.getByText(privateTransaction)).toHaveCount(0);
+  await page.getByRole("link", { name: "Budgets" }).click();
+  await expect(page.getByText("Aucun budget configuré")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Shopping", exact: true })).toHaveCount(0);
 });

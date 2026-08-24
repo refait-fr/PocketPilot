@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import type { CategoryBudgetSummary } from "@/lib/budgets/category-budget";
 import { getRecurringEntryDashboardDetail } from "@/lib/dashboard/recurring-entry-detail";
 import { formatCents } from "@/lib/finance/format-cents";
 import type { MonthlySnapshot } from "@/lib/finance/monthly-snapshot";
@@ -8,6 +9,7 @@ type DashboardOverviewProps = {
   activeExpenseCount: number;
   activeIncomeCount: number;
   currencyCode: string;
+  categoryBudgetSummary: CategoryBudgetSummary;
   expenseCount: number;
   goalCount: number;
   incomeCount: number;
@@ -68,6 +70,7 @@ function MetricCard({
 export function DashboardOverview({
   activeExpenseCount,
   activeIncomeCount,
+  categoryBudgetSummary,
   currencyCode,
   expenseCount,
   goalCount,
@@ -132,6 +135,29 @@ export function DashboardOverview({
               <dd className="mt-1 font-bold">{currencyCode}</dd>
             </div>
           </dl>
+        </div>
+      </section>
+
+      <section className="rounded-[1.5rem] border border-[var(--line)] bg-[var(--paper)] p-5 shadow-[0_12px_36px_rgba(23,53,47,0.06)] sm:p-6" aria-labelledby="category-budget-summary-title">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent-dark)]">Budgets par catégorie</p>
+            <h2 className="font-display mt-2 text-2xl font-bold" id="category-budget-summary-title">
+              {categoryBudgetSummary.configuredCount === 0
+                ? "Aucun plafond configuré"
+                : categoryBudgetSummary.mostConsumed
+                  ? `${categoryBudgetSummary.mostConsumed.category} est la plus consommée`
+                  : "Vos plafonds du mois"}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-[var(--ink-soft)]">
+              {categoryBudgetSummary.configuredCount === 0
+                ? "Ajoutez seulement les catégories que vous souhaitez surveiller."
+                : `${categoryBudgetSummary.mostConsumed?.percentageConsumed ?? "0"} % consommé · ${categoryBudgetSummary.exceededCount} catégorie${categoryBudgetSummary.exceededCount === 1 ? "" : "s"} dépassée${categoryBudgetSummary.exceededCount === 1 ? "" : "s"}.`}
+            </p>
+          </div>
+          <Link className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--forest)] px-4 py-2 text-sm font-bold text-[var(--forest)] hover:bg-[var(--forest)] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--forest)]" href="/budgets">
+            Gérer les budgets
+          </Link>
         </div>
       </section>
 

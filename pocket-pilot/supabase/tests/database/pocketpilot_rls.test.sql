@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(24);
+select plan(30);
 
 insert into auth.users (id, email)
 values
@@ -47,6 +47,11 @@ values
   ('11111111-1111-1111-1111-111111111111', 13700, 'Alimentation', 'Transaction A', '2026-08-24'),
   ('22222222-2222-2222-2222-222222222222', 4200, 'Transport', 'Transaction B', '2026-08-23');
 
+insert into public.category_budgets (user_id, category, monthly_budget_cents)
+values
+  ('11111111-1111-1111-1111-111111111111', 'Shopping', 10000),
+  ('22222222-2222-2222-2222-222222222222', 'Transport', 20000);
+
 set local role authenticated;
 set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 
@@ -75,6 +80,11 @@ select results_eq(
   array[1::bigint],
   'A can read their own transaction'
 );
+select results_eq(
+  $$select count(*) from public.category_budgets where user_id = '11111111-1111-1111-1111-111111111111'$$,
+  array[1::bigint],
+  'A can read their own category budget'
+);
 
 select is_empty(
   $$select user_id from public.profiles where user_id = '22222222-2222-2222-2222-222222222222'$$,
@@ -95,6 +105,10 @@ select is_empty(
 select is_empty(
   $$select user_id from public.transactions where user_id = '22222222-2222-2222-2222-222222222222'$$,
   'A cannot read B transaction'
+);
+select is_empty(
+  $$select user_id from public.category_budgets where user_id = '22222222-2222-2222-2222-222222222222'$$,
+  'A cannot read B category budget'
 );
 
 select is_empty(
@@ -117,6 +131,10 @@ select is_empty(
   $$update public.transactions set description = 'Changed' where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
   'A cannot update B transaction'
 );
+select is_empty(
+  $$update public.category_budgets set monthly_budget_cents = 1 where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
+  'A cannot update B category budget'
+);
 
 select is_empty(
   $$delete from public.profiles where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
@@ -137,6 +155,10 @@ select is_empty(
 select is_empty(
   $$delete from public.transactions where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
   'A cannot delete B transaction'
+);
+select is_empty(
+  $$delete from public.category_budgets where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
+  'A cannot delete B category budget'
 );
 
 select throws_ok(
@@ -162,6 +184,18 @@ select throws_ok(
   '42501',
   null,
   'A cannot create a transaction owned by B'
+);
+select throws_ok(
+  $$insert into public.category_budgets (user_id, category, monthly_budget_cents) values ('22222222-2222-2222-2222-222222222222', 'Shopping', 1)$$,
+  '42501',
+  null,
+  'A cannot create a category budget owned by B'
+);
+select throws_ok(
+  $$insert into public.category_budgets (user_id, category, monthly_budget_cents) values ('11111111-1111-1111-1111-111111111111', 'Shopping', 1)$$,
+  '23505',
+  null,
+  'A cannot create two budgets for the same category'
 );
 
 select * from finish();

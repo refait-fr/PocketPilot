@@ -23,6 +23,7 @@ export default async function Home() {
         activeExpenseCount={overview.activeExpenseCount}
         activeIncomeCount={overview.activeIncomeCount}
         currencyCode={profile.currencyCode}
+        categoryBudgetSummary={overview.categoryBudgetSummary}
         expenseCount={overview.expenseCount}
         goalCount={overview.goalCount}
         incomeCount={overview.incomeCount}

@@ -41,6 +41,7 @@ function validateTransactionForm(formData: FormData) {
 
 function revalidateTransactionViews() {
   revalidatePath("/");
+  revalidatePath("/budgets");
   revalidatePath("/purchase-checker");
   revalidatePath("/transactions");
 }

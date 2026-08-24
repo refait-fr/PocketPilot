@@ -29,6 +29,7 @@ test("les parcours essentiels restent utilisables en 390 × 844", async ({
     "Revenus",
     "Dépenses",
     "Transactions",
+    "Budgets",
     "Objectifs",
     "Réglages",
   ]) {
@@ -75,6 +76,24 @@ test("les parcours essentiels restent utilisables en 390 × 844", async ({
   await expect(transactionSubmit).toBeInViewport();
   await transactionSubmit.click();
   await expect(listRow(page, "Métro mobile E2E")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await navigation.getByRole("link", { name: "Budgets" }).click();
+  await expectNoHorizontalOverflow(page);
+  const budgetForm = page
+    .getByRole("button", { name: "Ajouter ce budget" })
+    .locator("xpath=ancestor::form");
+  await budgetForm.getByLabel("Catégorie").selectOption("Transport");
+  await budgetForm.getByLabel("Plafond mensuel").fill("100,00");
+  const budgetSubmit = budgetForm.getByRole("button", { name: "Ajouter ce budget" });
+  await budgetSubmit.scrollIntoViewIfNeeded();
+  await expect(budgetSubmit).toBeInViewport();
+  await budgetSubmit.click();
+  const transportBudget = page.getByRole("listitem").filter({
+    has: page.getByRole("heading", { name: "Transport", exact: true }),
+  });
+  await expect(transportBudget).toContainText(/18,50\s*€\s*\/\s*100,00\s*€/);
+  await expect(transportBudget.getByRole("button", { name: "Modifier" })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
   await navigation.getByRole("link", { name: "Vue d’ensemble" }).click();

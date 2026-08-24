@@ -6,7 +6,12 @@ import { useFormStatus } from "react-dom";
 
 import { createTransaction } from "@/app/transactions/actions";
 import type { TransactionActionState } from "@/app/transactions/transaction-types";
-import { formatCentsForInput } from "@/lib/finance/money";
+import {
+  calculateCategoryBudgetUsage,
+  type CategoryBudgetUsage,
+} from "@/lib/budgets/category-budget";
+import { formatCents } from "@/lib/finance/format-cents";
+import { addCents, formatCentsForInput } from "@/lib/finance/money";
 import { TRANSACTION_CATEGORIES } from "@/lib/transactions/categories";
 
 function ConfirmationSubmitButton() {
@@ -24,15 +29,20 @@ function ConfirmationSubmitButton() {
 }
 
 export function PurchaseTransactionConfirmation({
+  categoryBudgets,
+  currencyCode,
   currentDate,
   name,
   priceCents,
 }: {
+  categoryBudgets: CategoryBudgetUsage[];
+  currencyCode: string;
   currentDate: string;
   name: string;
   priceCents: number;
 }) {
   const [isConfirming, setIsConfirming] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("Autre");
   const initialState: TransactionActionState = {
     fieldErrors: {},
     message: "",
@@ -45,6 +55,21 @@ export function PurchaseTransactionConfirmation({
     },
   };
   const [state, formAction] = useActionState(createTransaction, initialState);
+  const selectedBudget = categoryBudgets.find(
+    (budget) => budget.category === selectedCategory,
+  );
+  let projectedBudget: CategoryBudgetUsage | null = null;
+
+  if (selectedBudget) {
+    try {
+      projectedBudget = calculateCategoryBudgetUsage({
+        budget: selectedBudget,
+        spentCents: addCents(selectedBudget.spentCents, priceCents),
+      });
+    } catch {
+      projectedBudget = null;
+    }
+  }
 
   if (state.status === "success") {
     return (
@@ -117,6 +142,7 @@ export function PurchaseTransactionConfirmation({
           className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-base font-normal outline-none transition-all focus:border-[var(--forest)] focus:ring-3 focus:ring-[#c9d5c380]"
           defaultValue="Autre"
           name="category"
+          onChange={(event) => setSelectedCategory(event.target.value)}
         >
           {TRANSACTION_CATEGORIES.map((category) => (
             <option key={category} value={category}>
@@ -125,6 +151,12 @@ export function PurchaseTransactionConfirmation({
           ))}
         </select>
       </label>
+
+      {selectedBudget && projectedBudget ? (
+        <p className="rounded-xl bg-[var(--sage)] p-4 text-sm leading-6 text-[var(--forest)]">
+          Ce montant ferait passer {selectedBudget.category} de {formatCents(selectedBudget.spentCents, currencyCode)} / {formatCents(selectedBudget.monthlyBudgetCents, currencyCode)} à {formatCents(projectedBudget.spentCents, currencyCode)} / {formatCents(projectedBudget.monthlyBudgetCents, currencyCode)}.
+        </p>
+      ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <ConfirmationSubmitButton />
