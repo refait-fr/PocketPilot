@@ -1,38 +1,40 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
+import { AppIcon } from "@/app/_components/app-icon";
 import { SignOutButton } from "@/app/_components/sign-out-button";
 import { signOut } from "@/app/auth/actions";
 import type { AuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
 
-const desktopNavigation = [
-  { href: "/", label: "Vue d’ensemble" },
-  { href: "/transactions", label: "Transactions" },
-  { href: "/budgets", label: "Budgets" },
-  { href: "/incomes", label: "Revenus" },
-  { href: "/expenses", label: "Charges" },
-  { href: "/goals", label: "Objectifs" },
+const primaryNavigation = [
+  { href: "/", icon: "home", label: "Vue d’ensemble" },
+  { href: "/transactions", icon: "transaction", label: "Transactions" },
+  { href: "/budgets", icon: "budget", label: "Budgets" },
+  { href: "/goals", icon: "goal", label: "Objectifs" },
+] as const;
+
+const planningNavigation = [
+  { href: "/incomes", icon: "income", label: "Revenus" },
+  { href: "/expenses", icon: "expense", label: "Charges fixes" },
 ] as const;
 
 const mobileNavigation = [
-  { href: "/", label: "Accueil", marker: "⌂" },
-  { href: "/transactions", label: "Transactions", marker: "↗" },
-  { href: "/budgets", label: "Budgets", marker: "◫" },
-  { href: "/goals", label: "Objectifs", marker: "◎" },
-  { href: "/purchase-checker", label: "Achat", marker: "✓" },
+  { href: "/", icon: "home", label: "Accueil" },
+  { href: "/transactions", icon: "transaction", label: "Transactions" },
+  { href: "/budgets", icon: "budget", label: "Budgets" },
+  { href: "/goals", icon: "goal", label: "Objectifs" },
+  { href: "/purchase-checker", icon: "check", label: "Achat" },
 ] as const;
 
 const secondaryNavigation = [
-  { href: "/incomes", label: "Revenus" },
-  { href: "/expenses", label: "Charges" },
-  { href: "/goals", label: "Objectifs" },
-  { href: "/settings", label: "Paramètres" },
+  ...planningNavigation,
+  { href: "/settings", icon: "settings", label: "Paramètres" },
 ] as const;
 
 type AppPath =
-  | (typeof desktopNavigation)[number]["href"]
-  | (typeof mobileNavigation)[number]["href"]
-  | (typeof secondaryNavigation)[number]["href"];
+  | (typeof primaryNavigation)[number]["href"]
+  | (typeof secondaryNavigation)[number]["href"]
+  | "/purchase-checker";
 
 type AppShellProps = {
   activePath?: AppPath;
@@ -43,146 +45,98 @@ type AppShellProps = {
   title: string;
 };
 
-function Brand() {
+function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <Link className="brand-lockup" href="/" aria-label="PocketPilot, accueil">
       <span className="brand-mark" aria-hidden="true">P</span>
-      <span className="font-display text-[1.45rem] font-semibold tracking-[-0.05em]">PocketPilot</span>
+      {compact ? null : <span className="brand-name">PocketPilot</span>}
     </Link>
   );
 }
 
-function DesktopNavigation({ activePath }: { activePath?: AppPath }) {
+function NavigationLink({ activePath, href, icon, label }: {
+  activePath?: AppPath;
+  href: AppPath;
+  icon: Parameters<typeof AppIcon>[0]["name"];
+  label: string;
+}) {
   return (
-    <nav aria-label="Navigation principale" className="hidden min-w-0 flex-1 justify-center xl:flex">
-      <ul className="nav-capsule">
-        {desktopNavigation.map((item) => (
-          <li key={item.href}>
-            <Link
-              aria-current={item.href === activePath ? "page" : undefined}
-              className={item.href === activePath ? "is-active" : ""}
-              href={item.href}
-            >
-              {item.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <Link
+      aria-current={href === activePath ? "page" : undefined}
+      className={href === activePath ? "is-active" : ""}
+      href={href}
+    >
+      <AppIcon name={icon} />
+      <span>{label}</span>
+    </Link>
   );
 }
 
-function MobileMenu({
-  activePath,
-  currencyCode,
-}: {
-  activePath?: AppPath;
-  currencyCode: string;
-}) {
+function DesktopSidebar({ activePath, currencyCode }: { activePath?: AppPath; currencyCode: string }) {
   return (
-    <details className="relative xl:hidden">
-      <summary className="ui-menu-trigger">
-        <span>Menu</span>
-        <span aria-hidden="true">＋</span>
-      </summary>
-      <div className="mobile-menu-panel">
-        <div className="flex items-center justify-between border-b border-[var(--line)] px-3 pb-3">
-          <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--ink-soft)]">Planifier</span>
-          <span className="ui-badge bg-[var(--surface-muted)] text-[var(--ink-soft)]">{currencyCode}</span>
+    <aside className="app-sidebar">
+      <Brand />
+      <nav aria-label="Navigation principale" className="sidebar-navigation">
+        <p className="sidebar-label">Pilotage</p>
+        <ul>{primaryNavigation.map((item) => <li key={item.href}><NavigationLink activePath={activePath} {...item} /></li>)}</ul>
+        <p className="sidebar-label">Plan mensuel</p>
+        <ul>{planningNavigation.map((item) => <li key={item.href}><NavigationLink activePath={activePath} {...item} /></li>)}</ul>
+      </nav>
+      <div className="sidebar-footer">
+        <Link
+          aria-label="Vérifier un achat"
+          aria-current={activePath === "/purchase-checker" ? "page" : undefined}
+          className={`sidebar-purchase ${activePath === "/purchase-checker" ? "is-active" : ""}`}
+          href="/purchase-checker"
+        >
+          <span className="sidebar-purchase-icon"><AppIcon name="check" /></span>
+          <span><strong>Vérifier un achat</strong><small>Action PocketPilot · mesurer son impact</small></span>
+        </Link>
+        <div className="sidebar-account">
+          <Link aria-current={activePath === "/settings" ? "page" : undefined} href="/settings" aria-label={`Paramètres du profil, devise ${currencyCode}`}>
+            <span className="profile-avatar">{currencyCode.slice(0, 1)}</span>
+            <span><strong>Mon profil</strong><small>{currencyCode}</small></span>
+            <AppIcon name="settings" />
+          </Link>
+          <form action={signOut}><SignOutButton /></form>
         </div>
+      </div>
+    </aside>
+  );
+}
+
+function MobileMenu({ activePath, currencyCode }: { activePath?: AppPath; currencyCode: string }) {
+  return (
+    <details className="mobile-menu">
+      <summary className="ui-menu-trigger"><AppIcon name="menu" /><span>Menu</span></summary>
+      <div className="mobile-menu-panel">
+        <div className="mobile-menu-heading"><span>Planification</span><span className="ui-badge">{currencyCode}</span></div>
         <nav aria-label="Navigation secondaire">
-          <ul className="mt-2 space-y-1">
-            {secondaryNavigation.map((item) => (
-              <li key={item.href}>
-                <Link
-                  aria-current={item.href === activePath ? "page" : undefined}
-                  className="mobile-menu-link"
-                  href={item.href}
-                >
-                  {item.label}
-                  <span aria-hidden="true">↗</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <ul>{secondaryNavigation.map((item) => <li key={item.href}><NavigationLink activePath={activePath} {...item} /></li>)}</ul>
         </nav>
-        <form action={signOut} className="mt-2 border-t border-[var(--line)] pt-2">
-          <SignOutButton />
-        </form>
+        <form action={signOut} className="mobile-signout"><SignOutButton /></form>
       </div>
     </details>
   );
 }
 
-export function AppShell({
-  activePath,
-  children,
-  description,
-  eyebrow,
-  profile,
-  title,
-}: AppShellProps) {
-  const isDashboard = activePath === "/";
-
+export function AppShell({ activePath, children, description, eyebrow, profile, title }: AppShellProps) {
   return (
-    <div className="app-frame min-h-screen">
+    <div className="app-frame">
       <a href="#main" className="skip-link">Aller au contenu principal</a>
-
-      <header className="app-header">
-        <div className="app-header-inner">
-          <Brand />
-          <DesktopNavigation activePath={activePath} />
-          <div className="hidden items-center gap-2 xl:flex">
-            <Link
-              aria-current={activePath === "/purchase-checker" ? "page" : undefined}
-              className="purchase-nav-action"
-              href="/purchase-checker"
-            >
-              <span className="purchase-nav-dot" aria-hidden="true" />
-              Vérifier un achat
-            </Link>
-            <Link
-              aria-current={activePath === "/settings" ? "page" : undefined}
-              className="profile-chip"
-              href="/settings"
-              aria-label={`Paramètres du profil, devise ${profile.currencyCode}`}
-            >
-              {profile.currencyCode}
-            </Link>
-            <form action={signOut}>
-              <SignOutButton />
-            </form>
+      <DesktopSidebar activePath={activePath} currencyCode={profile.currencyCode} />
+      <div className="app-workspace">
+        <header className="app-header"><Brand /><MobileMenu activePath={activePath} currencyCode={profile.currencyCode} /></header>
+        <main className="app-main" id="main" tabIndex={-1}>
+          <div className="page-heading">
+            <div><p className="ui-kicker">{eyebrow}</p><h1>{title}</h1></div>
+            <p>{description}</p>
           </div>
-          <MobileMenu activePath={activePath} currencyCode={profile.currencyCode} />
-        </div>
-      </header>
-
-      <main className="app-main" id="main" tabIndex={-1}>
-        <div className={`page-heading ${isDashboard ? "is-dashboard" : ""}`}>
-          <div>
-            <p className="ui-kicker">{eyebrow}</p>
-            <h1>{title}</h1>
-          </div>
-          <p>{description}</p>
-        </div>
-        {children}
-      </main>
-
+          {children}
+        </main>
+      </div>
       <nav aria-label="Navigation principale mobile" className="mobile-tab-bar">
-        <ul>
-          {mobileNavigation.map((item) => (
-            <li key={item.href}>
-              <Link
-                aria-current={item.href === activePath ? "page" : undefined}
-                className={item.href === activePath ? "is-active" : ""}
-                href={item.href}
-              >
-                <span aria-hidden="true">{item.marker}</span>
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <ul>{mobileNavigation.map((item) => <li key={item.href}><NavigationLink activePath={activePath} {...item} /></li>)}</ul>
       </nav>
     </div>
   );

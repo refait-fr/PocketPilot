@@ -30,6 +30,49 @@ export type PurchaseInputValidation =
       values: PurchaseInputValues;
     };
 
+export type PurchaseImpactBar = {
+  direction: "left" | "right";
+  widthPercent: number;
+};
+
+export function calculatePurchaseImpactBars(
+  currentRealAvailableCents: number,
+  remainingAfterPurchaseCents: number,
+): { after: PurchaseImpactBar; before: PurchaseImpactBar } {
+  if (
+    !Number.isSafeInteger(currentRealAvailableCents) ||
+    !Number.isSafeInteger(remainingAfterPurchaseCents)
+  ) {
+    throw new Error("Les montants de comparaison doivent être des entiers sûrs en centimes.");
+  }
+
+  const beforeMagnitude = currentRealAvailableCents < 0
+    ? -BigInt(currentRealAvailableCents)
+    : BigInt(currentRealAvailableCents);
+  const afterMagnitude = remainingAfterPurchaseCents < 0
+    ? -BigInt(remainingAfterPurchaseCents)
+    : BigInt(remainingAfterPurchaseCents);
+  const largestMagnitude = beforeMagnitude > afterMagnitude
+    ? beforeMagnitude
+    : afterMagnitude;
+
+  function buildBar(amountCents: number, magnitude: bigint): PurchaseImpactBar {
+    const scaledWidth = largestMagnitude === BigInt(0)
+      ? 0
+      : Number((magnitude * BigInt(50)) / largestMagnitude);
+
+    return {
+      direction: amountCents < 0 ? "left" : "right",
+      widthPercent: magnitude > BigInt(0) ? Math.max(2, scaledWidth) : 0,
+    };
+  }
+
+  return {
+    after: buildBar(remainingAfterPurchaseCents, afterMagnitude),
+    before: buildBar(currentRealAvailableCents, beforeMagnitude),
+  };
+}
+
 function readText(value: unknown): string {
   return typeof value === "string" ? value : "";
 }

@@ -14,10 +14,10 @@ export default async function Home() {
   return (
     <AppShell
       activePath="/"
-      description="Vos revenus, vos charges fixes et vos objectifs réunis dans un plan mensuel lisible."
-      eyebrow="Tableau de bord"
+      description="Synthèse du plan, des dépenses et des objectifs pour le mois en cours."
+      eyebrow="Mois en cours · Synthèse financière"
       profile={profile}
-      title="Votre mois, en un coup d’œil."
+      title="Vue d’ensemble"
     >
       <DashboardOverview
         activeExpenseCount={overview.activeExpenseCount}

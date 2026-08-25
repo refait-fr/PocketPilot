@@ -37,10 +37,10 @@ export default async function IncomesPage() {
   return (
     <AppShell
       activePath="/incomes"
-      description="Ajoutez les revenus qui reviennent chaque mois. Seuls les revenus actifs alimentent votre reste disponible."
-      eyebrow="Revenus récurrents"
+      description="Seuls les revenus actifs alimentent le budget disponible."
+      eyebrow="Plan mensuel"
       profile={profile}
-      title="Votre point de départ mensuel."
+      title="Revenus récurrents"
     >
       <IncomeManagement
         currencyCode={profile.currencyCode}

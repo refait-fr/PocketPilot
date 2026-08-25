@@ -50,7 +50,7 @@ export function BudgetRow({ budget, currencyCode }: { budget: BudgetView; curren
   if (isEditing) {
     return (
       <li className="ui-panel-flat border-[var(--accent)] bg-[var(--accent-soft)] p-5 sm:p-6">
-        <h3 className="font-display mb-5 text-2xl font-medium">Modifier {budget.category}</h3>
+        <h3 className="font-display mb-5 text-xl font-semibold">Modifier {budget.category}</h3>
         <BudgetForm
           action={updateCategoryBudget.bind(null, budget.id)}
           availableCategories={[budget.category]}
@@ -66,7 +66,7 @@ export function BudgetRow({ budget, currencyCode }: { budget: BudgetView; curren
   }
 
   return (
-    <li className="ui-panel-flat p-5 sm:p-6">
+    <li className="budget-tracker-row ui-panel-flat p-4 sm:p-5">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -81,11 +81,11 @@ export function BudgetRow({ budget, currencyCode }: { budget: BudgetView; curren
               {statusLabels[budget.status]}
             </span>
           </div>
-          <p className="font-amount mt-3 text-2xl font-extrabold">
+          <p className="font-amount mt-3 text-lg font-extrabold">
             {formatCents(budget.spentCents, currencyCode)} <span className="text-base font-semibold text-[var(--ink-soft)]">sur {formatCents(budget.monthlyBudgetCents, currencyCode)}</span>
           </p>
-          <p className={`mt-1 text-sm font-semibold ${budget.remainingCents < 0 ? "text-red-700" : "text-[var(--ink-soft)]"}`}>
-            {formatCents(budget.remainingCents, currencyCode)} {budget.remainingCents < 0 ? "de dépassement" : "restants"}
+          <p className={`mt-1 text-sm font-bold ${budget.remainingCents < 0 ? "text-red-700" : "text-[var(--ink-soft)]"}`}>
+            {budget.remainingCents < 0 ? `${formatCents(Math.abs(budget.remainingCents), currencyCode)} de dépassement` : `${formatCents(budget.remainingCents, currencyCode)} restants`}
           </p>
           <div
             aria-label={`${budget.percentageConsumed} % du budget ${budget.category} consommé`}

@@ -7,6 +7,7 @@ import type { CategoryBudgetUsage } from "@/lib/budgets/category-budget";
 import { formatCents } from "@/lib/finance/format-cents";
 import {
   calculatePurchaseImpact,
+  calculatePurchaseImpactBars,
   MAX_PURCHASE_NAME_LENGTH,
   type PurchaseClassification,
   validatePurchaseInput,
@@ -110,6 +111,12 @@ export function PurchaseChecker({
           currencyCode,
         )}.`
       : presentation?.message;
+  const impactBars = result
+    ? calculatePurchaseImpactBars(
+        currentRealAvailableCents,
+        result.remainingAfterPurchaseCents,
+      )
+    : null;
 
   return (
     <div className="purchase-layout">
@@ -117,7 +124,7 @@ export function PurchaseChecker({
         <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">
           Achat à vérifier
         </p>
-        <h2 className="font-display mt-2 text-3xl font-medium tracking-[-0.04em]">
+        <h2 className="font-display mt-2 text-2xl font-semibold tracking-[-0.04em]">
           Tu veux acheter quoi ?
         </h2>
         <p className="mt-3 text-sm leading-6 text-[var(--ink-soft)]">
@@ -201,7 +208,7 @@ export function PurchaseChecker({
             <p className="font-amount mt-6 break-words text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold leading-none tracking-[-0.07em]">
               {formatCents(result.priceCents, currencyCode)}
             </p>
-            <h2 className="font-display mt-3 text-3xl font-medium tracking-[-0.04em]">
+            <h2 className="font-display mt-3 text-2xl font-semibold tracking-[-0.04em]">
               {result.name}
             </h2>
             <dl className="purchase-impact-grid">
@@ -218,6 +225,35 @@ export function PurchaseChecker({
                 <dd className="font-amount mt-2 break-words text-xl font-extrabold">{formatCents(result.remainingAfterPurchaseCents, currencyCode)}</dd>
               </div>
             </dl>
+            {impactBars ? (
+              <figure className="purchase-impact-figure" aria-labelledby="purchase-impact-title">
+                <figcaption id="purchase-impact-title">
+                  <span>Impact sur le reste réel</span>
+                  <small>La ligne centrale représente zéro.</small>
+                </figcaption>
+                <div className="impact-comparison-row">
+                  <span>Avant</span>
+                  <div className="impact-comparison-track">
+                    <i
+                      className={`impact-comparison-bar is-${impactBars.before.direction}`}
+                      style={{ width: `${impactBars.before.widthPercent}%` }}
+                    />
+                  </div>
+                  <strong>{formatCents(currentRealAvailableCents, currencyCode)}</strong>
+                </div>
+                <div className="purchase-impact-delta">↓ achat de {formatCents(result.priceCents, currencyCode)}</div>
+                <div className="impact-comparison-row">
+                  <span>Après</span>
+                  <div className="impact-comparison-track">
+                    <i
+                      className={`impact-comparison-bar is-${impactBars.after.direction} ${result.remainingAfterPurchaseCents < 0 ? "is-negative" : ""}`}
+                      style={{ width: `${impactBars.after.widthPercent}%` }}
+                    />
+                  </div>
+                  <strong>{formatCents(result.remainingAfterPurchaseCents, currencyCode)}</strong>
+                </div>
+              </figure>
+            ) : null}
             <p className={`my-6 rounded-2xl p-5 text-sm font-semibold leading-6 ${presentation.tone}`}>
               {resultMessage}
             </p>
@@ -239,7 +275,7 @@ export function PurchaseChecker({
           <div className="grid min-h-[27rem] place-items-center text-center">
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">Avant de décider</p>
-              <h2 className="font-display mt-3 text-3xl font-medium">Voyez l’impact sur votre mois.</h2>
+              <h2 className="font-display mt-3 text-2xl font-semibold">Voyez l’impact sur votre mois.</h2>
               <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[var(--ink-soft)]">
                 Le calcul utilise le snapshot du mois : plan récurrent, épargne prévue et transactions déjà enregistrées.
               </p>

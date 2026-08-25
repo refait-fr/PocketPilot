@@ -42,6 +42,9 @@ export type CategoryBudgetSummary = {
   configuredCount: number;
   exceededCount: number;
   mostConsumed: CategoryBudgetUsage | null;
+  totalBudgetCents: number;
+  totalRemainingCents: number;
+  totalSpentCents: number;
 };
 
 type CategoryBudgetRecord = {
@@ -176,8 +179,12 @@ export function summarizeCategoryBudgets(
   usages: readonly CategoryBudgetUsage[],
 ): CategoryBudgetSummary {
   let mostConsumed: CategoryBudgetUsage | null = null;
+  let totalBudgetCents = 0;
+  let totalSpentCents = 0;
 
   for (const usage of usages) {
+    totalBudgetCents = addCents(totalBudgetCents, usage.monthlyBudgetCents);
+    totalSpentCents = addCents(totalSpentCents, usage.spentCents);
     if (
       !mostConsumed ||
       BigInt(usage.spentCents) * BigInt(mostConsumed.monthlyBudgetCents) >
@@ -191,6 +198,9 @@ export function summarizeCategoryBudgets(
     configuredCount: usages.length,
     exceededCount: usages.filter((usage) => usage.status === "exceeded").length,
     mostConsumed,
+    totalBudgetCents,
+    totalRemainingCents: subtractCents(totalBudgetCents, totalSpentCents),
+    totalSpentCents,
   };
 }
 

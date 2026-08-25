@@ -13,6 +13,9 @@ import type {
   RecurringEntryUpdateAction,
   RecurringEntryView,
 } from "@/app/_components/recurring-entry/recurring-entry-types";
+import { CreationDisclosure } from "@/app/_components/creation-disclosure";
+import { formatCents } from "@/lib/finance/format-cents";
+import { summarizeRecurringEntries } from "@/lib/dashboard/recurring-entry-detail";
 
 export function RecurringEntryManagement({
   createEntry,
@@ -31,46 +34,46 @@ export function RecurringEntryManagement({
   setEntryActive: RecurringEntryToggleAction;
   updateEntry: RecurringEntryUpdateAction;
 }) {
-  const activeEntryCount = entries.filter((entry) => entry.isActive).length;
+  const summary = summarizeRecurringEntries(entries);
   const copy = recurringEntryCopy[kind];
   const listTitleId = `${kind}-list-title`;
 
   return (
-    <div className="management-grid">
-      <section className="ui-panel management-form-panel">
-        <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">
-          {copy.formEyebrow}
-        </p>
-        <h2 className="font-display mt-2 text-3xl font-medium tracking-[-0.04em]">
-          {copy.formTitle}
-        </h2>
-        <p className="mb-7 mt-3 text-sm leading-6 text-[var(--ink-soft)]">
-          {copy.formDescription}
-        </p>
-        <RecurringEntryForm action={createEntry} kind={kind} mode="create" />
-      </section>
-
+    <div className="management-stack">
       <section aria-labelledby={listTitleId} className="min-w-0">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <dl className="finance-summary recurring-summary" aria-label={kind === "income" ? "Synthèse des revenus" : "Synthèse des charges fixes"}>
+          <div className="pilot-metric pilot-metric-primary">
+            <dt>Total mensuel actif</dt>
+            <dd>{formatCents(summary.totalActiveCents, currencyCode)}</dd>
+          </div>
+          <div className="pilot-metric">
+            <dt>Entrées actives</dt>
+            <dd>{summary.activeCount}</dd>
+          </div>
+          <div className="pilot-metric">
+            <dt>En pause</dt>
+            <dd>{summary.inactiveCount}</dd>
+          </div>
+        </dl>
+
+        <div className="management-list-heading">
           <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--ink-soft)]">
-              {activeEntryCount} actif{activeEntryCount > 1 ? "s" : ""}
+            <p className="ui-kicker">
+              {summary.totalCount} entrée{summary.totalCount > 1 ? "s" : ""}
             </p>
             <h2
-              className="font-display mt-1 text-3xl font-medium tracking-[-0.04em]"
+              className="management-title"
               id={listTitleId}
             >
               {copy.listTitle}
             </h2>
           </div>
-          <span className="ui-badge bg-[var(--surface-muted)] text-[var(--ink-soft)]">
-            {entries.length} au total
-          </span>
+          <span className="ui-badge">{summary.activeCount} active{summary.activeCount > 1 ? "s" : ""}</span>
         </div>
 
         {entries.length === 0 ? (
           <div className="ui-empty">
-            <h3 className="font-display text-2xl font-medium tracking-[-0.035em]">
+            <h3>
               {copy.emptyTitle}
             </h3>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[var(--ink-soft)]">
@@ -78,7 +81,7 @@ export function RecurringEntryManagement({
             </p>
           </div>
         ) : (
-          <ul className="ui-divider-list ui-panel overflow-hidden">
+          <ul className="ui-divider-list ui-panel dense-finance-list overflow-hidden">
             {entries.map((entry) => (
               <RecurringEntryRow
                 currencyCode={currencyCode}
@@ -93,6 +96,15 @@ export function RecurringEntryManagement({
           </ul>
         )}
       </section>
+      <CreationDisclosure
+        buttonLabel={kind === "income" ? "Ajouter un revenu" : "Ajouter une charge"}
+        defaultOpen={entries.length === 0}
+        description={copy.formDescription}
+        eyebrow={copy.formEyebrow}
+        title={copy.formTitle}
+      >
+        <RecurringEntryForm action={createEntry} kind={kind} mode="create" />
+      </CreationDisclosure>
     </div>
   );
 }

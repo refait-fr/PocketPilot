@@ -88,10 +88,10 @@ export default async function BudgetsPage({
   return (
     <AppShell
       activePath="/budgets"
-      description="Définissez quelques plafonds utiles et suivez leur consommation à partir de vos transactions réelles."
-      eyebrow="Budgets par catégorie"
+      description="Suivez les plafonds des catégories qui comptent pour vous."
+      eyebrow="Suivi mensuel"
       profile={profile}
-      title="Des limites lisibles, mois après mois."
+      title="Budgets par catégorie"
     >
       <BudgetManagement
         budgets={usages}

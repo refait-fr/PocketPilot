@@ -1,11 +1,13 @@
 import Link from "next/link";
 
+import { CreationDisclosure } from "@/app/_components/creation-disclosure";
 import { createTransaction } from "@/app/transactions/actions";
 import { TransactionForm } from "@/app/transactions/transaction-form";
 import { TransactionRow } from "@/app/transactions/transaction-row";
 import type { TransactionView } from "@/app/transactions/transaction-types";
 import { formatCents } from "@/lib/finance/format-cents";
 import type { TransactionInputValues } from "@/lib/transactions/transaction-input";
+import type { MonthlyTransactionSummary } from "@/lib/transactions/monthly-summary";
 
 export function TransactionManagement({
   currencyCode,
@@ -14,7 +16,7 @@ export function TransactionManagement({
   monthLabel,
   nextMonthHref,
   previousMonthHref,
-  totalTransactionsCents,
+  summary,
   transactions,
 }: {
   currencyCode: string;
@@ -23,36 +25,19 @@ export function TransactionManagement({
   monthLabel: string;
   nextMonthHref: string;
   previousMonthHref: string;
-  totalTransactionsCents: number;
+  summary: MonthlyTransactionSummary;
   transactions: TransactionView[];
 }) {
   return (
-    <div className="management-grid">
-      <section className="ui-panel management-form-panel">
-        <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">
-          Nouvelle dépense ponctuelle
-        </p>
-        <h2 className="font-display mt-2 text-3xl font-medium tracking-[-0.04em]">
-          Notez ce qui sort vraiment.
-        </h2>
-        <p className="mb-7 mt-3 text-sm leading-6 text-[var(--ink-soft)]">
-          Une date, un montant et une catégorie suffisent. Aucun relevé bancaire complet à maintenir.
-        </p>
-        <TransactionForm
-          action={createTransaction}
-          defaultValues={defaultValues}
-          mode="create"
-        />
-      </section>
-
+    <div className="management-stack transaction-management">
       <section aria-labelledby="transaction-list-title" className="min-w-0">
-        <div className="ui-panel-flat p-4 sm:p-5">
+        <div className="period-toolbar period-toolbar-compact">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--ink-soft)]">
+              <p className="ui-kicker">
                 {isCurrentMonth ? "Mois actuel" : "Mois consulté"}
               </p>
-              <p className="font-display mt-1 text-2xl font-medium capitalize tracking-[-0.035em]">
+              <p className="period-title">
                 {monthLabel}
               </p>
             </div>
@@ -72,20 +57,29 @@ export function TransactionManagement({
           </div>
         </div>
 
-        <div className="mb-4 mt-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--ink-soft)]">
-              {transactions.length} transaction{transactions.length > 1 ? "s" : ""}
-            </p>
-            <h2 className="font-display mt-1 text-3xl font-medium tracking-[-0.04em]" id="transaction-list-title">
-              Dépensé : {formatCents(totalTransactionsCents, currencyCode)}
-            </h2>
+        <dl className="finance-summary finance-summary-transactions" aria-label={`Synthèse de ${monthLabel}`}>
+          <div className="pilot-metric pilot-metric-primary">
+            <dt>Total dépensé</dt>
+            <dd>{formatCents(summary.totalCents, currencyCode)}</dd>
           </div>
+          <div className="pilot-metric">
+            <dt>Transactions</dt>
+            <dd>{summary.transactionCount}</dd>
+          </div>
+          <div className="pilot-metric">
+            <dt>Catégorie principale</dt>
+            <dd>{summary.topCategory ?? "—"}</dd>
+            {summary.topCategory ? <small>{formatCents(summary.topCategoryCents, currencyCode)}</small> : null}
+          </div>
+        </dl>
+
+        <div className="management-list-heading">
+          <div><p className="ui-kicker">Détail du mois</p><h2 className="management-title" id="transaction-list-title">Détail des transactions</h2></div>
         </div>
 
         {transactions.length === 0 ? (
           <div className="ui-empty">
-            <h3 className="font-display text-2xl font-medium tracking-[-0.035em]">
+            <h3>
               {isCurrentMonth ? "Aucune transaction ce mois-ci" : `Aucune transaction en ${monthLabel}`}
             </h3>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[var(--ink-soft)]">
@@ -95,7 +89,7 @@ export function TransactionManagement({
             </p>
           </div>
         ) : (
-          <ul className="ui-divider-list ui-panel overflow-hidden">
+          <ul className="ui-divider-list ui-panel dense-finance-list overflow-hidden">
             {transactions.map((transaction) => (
               <TransactionRow
                 currencyCode={currencyCode}
@@ -106,6 +100,15 @@ export function TransactionManagement({
           </ul>
         )}
       </section>
+      <CreationDisclosure
+        buttonLabel="Ajouter une transaction"
+        defaultOpen={transactions.length === 0 && isCurrentMonth}
+        description="Une date, un montant et une catégorie suffisent."
+        eyebrow="Nouvelle dépense ponctuelle"
+        title="Ajouter une transaction"
+      >
+        <TransactionForm action={createTransaction} defaultValues={defaultValues} mode="create" />
+      </CreationDisclosure>
     </div>
   );
 }

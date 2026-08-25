@@ -37,10 +37,10 @@ export default async function ExpensesPage() {
   return (
     <AppShell
       activePath="/expenses"
-      description="Rassemblez les charges fixes qui structurent votre mois, sans suivi de transactions quotidiennes."
-      eyebrow="Dépenses fixes"
+      description="Les charges actives sont retirées du budget disponible chaque mois."
+      eyebrow="Plan mensuel"
       profile={profile}
-      title="Les engagements avant le reste."
+      title="Charges fixes"
     >
       <ExpenseManagement
         currencyCode={profile.currencyCode}

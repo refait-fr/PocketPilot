@@ -58,7 +58,7 @@ export function GoalRow({
     return (
       <li className="ui-panel-flat border-[var(--accent)] bg-[var(--accent-soft)] p-5 sm:p-6">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-display text-2xl font-medium tracking-[-0.035em]">
+          <h3 className="font-display text-xl font-semibold tracking-[-0.03em]">
             Modifier l’objectif
           </h3>
           <span className="ui-badge bg-white text-[var(--accent-dark)]">
@@ -96,7 +96,7 @@ export function GoalRow({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="break-words font-display text-2xl font-medium tracking-[-0.035em] sm:text-3xl">
+              <h3 className="break-words font-display text-xl font-semibold tracking-[-0.03em]">
                 {goal.name}
               </h3>
               <span
@@ -109,9 +109,9 @@ export function GoalRow({
                 {goal.isReached ? "Atteint" : "En route"}
               </span>
             </div>
-            <p className="mt-2 text-sm text-[var(--ink-soft)]">
-              {formatCents(goal.currentAmountCents, currencyCode)} sur {" "}
-              {formatCents(goal.targetAmountCents, currencyCode)}
+            <p className="goal-remaining font-amount mt-3">
+              <span>Il vous manque</span>
+              <strong>{formatCents(goal.remainingAmountCents, currencyCode)}</strong>
             </p>
           </div>
 
@@ -133,7 +133,7 @@ export function GoalRow({
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-5">
           <div className="mb-2 flex items-center justify-between gap-4 text-xs font-bold">
             <span>Progression</span>
             <span>{goal.progressPercent} %</span>
@@ -153,16 +153,24 @@ export function GoalRow({
           </div>
         </div>
 
-        <dl className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl bg-[var(--surface-muted)] p-4">
+        <p className="goal-guidance">
+          {goal.isReached
+            ? `Objectif atteint avec ${formatCents(goal.currentAmountCents, currencyCode)} épargnés.`
+            : goal.estimatedMonths === null
+              ? `${formatCents(goal.remainingAmountCents, currencyCode)} restants. Ajoutez une allocation mensuelle pour obtenir une estimation.`
+              : `${formatCents(goal.remainingAmountCents, currencyCode)} restants · ${formatCents(goal.monthlyAllocationCents, currencyCode)} par mois · estimation ${goal.estimatedCompletionLabel}.`}
+        </p>
+
+        <dl className="goal-metrics mt-5 grid gap-2 sm:grid-cols-3">
+          <div className="rounded-xl bg-[var(--surface-muted)] p-3.5">
             <dt className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">
-              Restant
+              Déjà épargné / cible
             </dt>
             <dd className="mt-2 break-words font-bold">
-              {formatCents(goal.remainingAmountCents, currencyCode)}
+              {formatCents(goal.currentAmountCents, currencyCode)} / {formatCents(goal.targetAmountCents, currencyCode)}
             </dd>
           </div>
-          <div className="rounded-xl bg-[var(--surface-muted)] p-4">
+          <div className="rounded-xl bg-[var(--surface-muted)] p-3.5">
             <dt className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">
               Allocation / mois
             </dt>
@@ -170,7 +178,7 @@ export function GoalRow({
               {formatCents(goal.monthlyAllocationCents, currencyCode)}
             </dd>
           </div>
-          <div className="rounded-xl bg-[var(--surface-muted)] p-4">
+          <div className="goal-estimate rounded-xl bg-[var(--surface-muted)] p-3.5">
             <dt className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">
               Estimation
             </dt>

@@ -13,41 +13,41 @@ import {
 } from "./support/ui";
 
 const privatePages = [
-  { name: "dashboard", path: "/", title: "Votre mois, en un coup d’œil." },
+  { name: "dashboard", path: "/", title: "Vue d’ensemble" },
   {
     name: "transactions",
     path: "/transactions",
-    title: "Du budget prévu au reste réel.",
+    title: "Transactions",
   },
   {
     name: "budgets",
     path: "/budgets",
-    title: "Des limites lisibles, mois après mois.",
+    title: "Budgets par catégorie",
   },
   {
     name: "purchase-checker",
     path: "/purchase-checker",
-    title: "Est-ce que cet achat rentre dans votre mois ?",
+    title: "Purchase Checker",
   },
   {
     name: "incomes",
     path: "/incomes",
-    title: "Votre point de départ mensuel.",
+    title: "Revenus récurrents",
   },
   {
     name: "expenses",
     path: "/expenses",
-    title: "Les engagements avant le reste.",
+    title: "Charges fixes",
   },
   {
     name: "goals",
     path: "/goals",
-    title: "Chaque projet mérite un cap.",
+    title: "Objectifs d’épargne",
   },
   {
     name: "settings",
     path: "/settings",
-    title: "Votre cadre de calcul.",
+    title: "Paramètres",
   },
 ] as const;
 
@@ -57,11 +57,21 @@ const environment = readE2EEnvironment();
 async function prepareVisualCapture(page: import("@playwright/test").Page) {
   await page.evaluate(async () => {
     const previousScrollBehavior = document.documentElement.style.scrollBehavior;
-    document.documentElement.style.scrollBehavior = "auto";
+    document.documentElement.style.setProperty("scroll-behavior", "auto", "important");
+    document.documentElement.scrollLeft = 0;
+    document.documentElement.scrollTop = 0;
+    document.body.scrollLeft = 0;
+    document.body.scrollTop = 0;
     window.scrollTo({ left: 0, top: 0 });
     await document.fonts.ready;
-    document.documentElement.style.scrollBehavior = previousScrollBehavior;
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+    document.documentElement.style.setProperty("scroll-behavior", previousScrollBehavior);
   });
+  await expect
+    .poll(() => page.evaluate(() => ({ x: window.scrollX, y: window.scrollY })))
+    .toEqual({ x: 0, y: 0 });
 }
 
 async function createVisualFixtures(page: import("@playwright/test").Page) {
@@ -126,7 +136,7 @@ test("les pages principales restent cohérentes dans le viewport de référence"
   const viewportName = testInfo.project.name;
 
   await page.goto("/auth");
-  await expect(page.getByRole("heading", { name: "Reprends le fil de ton mois." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Connexion à PocketPilot" })).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await prepareVisualCapture(page);
   await page.screenshot({
@@ -141,7 +151,11 @@ test("les pages principales restent cohérentes dans le viewport de référence"
   for (const privatePage of privatePages) {
     await page.goto(privatePage.path);
     await expect(
-      page.getByRole("heading", { name: privatePage.title }),
+      page.getByRole("heading", {
+        exact: true,
+        level: 1,
+        name: privatePage.title,
+      }),
     ).toBeVisible();
     await expectNoHorizontalOverflow(page);
     if (privatePage.name === "dashboard") {
@@ -161,6 +175,14 @@ test("les pages principales restent cohérentes dans le viewport de référence"
       path: testInfo.outputPath(`${viewportName}-${privatePage.name}.png`),
     });
 
+    if (privatePage.name === "dashboard") {
+      const chartScrubber = page.getByRole("slider", {
+        name: "Explorer le solde quotidien",
+      });
+      await chartScrubber.press("Home");
+      await expect(page.getByRole("status")).toContainText("Jour 1");
+    }
+
     if (privatePage.name === "purchase-checker") {
       await page.getByLabel("Nom de l’achat").fill("Casque audio");
       await page.getByLabel("Prix").fill("149,00");
@@ -170,6 +192,27 @@ test("les pages principales restent cohérentes dans le viewport de référence"
       await page.screenshot({
         fullPage: false,
         path: testInfo.outputPath(`${viewportName}-purchase-result.png`),
+      });
+      const impactFigure = page.locator(".purchase-impact-figure");
+      await expect(impactFigure).toBeVisible();
+      await impactFigure.evaluate((element) => {
+        element.scrollIntoView({ behavior: "instant", block: "center" });
+      });
+      await expect
+        .poll(() =>
+          impactFigure.evaluate((element) => {
+            const bounds = element.getBoundingClientRect();
+            const mobileNavigation = document.querySelector(".mobile-tab-bar");
+            const visibleBottom = mobileNavigation &&
+              getComputedStyle(mobileNavigation).display !== "none"
+              ? mobileNavigation.getBoundingClientRect().top
+              : window.innerHeight;
+            return bounds.top >= 0 && bounds.bottom <= visibleBottom;
+          }),
+        )
+        .toBe(true);
+      await impactFigure.screenshot({
+        path: testInfo.outputPath(`${viewportName}-purchase-impact.png`),
       });
     }
   }
@@ -217,7 +260,7 @@ test("l’onboarding conserve une hiérarchie claire", async ({
     await expect(page).toHaveURL(/\/onboarding$/);
     await expect(
       page.getByRole("heading", {
-        name: "PocketPilot calcule ce qu’il te reste réellement chaque mois.",
+        name: "Configure ton profil financier.",
       }),
     ).toBeVisible();
     await expectNoHorizontalOverflow(page);

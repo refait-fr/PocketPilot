@@ -62,10 +62,10 @@ export default async function GoalsPage() {
   return (
     <AppShell
       activePath="/goals"
-      description="Donnez un montant cible et une allocation mensuelle aux projets qui comptent vraiment."
-      eyebrow="Objectifs d’épargne"
+      description="Suivez la progression et l’allocation mensuelle de chaque projet."
+      eyebrow="Plan d’épargne"
       profile={profile}
-      title="Chaque projet mérite un cap."
+      title="Objectifs d’épargne"
     >
       <GoalManagement currencyCode={profile.currencyCode} goals={goals} />
     </AppShell>

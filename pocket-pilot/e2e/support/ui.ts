@@ -12,7 +12,7 @@ export async function login(page: Page, account: TestAccount): Promise<void> {
 export async function expectDashboard(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/$/);
   await expect(
-    page.getByRole("heading", { name: "Votre mois, en un coup d’œil." }),
+    page.getByRole("heading", { name: "Vue d’ensemble" }),
   ).toBeVisible();
   await expect(page.getByText("Reste réel", { exact: true })).toBeVisible();
 }
@@ -21,7 +21,7 @@ export async function completeOnboarding(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/onboarding$/);
   await expect(
     page.getByRole("heading", {
-      name: "PocketPilot calcule ce qu’il te reste réellement chaque mois.",
+      name: "Configure ton profil financier.",
     }),
   ).toBeVisible();
   await page.getByLabel("Devise de référence").selectOption("EUR");

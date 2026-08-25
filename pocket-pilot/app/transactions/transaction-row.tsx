@@ -59,7 +59,7 @@ export function TransactionRow({
     return (
       <li className="bg-[var(--accent-soft)] p-5 sm:p-6">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-display text-2xl font-medium tracking-[-0.035em]">
+          <h3 className="font-display text-xl font-semibold tracking-[-0.03em]">
             Modifier la transaction
           </h3>
           <span className="ui-badge bg-white text-[var(--accent-dark)]">
@@ -84,9 +84,8 @@ export function TransactionRow({
   const title = transaction.description || transaction.category;
 
   return (
-    <li className="bg-[var(--paper)] p-5 sm:p-6">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
+    <li className="finance-list-row transaction-list-row bg-[var(--paper)]">
+      <div className="transaction-main min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="break-words text-base font-extrabold">
               {title}
@@ -95,15 +94,15 @@ export function TransactionRow({
               {transaction.category}
             </span>
           </div>
-          <p className="font-amount mt-2 break-words text-2xl font-extrabold">
+          <p className="transaction-amount font-amount break-words text-lg font-extrabold">
             {formatCents(transaction.amountCents, currencyCode)}
           </p>
-          <p className="mt-1 text-sm text-[var(--ink-soft)]">
+          <p className="transaction-date text-sm text-[var(--ink-soft)]">
             {formatTransactionDate(transaction.transactionDate)}
           </p>
-        </div>
+      </div>
 
-        <div className="flex flex-wrap gap-2 sm:justify-end">
+        <div className="finance-row-actions flex flex-wrap gap-2 sm:justify-end">
           <button
             className="ui-button-quiet min-h-10 px-3 py-2 text-xs"
             onClick={() => setIsEditing(true)}
@@ -118,7 +117,6 @@ export function TransactionRow({
           >
             Supprimer
           </button>
-        </div>
       </div>
 
       {deleteState.status === "error" ? (

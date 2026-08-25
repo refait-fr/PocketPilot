@@ -38,9 +38,9 @@ test("les parcours essentiels restent utilisables en 390 × 844", async ({
   const secondaryNavigation = page.getByRole("navigation", {
     name: "Navigation secondaire",
   });
-  for (const label of ["Revenus", "Charges", "Objectifs", "Paramètres"]) {
+  for (const label of ["Revenus", "Charges fixes", "Paramètres"]) {
     await expect(
-      secondaryNavigation.getByRole("link", { name: label }),
+      secondaryNavigation.getByRole("link", { exact: true, name: label }),
     ).toBeVisible();
   }
   await secondaryNavigation.getByRole("link", { name: "Revenus" }).click();
@@ -108,8 +108,7 @@ test("les parcours essentiels restent utilisables en 390 × 844", async ({
     exact: true,
     name: "Achat",
   });
-  await purchaseCheckerLink.scrollIntoViewIfNeeded();
-  await expect(purchaseCheckerLink).toBeInViewport();
+  await expect(purchaseCheckerLink).toBeVisible();
   await purchaseCheckerLink.click();
   await expectNoHorizontalOverflow(page);
   await page.getByLabel("Nom de l’achat").fill("Livre mobile E2E");

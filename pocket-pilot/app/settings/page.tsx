@@ -10,16 +10,16 @@ export default async function SettingsPage() {
   return (
     <AppShell
       activePath="/settings"
-      description="Retrouvez les deux repères qui garantissent la cohérence de votre plan financier."
+      description="Profil financier et sécurité du compte."
       eyebrow="Réglages"
       profile={profile}
-      title="Votre cadre de calcul."
+      title="Paramètres"
     >
       <div className="settings-grid">
       <section className="ui-panel overflow-hidden">
         <div className="border-b border-[var(--line)] px-6 py-5 sm:px-8">
           <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">Préférences du profil</p>
-          <h2 className="font-display mt-2 text-3xl font-medium">Repères de calcul</h2>
+          <h2 className="font-display mt-2 text-2xl font-semibold tracking-[-0.035em]">Repères de calcul</h2>
         </div>
         <dl className="ui-divider-list">
           <div className="grid gap-2 px-6 py-5 sm:grid-cols-[180px_1fr] sm:items-center sm:px-8">
@@ -53,7 +53,7 @@ export default async function SettingsPage() {
         <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">
           Sécurité du compte
         </p>
-        <h2 className="font-display mt-2 text-3xl font-medium tracking-[-0.035em]">
+        <h2 className="font-display mt-2 text-2xl font-semibold tracking-[-0.035em]">
           Changer de mot de passe
         </h2>
         <p className="mb-7 mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">

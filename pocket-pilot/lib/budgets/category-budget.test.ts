@@ -78,6 +78,9 @@ test("résume la catégorie la plus consommée et les dépassements", () => {
   const summary = summarizeCategoryBudgets(usages);
   assert.equal(summary.mostConsumed?.category, "Shopping");
   assert.equal(summary.exceededCount, 1);
+  assert.equal(summary.totalBudgetCents, 15_000);
+  assert.equal(summary.totalSpentCents, 11_500);
+  assert.equal(summary.totalRemainingCents, 3_500);
 });
 
 test("valide la limite monétaire et refuse son dépassement", () => {

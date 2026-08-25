@@ -28,10 +28,10 @@ export function AuthSupportShell({
             PocketPilot
           </span>
         </Link>
-        <p className="mt-9 text-xs font-extrabold uppercase tracking-[0.17em] text-[var(--accent)]">
+        <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">
           {eyebrow}
         </p>
-        <h1 className="font-display mt-3 text-4xl font-medium leading-tight tracking-[-0.045em] sm:text-5xl">
+        <h1 className="font-display mt-2 text-3xl font-semibold leading-tight tracking-[-0.04em] sm:text-4xl">
           {title}
         </h1>
         <p className="mt-4 leading-7 text-[var(--ink-soft)]">{description}</p>

@@ -1,5 +1,45 @@
 export type RecurringEntryDashboardKind = "expense" | "income";
 
+import { addCents, readStoredCents } from "../finance/money.ts";
+
+type RecurringEntrySummaryInput = {
+  amountCents: number;
+  isActive: boolean;
+};
+
+export type RecurringEntrySummary = {
+  activeCount: number;
+  inactiveCount: number;
+  totalActiveCents: number;
+  totalCount: number;
+};
+
+export function summarizeRecurringEntries(
+  entries: readonly RecurringEntrySummaryInput[],
+): RecurringEntrySummary {
+  let activeCount = 0;
+  let totalActiveCents = 0;
+
+  for (const entry of entries) {
+    const amountCents = readStoredCents(entry.amountCents, {
+      allowZero: false,
+      fieldName: "Le montant récurrent",
+    });
+
+    if (entry.isActive) {
+      activeCount += 1;
+      totalActiveCents = addCents(totalActiveCents, amountCents);
+    }
+  }
+
+  return {
+    activeCount,
+    inactiveCount: entries.length - activeCount,
+    totalActiveCents,
+    totalCount: entries.length,
+  };
+}
+
 type RecurringEntryCounts = {
   activeCount: number;
   totalCount: number;

@@ -1,7 +1,26 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getRecurringEntryDashboardDetail } from "./recurring-entry-detail.ts";
+import {
+  getRecurringEntryDashboardDetail,
+  summarizeRecurringEntries,
+} from "./recurring-entry-detail.ts";
+
+test("résume uniquement les montants récurrents actifs", () => {
+  assert.deepEqual(
+    summarizeRecurringEntries([
+      { amountCents: 120_000, isActive: true },
+      { amountCents: 35_000, isActive: false },
+      { amountCents: 80_000, isActive: true },
+    ]),
+    {
+      activeCount: 2,
+      inactiveCount: 1,
+      totalActiveCents: 200_000,
+      totalCount: 3,
+    },
+  );
+});
 
 test("distingue l’absence de revenus de revenus tous désactivés", () => {
   assert.equal(

@@ -112,7 +112,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     /1\s*200,00\s*€/,
   );
 
-  await page.getByRole("link", { exact: true, name: "Charges" }).click();
+  await page.getByRole("link", { exact: true, name: "Charges fixes" }).click();
   const expenseCreateForm = formForButton(page, "Ajouter cette dépense");
   await expenseCreateForm.getByLabel("Libellé").fill("Loyer E2E");
   await expenseCreateForm.getByLabel("Montant mensuel").fill("400,00");
@@ -148,7 +148,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
   );
   await expect(availableBudget(page)).toContainText(/1\s*200,00\s*€/);
 
-  await page.getByRole("link", { exact: true, name: "Charges" }).click();
+  await page.getByRole("link", { exact: true, name: "Charges fixes" }).click();
   await listRow(page, "Loyer principal E2E")
     .getByRole("button", { name: "Activer" })
     .click();
@@ -224,7 +224,12 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     defaultTransactionDate,
   );
   await expect(listRow(page, "Courses E2E")).toContainText(/137,00\s*€/);
-  await expect(page.getByRole("heading", { name: /Dépensé : 137,00\s*€/ })).toBeVisible();
+  await expect(
+    page
+      .getByText("Total dépensé", { exact: true })
+      .locator("..")
+      .getByText(/137,00\s*€/),
+  ).toBeVisible();
 
   await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(dashboardAmount(page, "Budget disponible")).toContainText(
@@ -240,7 +245,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     .click();
   await expect(
     page.getByRole("heading", {
-      name: "Est-ce que cet achat rentre dans votre mois ?",
+      name: "Purchase Checker",
     }),
   ).toBeVisible();
   await page.getByLabel("Nom de l’achat").fill("Casque E2E");
@@ -388,7 +393,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
     .click();
   await expect(page.getByText("Aucun objectif défini")).toBeVisible();
 
-  await page.getByRole("link", { exact: true, name: "Charges" }).click();
+  await page.getByRole("link", { exact: true, name: "Charges fixes" }).click();
   await listRow(page, "Loyer principal E2E")
     .getByRole("button", { name: "Supprimer" })
     .click();

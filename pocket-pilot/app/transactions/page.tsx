@@ -12,8 +12,8 @@ import {
   isSameCalendarMonth,
   parseCalendarMonthParam,
 } from "@/lib/finance/calendar-month";
-import { sumStoredCents } from "@/lib/finance/money";
 import { isTransactionCategory } from "@/lib/transactions/categories";
+import { summarizeMonthlyTransactions } from "@/lib/transactions/monthly-summary";
 import {
   isValidTransactionDate,
   MAX_TRANSACTION_DESCRIPTION_LENGTH,
@@ -71,14 +71,15 @@ export default async function TransactionsPage({
   });
   const previousMonth = addCalendarMonths(selectedMonth, -1);
   const nextMonth = addCalendarMonths(selectedMonth, 1);
+  const summary = summarizeMonthlyTransactions(transactions);
 
   return (
     <AppShell
       activePath="/transactions"
-      description="Comparez votre budget prévu aux dépenses ponctuelles réellement effectuées pendant le mois."
-      eyebrow="Transactions du mois"
+      description="Consultez et ajoutez les dépenses ponctuelles du mois."
+      eyebrow="Dépenses ponctuelles"
       profile={profile}
-      title="Du budget prévu au reste réel."
+      title="Transactions"
     >
       <TransactionManagement
         currencyCode={profile.currencyCode}
@@ -92,10 +93,7 @@ export default async function TransactionsPage({
         monthLabel={formatCalendarMonth(selectedMonth)}
         nextMonthHref={`/transactions?month=${formatCalendarMonthParam(nextMonth)}`}
         previousMonthHref={`/transactions?month=${formatCalendarMonthParam(previousMonth)}`}
-        totalTransactionsCents={sumStoredCents(
-          transactions.map((transaction) => transaction.amountCents),
-          "La transaction",
-        )}
+        summary={summary}
         transactions={transactions}
       />
     </AppShell>

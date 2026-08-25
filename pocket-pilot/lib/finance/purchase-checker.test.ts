@@ -4,9 +4,24 @@ import test from "node:test";
 import { MAX_MONEY_CENTS } from "./money.ts";
 import {
   calculatePurchaseImpact,
+  calculatePurchaseImpactBars,
   classifyPurchase,
   validatePurchaseInput,
 } from "./purchase-checker.ts";
+
+test("calcule une échelle visuelle entière pour les restes positifs", () => {
+  assert.deepEqual(calculatePurchaseImpactBars(62_800, 47_900), {
+    after: { direction: "right", widthPercent: 38 },
+    before: { direction: "right", widthPercent: 50 },
+  });
+});
+
+test("représente un reste négatif de l’autre côté de l’axe", () => {
+  assert.deepEqual(calculatePurchaseImpactBars(5_000, -10_000), {
+    after: { direction: "left", widthPercent: 50 },
+    before: { direction: "right", widthPercent: 25 },
+  });
+});
 
 test("classe un achat confortable", () => {
   assert.equal(classifyPurchase(50_000, 8_000), "comfortable");

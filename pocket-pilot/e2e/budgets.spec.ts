@@ -19,7 +19,24 @@ async function createTransaction(
   description: string,
 ): Promise<void> {
   await page.getByRole("link", { name: "Transactions" }).click();
-  const form = formForButton(page, "Ajouter la transaction");
+  const submitButton = page.getByRole("button", {
+    exact: true,
+    name: "Ajouter la transaction",
+  });
+  const creationDisclosure = page.locator(".creation-disclosure");
+  const disclosureButton = creationDisclosure.locator(".creation-summary");
+  await expect(disclosureButton).toBeVisible();
+  if ((await disclosureButton.getAttribute("aria-expanded")) === "false") {
+    await expect.poll(async () => {
+      if ((await disclosureButton.getAttribute("aria-expanded")) === "true") {
+        return true;
+      }
+      await disclosureButton.click();
+      return false;
+    }).toBe(true);
+  }
+  await expect(submitButton).toBeVisible();
+  const form = submitButton.locator("xpath=ancestor::form");
   await form.getByLabel("Montant").fill(amount);
   await form.getByLabel("Catégorie").selectOption("Shopping");
   await form.getByLabel(/Description/).fill(description);
@@ -61,7 +78,9 @@ test("les budgets par catégorie suivent les transactions du mois", async ({
   await createTransaction(page, "30,00", "Shopping 30 E2E");
   await page.getByRole("link", { name: "Budgets" }).click();
   await expect(budgetRow(page, "Shopping")).toContainText("105 % consommé");
-  await expect(budgetRow(page, "Shopping")).toContainText(/-5,00\s*€/);
+  await expect(budgetRow(page, "Shopping")).toContainText(
+    /5,00\s*€\s*de dépassement/,
+  );
   await expect(budgetRow(page, "Shopping").getByText("Dépassé", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Vue d’ensemble" }).click();
