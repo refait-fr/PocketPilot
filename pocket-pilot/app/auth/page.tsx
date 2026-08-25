@@ -14,15 +14,15 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
       <section className="auth-showcase hidden min-h-screen p-12 text-white lg:flex lg:flex-col lg:justify-between xl:p-16">
         <div className="flex items-center gap-3"><span className="brand-mark">P</span><span className="font-display text-2xl font-semibold tracking-[-0.04em]">PocketPilot</span></div>
         <div className="max-w-2xl">
-          <p className="mb-4 text-xs font-extrabold uppercase tracking-[0.16em] text-[#aebde8]">Planification financière</p>
+          <p className="mb-4 text-xs font-extrabold uppercase tracking-[0.16em] text-[#b7b7bd]">Planification financière</p>
           <h1 className="font-display text-4xl font-semibold leading-[1.08] tracking-[-0.045em] xl:text-5xl">Pilote ton mois avec des repères fiables.</h1>
-          <p className="mt-5 max-w-xl text-base leading-7 text-[#bdc9d9]">Revenus, charges, budgets et objectifs réunis dans une vue claire.</p>
+          <p className="mt-5 max-w-xl text-base leading-7 text-[#c1c1c6]">Revenus, charges, budgets et objectifs réunis dans une vue claire.</p>
           <div aria-hidden="true" className="auth-pilot-visual">
             <div className="auth-pilot-route"><i /><i /><i /><i /></div>
             <div className="auth-pilot-labels"><span>Plan</span><span>Marge</span><span>Cap</span><span>Objectif</span></div>
           </div>
         </div>
-        <p className="max-w-lg border-l-2 border-[var(--accent)] pl-4 text-sm leading-6 text-[#aebdb7]">Pas de complexité bancaire. Des calculs déterministes, centrés sur tes projets.</p>
+        <p className="max-w-lg border-l-2 border-white pl-4 text-sm leading-6 text-[#b7b7bd]">Pas de complexité bancaire. Des calculs déterministes, centrés sur tes projets.</p>
       </section>
       <section className="auth-form-stage flex min-h-screen items-center justify-center px-5 py-10 sm:px-10 lg:px-14">
         <div className="w-full max-w-lg">

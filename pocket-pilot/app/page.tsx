@@ -17,7 +17,7 @@ export default async function Home() {
       description="Synthèse du plan, des dépenses et des objectifs pour le mois en cours."
       eyebrow="Mois en cours · Synthèse financière"
       profile={profile}
-      title="Vue d’ensemble"
+      title="Bonjour !"
     >
       <DashboardOverview
         activeExpenseCount={overview.activeExpenseCount}
@@ -30,7 +30,7 @@ export default async function Home() {
         featuredGoal={overview.featuredGoal}
         goalCount={overview.goalCount}
         incomeCount={overview.incomeCount}
-        insights={overview.insights}
+        recentTransactions={overview.recentTransactions}
         snapshot={overview.snapshot}
         transactionCount={overview.transactionCount}
       />

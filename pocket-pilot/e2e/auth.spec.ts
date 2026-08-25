@@ -66,7 +66,11 @@ test("inscription, confirmation, onboarding, déconnexion et reconnexion", async
     await deleteCapturedEmail(environment.mailpitUrl, capturedEmail.messageId);
   }
 
-  await expect(page.getByText("EUR", { exact: true }).first()).toBeVisible();
+  await expect(
+    page
+      .getByRole("link", { name: /Ouvrir les paramètres du profil/ })
+      .getByText("EUR", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("Aucun revenu récurrent enregistré.")).toBeVisible();
   await expect(page.getByText("Aucune dépense fixe enregistrée.")).toBeVisible();
   await expect(page.getByText("Aucun objectif d’épargne enregistré.")).toBeVisible();

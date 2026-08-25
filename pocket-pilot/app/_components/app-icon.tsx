@@ -5,6 +5,7 @@ type AppIconName =
   | "goal"
   | "home"
   | "income"
+  | "logout"
   | "menu"
   | "settings"
   | "transaction"
@@ -17,6 +18,7 @@ const paths: Record<AppIconName, React.ReactNode> = {
   goal: <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4" /><path d="M12 4V2M20 12h2" /></>,
   home: <><path d="m4 11 8-7 8 7" /><path d="M6.5 10v9h11v-9M10 19v-5h4v5" /></>,
   income: <><path d="M12 3v13" /><path d="m7 11 5 5 5-5M5 20h14" /></>,
+  logout: <><path d="M10 5H5v14h5" /><path d="M13 8l4 4-4 4M8 12h9" /></>,
   menu: <><path d="M5 7h14M5 12h14M5 17h14" /></>,
   settings: <><circle cx="12" cy="12" r="3" /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" /></>,
   transaction: <><path d="M4 7h13" /><path d="m14 4 3 3-3 3M20 17H7" /><path d="m10 14-3 3 3 3" /></>,

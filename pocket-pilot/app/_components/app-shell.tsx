@@ -18,6 +18,12 @@ const planningNavigation = [
   { href: "/expenses", icon: "expense", label: "Charges fixes" },
 ] as const;
 
+const desktopNavigation = [
+  ...primaryNavigation,
+  ...planningNavigation,
+  { href: "/purchase-checker", icon: "check", label: "Purchase Checker" },
+] as const;
+
 const mobileNavigation = [
   { href: "/", icon: "home", label: "Accueil" },
   { href: "/transactions", icon: "transaction", label: "Transactions" },
@@ -67,7 +73,7 @@ function NavigationLink({ activePath, href, icon, label }: {
       href={href}
     >
       <AppIcon name={icon} />
-      <span>{label}</span>
+      <span className="navigation-label" role="tooltip">{label}</span>
     </Link>
   );
 }
@@ -75,30 +81,17 @@ function NavigationLink({ activePath, href, icon, label }: {
 function DesktopSidebar({ activePath, currencyCode }: { activePath?: AppPath; currencyCode: string }) {
   return (
     <aside className="app-sidebar">
-      <Brand />
+      <Brand compact />
       <nav aria-label="Navigation principale" className="sidebar-navigation">
-        <p className="sidebar-label">Pilotage</p>
-        <ul>{primaryNavigation.map((item) => <li key={item.href}><NavigationLink activePath={activePath} {...item} /></li>)}</ul>
-        <p className="sidebar-label">Plan mensuel</p>
-        <ul>{planningNavigation.map((item) => <li key={item.href}><NavigationLink activePath={activePath} {...item} /></li>)}</ul>
+        <ul>{desktopNavigation.map((item) => <li key={item.href}><NavigationLink activePath={activePath} {...item} /></li>)}</ul>
       </nav>
       <div className="sidebar-footer">
-        <Link
-          aria-label="Vérifier un achat"
-          aria-current={activePath === "/purchase-checker" ? "page" : undefined}
-          className={`sidebar-purchase ${activePath === "/purchase-checker" ? "is-active" : ""}`}
-          href="/purchase-checker"
-        >
-          <span className="sidebar-purchase-icon"><AppIcon name="check" /></span>
-          <span><strong>Vérifier un achat</strong><small>Action PocketPilot · mesurer son impact</small></span>
-        </Link>
         <div className="sidebar-account">
           <Link aria-current={activePath === "/settings" ? "page" : undefined} href="/settings" aria-label={`Paramètres du profil, devise ${currencyCode}`}>
             <span className="profile-avatar">{currencyCode.slice(0, 1)}</span>
-            <span><strong>Mon profil</strong><small>{currencyCode}</small></span>
-            <AppIcon name="settings" />
+            <span className="navigation-label" role="tooltip">Paramètres</span>
           </Link>
-          <form action={signOut}><SignOutButton /></form>
+          <form action={signOut}><SignOutButton compact /></form>
         </div>
       </div>
     </aside>
@@ -121,16 +114,28 @@ function MobileMenu({ activePath, currencyCode }: { activePath?: AppPath; curren
 }
 
 export function AppShell({ activePath, children, description, eyebrow, profile, title }: AppShellProps) {
+  const isDashboard = activePath === "/";
+
   return (
     <div className="app-frame">
       <a href="#main" className="skip-link">Aller au contenu principal</a>
       <DesktopSidebar activePath={activePath} currencyCode={profile.currencyCode} />
       <div className="app-workspace">
         <header className="app-header"><Brand /><MobileMenu activePath={activePath} currencyCode={profile.currencyCode} /></header>
-        <main className="app-main" id="main" tabIndex={-1}>
+        <main className={`app-main ${isDashboard ? "is-dashboard" : ""}`} id="main" tabIndex={-1}>
           <div className="page-heading">
-            <div><p className="ui-kicker">{eyebrow}</p><h1>{title}</h1></div>
-            <p>{description}</p>
+            <div>
+              {isDashboard ? null : <p className="ui-kicker">{eyebrow}</p>}
+              <h1>{title}</h1>
+              {isDashboard ? <p className="dashboard-heading-description">{description}</p> : null}
+            </div>
+            <div className="page-heading-meta">
+              {isDashboard ? null : <p>{description}</p>}
+              <Link href="/settings" className="header-profile" aria-label={`Ouvrir les paramètres du profil, devise ${profile.currencyCode}`}>
+                <span>{profile.currencyCode}</span>
+                <span className="profile-avatar">{profile.currencyCode.slice(0, 1)}</span>
+              </Link>
+            </div>
           </div>
           {children}
         </main>

@@ -85,7 +85,7 @@ test("les budgets par catégorie suivent les transactions du mois", async ({
 
   await page.getByRole("link", { name: "Vue d’ensemble" }).click();
   await expect(
-    page.getByRole("heading", { name: "À surveiller ce mois-ci" }),
+    page.getByRole("heading", { name: "Budgets à surveiller" }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { exact: true, name: "Shopping" }),

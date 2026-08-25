@@ -23,12 +23,17 @@ export function AppLoadingShell({
           <div className="ui-skeleton h-14 w-full max-w-md" />
         </div>
         {variant === "dashboard" ? (
-          <div className="cockpit-grid">
-            <div className="ui-skeleton h-[25rem] lg:col-span-7 xl:col-span-8" />
-            <div className="ui-skeleton h-[25rem] lg:col-span-5 xl:col-span-4" />
-            <div className="ui-skeleton h-72 lg:col-span-6 xl:col-span-5" />
-            <div className="ui-skeleton h-72 lg:col-span-6 xl:col-span-3" />
-            <div className="ui-skeleton h-72 lg:col-span-12 xl:col-span-4" />
+          <div className="dashboard-layout">
+            <div className="dashboard-kpi-grid">
+              <div className="ui-skeleton h-44" />
+              <div className="ui-skeleton h-44" />
+              <div className="ui-skeleton h-44" />
+              <div className="ui-skeleton h-44" />
+            </div>
+            <div className="dashboard-content-grid">
+              <div className="ui-skeleton h-[36rem]" />
+              <div className="ui-skeleton h-[36rem]" />
+            </div>
           </div>
         ) : (
           <div className={variant === "purchase" ? "purchase-layout" : "management-grid"}>

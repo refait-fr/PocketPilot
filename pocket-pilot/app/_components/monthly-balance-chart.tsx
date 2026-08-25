@@ -6,8 +6,8 @@ import type { MonthlyBalancePoint } from "@/lib/dashboard/monthly-cockpit";
 import { formatCents } from "@/lib/finance/format-cents";
 
 const WIDTH = 760;
-const HEIGHT = 252;
-const PADDING = { bottom: 30, left: 16, right: 16, top: 18 } as const;
+const HEIGHT = 220;
+const PADDING = { bottom: 28, left: 16, right: 16, top: 18 } as const;
 
 function getGeometry(points: readonly MonthlyBalancePoint[]) {
   const values = points.map((point) => point.remainingCents);

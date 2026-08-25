@@ -10,7 +10,6 @@ import {
 } from "@/lib/finance/calendar-month";
 import {
   buildMonthlyBalanceTrend,
-  buildMonthlyInsights,
   rankCategoryBudgets,
   selectFeaturedGoal,
 } from "@/lib/dashboard/monthly-cockpit";
@@ -62,7 +61,8 @@ export async function loadCurrentMonthOverview({
         .select("amount_cents, category, description, transaction_date")
         .eq("user_id", userId)
         .gte("transaction_date", currentMonthRange.startInclusive)
-        .lt("transaction_date", currentMonthRange.endExclusive),
+        .lt("transaction_date", currentMonthRange.endExclusive)
+        .order("transaction_date", { ascending: false }),
       supabase
         .from("category_budgets")
         .select("id, category, monthly_budget_cents")
@@ -99,6 +99,7 @@ export async function loadCurrentMonthOverview({
         fieldName: "La transaction",
       }),
       category: transaction.category,
+      description: transaction.description.trim(),
       transactionDate: transaction.transaction_date,
     };
   });
@@ -159,12 +160,6 @@ export async function loadCurrentMonthOverview({
     monthDate,
     transactions: categoryTransactions,
   });
-  const insights = buildMonthlyInsights({
-    categoryBudgets: categoryBudgetUsages,
-    featuredGoal,
-    realAvailableCents: snapshot.realAvailableCents,
-  });
-
   return {
     activeExpenseCount: activeExpenses.length,
     activeIncomeCount: activeIncomes.length,
@@ -175,8 +170,8 @@ export async function loadCurrentMonthOverview({
     balanceTrend,
     currentDay: Number(monthDate.slice(8, 10)),
     featuredGoal,
-    insights,
     rankedCategoryBudgets,
+    recentTransactions: categoryTransactions.slice(0, 5),
     snapshot,
     transactionCount: transactions.length,
   };

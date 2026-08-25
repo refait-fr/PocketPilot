@@ -354,7 +354,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
 
   await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(availableBudget(page)).toContainText(/700,00\s*€/);
-  await expect(page.getByText("Épargne prévue").locator("..")).toContainText(
+  await expect(page.getByText("Épargne prévue", { exact: true }).locator("..")).toContainText(
     /50,00\s*€/,
   );
   await expect(dashboardMetric(page, "Objectifs actifs")).toContainText("1");
@@ -377,7 +377,7 @@ test("le parcours financier CRUD reste cohérent avec le dashboard", async ({
 
   await page.getByRole("link", { exact: true, name: "Vue d’ensemble" }).click();
   await expect(availableBudget(page)).toContainText(/750,00\s*€/);
-  await expect(page.getByText("Épargne prévue").locator("..")).toContainText(
+  await expect(page.getByText("Épargne prévue", { exact: true }).locator("..")).toContainText(
     /0,00\s*€/,
   );
   await expect(dashboardMetric(page, "Objectifs actifs")).toContainText(

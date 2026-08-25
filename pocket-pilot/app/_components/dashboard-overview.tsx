@@ -1,16 +1,24 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 
+import { AppIcon } from "@/app/_components/app-icon";
 import { MonthlyBalanceChart } from "@/app/_components/monthly-balance-chart";
 import type { CategoryBudgetUsage } from "@/lib/budgets/category-budget";
 import type {
   DashboardGoal,
   MonthlyBalancePoint,
-  MonthlyInsight,
 } from "@/lib/dashboard/monthly-cockpit";
 import { getRecurringEntryDashboardDetail } from "@/lib/dashboard/recurring-entry-detail";
 import { formatCents } from "@/lib/finance/format-cents";
 import type { MonthlySnapshot } from "@/lib/finance/monthly-snapshot";
+import type { TransactionCategory } from "@/lib/transactions/categories";
+
+type RecentTransaction = {
+  amountCents: number;
+  category: TransactionCategory;
+  description: string;
+  transactionDate: string;
+};
 
 type DashboardOverviewProps = {
   activeExpenseCount: number;
@@ -23,10 +31,41 @@ type DashboardOverviewProps = {
   featuredGoal: DashboardGoal | null;
   goalCount: number;
   incomeCount: number;
-  insights: MonthlyInsight[];
+  recentTransactions: RecentTransaction[];
   snapshot: MonthlySnapshot;
   transactionCount: number;
 };
+
+function formatTransactionDate(date: string) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00Z`));
+}
+
+function MetricCard({
+  detail,
+  icon,
+  label,
+  value,
+}: {
+  detail: string;
+  icon: Parameters<typeof AppIcon>[0]["name"];
+  label: string;
+  value: string;
+}) {
+  return (
+    <article className="dashboard-metric-card">
+      <div className="dashboard-metric-icon" aria-hidden="true">
+        <AppIcon name={icon} />
+      </div>
+      <p>{label}</p>
+      <strong className="font-amount">{value}</strong>
+      <small>{detail}</small>
+    </article>
+  );
+}
 
 function StatusBadge({ status }: { status: CategoryBudgetUsage["status"] }) {
   const presentation = {
@@ -39,67 +78,24 @@ function StatusBadge({ status }: { status: CategoryBudgetUsage["status"] }) {
   return <span className={`ui-badge ${presentation.tone}`}>{presentation.label}</span>;
 }
 
-function getInsightContent({
-  currencyCode,
-  insight,
-}: {
-  currencyCode: string;
-  insight: MonthlyInsight;
-}) {
-  if (insight.kind === "real-available") {
-    return {
-      detail:
-        insight.amountCents < 0
-          ? `Les dépenses enregistrées dépassent le plan de ${formatCents(Math.abs(insight.amountCents), currencyCode)}.`
-          : `${formatCents(insight.amountCents, currencyCode)} restent disponibles après le plan et les transactions.`,
-      title: insight.amountCents < 0 ? "Le mois est sous tension." : "Votre marge reste positive.",
-    };
-  }
-
-  if (insight.kind === "budget-exceeded") {
-    return {
-      detail: `Le plafond est dépassé de ${formatCents(insight.overrunCents, currencyCode)}.`,
-      title: `Le budget ${insight.category} demande votre attention.`,
-    };
-  }
-
-  if (insight.kind === "budget-near") {
-    return {
-      detail: `${insight.percentageConsumed} % du plafond est déjà consommé.`,
-      title: `Le budget ${insight.category} approche de sa limite.`,
-    };
-  }
-
-  return {
-    detail: `${insight.progressPercent} % de la cible est déjà épargné.`,
-    title: `L’objectif ${insight.name} avance.`,
-  };
-}
-
-function PlanMetric({
-  detail,
+function DashboardSectionHeader({
   href,
-  label,
-  value,
+  id,
+  linkLabel,
+  title,
 }: {
-  detail: string;
-  href: string;
-  label: string;
-  value: string;
+  href?: string;
+  id?: string;
+  linkLabel?: string;
+  title: string;
 }) {
   return (
-    <article className="group min-w-0 border-t border-[var(--line)] px-5 py-4 first:border-t-0 sm:px-6 lg:border-l lg:border-t-0 lg:first:border-l-0">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-bold text-[var(--ink-soft)]">{label}</p>
-          <p className="font-amount mt-1 break-words text-xl font-extrabold">{value}</p>
-        </div>
-        <Link className="ui-icon-link" href={href} aria-label={`Gérer ${label.toLowerCase()}`}>
-          <span aria-hidden="true">↗</span>
-        </Link>
-      </div>
-      <p className="mt-2 text-xs leading-5 text-[var(--ink-soft)]">{detail}</p>
-    </article>
+    <div className="dashboard-section-header">
+      <h2 id={id}>{title}</h2>
+      {href && linkLabel ? (
+        <Link href={href}>{linkLabel}<span aria-hidden="true">↗</span></Link>
+      ) : null}
+    </div>
   );
 }
 
@@ -114,161 +110,157 @@ export function DashboardOverview({
   featuredGoal,
   goalCount,
   incomeCount,
-  insights,
+  recentTransactions,
   snapshot,
   transactionCount,
 }: DashboardOverviewProps) {
-  const realAvailableIsPositive = snapshot.realAvailableCents >= 0;
   const visibleBudgets = categoryBudgets.slice(0, 3);
+  const recurringIncomeDetail = getRecurringEntryDashboardDetail("income", {
+    activeCount: activeIncomeCount,
+    totalCount: incomeCount,
+  });
+  const recurringExpenseDetail = getRecurringEntryDashboardDetail("expense", {
+    activeCount: activeExpenseCount,
+    totalCount: expenseCount,
+  });
 
   return (
-    <div className="cockpit-stack">
-      <section className="cockpit-grid" aria-label="Synthèse financière du mois">
-        <article className="ui-panel cockpit-chart-card">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="ui-kicker">Évolution du mois</p>
-              <h2 className="ui-card-title">Reste réel au fil du mois</h2>
-            </div>
-            <div className="sm:text-right">
-              <p className="text-xs font-bold text-[var(--ink-soft)]">Dépensé ce mois</p>
-              <p className="font-amount mt-1 text-xl font-extrabold">{formatCents(snapshot.totalTransactionsCents, currencyCode)}</p>
-            </div>
-          </div>
-          {transactionCount === 0 ? (
-            <div className="chart-empty mt-5">
-              <div>
-                <p className="text-sm font-extrabold">Aucune variation pour le moment</p>
-                <p className="mt-1 text-xs leading-5 text-[var(--ink-soft)]">La courbe évoluera à chaque transaction enregistrée.</p>
-              </div>
-              <MonthlyBalanceChart currencyCode={currencyCode} currentDay={currentDay} points={balanceTrend} />
-            </div>
-          ) : (
-            <MonthlyBalanceChart currencyCode={currencyCode} currentDay={currentDay} points={balanceTrend} />
-          )}
-        </article>
-
-        <article className={`cockpit-balance-card ${realAvailableIsPositive ? "" : "is-negative"}`}>
+    <div className="dashboard-layout">
+      <section className="dashboard-kpi-grid" aria-label="Synthèse financière du mois">
+        <MetricCard
+          detail="Disponible après votre plan et vos dépenses."
+          icon="wallet"
+          label="Reste réel"
+          value={formatCents(snapshot.realAvailableCents, currencyCode)}
+        />
+        <MetricCard
+          detail={`Sur ${formatCents(snapshot.totalIncomeCents, currencyCode)} de revenus`}
+          icon="transaction"
+          label="Dépensé ce mois"
+          value={formatCents(snapshot.totalTransactionsCents, currencyCode)}
+        />
+        <MetricCard
+          detail="Allocation effective ce mois-ci"
+          icon="goal"
+          label="Épargne prévue"
+          value={formatCents(snapshot.totalGoalAllocationsCents, currencyCode)}
+        />
+        <article className="dashboard-purchase-card">
+          <div className="dashboard-purchase-icon" aria-hidden="true"><AppIcon name="check" /></div>
           <div>
-            <p className="ui-kicker text-[var(--cockpit-muted)]">Reste réel</p>
-            <p className="font-amount mt-3 break-words text-[clamp(2.25rem,4vw,3.65rem)] font-extrabold leading-none tracking-[-0.06em]">
-              {formatCents(snapshot.realAvailableCents, currencyCode)}
-            </p>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-[var(--cockpit-muted)]">
-              {realAvailableIsPositive
-                ? "La marge réellement disponible après votre plan et les dépenses saisies."
-                : "Les dépenses enregistrées dépassent le budget disponible du mois."}
-            </p>
+            <h2>Purchase Checker</h2>
+            <p>Mesurez l’impact d’un achat sur votre reste réel.</p>
           </div>
-          <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-[var(--cockpit-line)]">
-            <div className="bg-[var(--cockpit-card)] p-4">
-              <dt className="text-[0.68rem] font-bold text-[var(--cockpit-muted)]">Budget disponible</dt>
-              <dd className="font-amount mt-1 break-words text-base font-extrabold">{formatCents(snapshot.availableCents, currencyCode)}</dd>
-            </div>
-            <div className="bg-[var(--cockpit-card)] p-4">
-              <dt className="text-[0.68rem] font-bold text-[var(--cockpit-muted)]">Épargne prévue</dt>
-              <dd className="font-amount mt-1 break-words text-base font-extrabold">{formatCents(snapshot.totalGoalAllocationsCents, currencyCode)}</dd>
-            </div>
-          </dl>
+          <Link href="/purchase-checker">Vérifier un achat</Link>
         </article>
+      </section>
 
-        <article className="ui-panel cockpit-budgets-card">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="ui-kicker">Budgets par catégorie</p>
-              <h2 className="ui-card-title" id="category-budget-summary-title">{visibleBudgets.length === 0 ? "Vos repères du mois" : "À surveiller ce mois-ci"}</h2>
-            </div>
-            <Link className="ui-icon-link" href="/budgets" aria-label="Voir tous les budgets">↗</Link>
-          </div>
-          {visibleBudgets.length === 0 ? (
-            <div className="ui-compact-empty mt-6">
-              <p className="font-extrabold">Aucun budget configuré</p>
-              <p className="mt-1 text-xs leading-5 text-[var(--ink-soft)]">Ajoutez un plafond à une catégorie que vous souhaitez surveiller.</p>
-              <Link className="ui-text-link mt-4" href="/budgets">Créer un budget</Link>
-            </div>
-          ) : (
-            <ul className="mt-6 space-y-5">
-              {visibleBudgets.map((budget) => (
-                <li key={budget.id}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="truncate text-sm font-extrabold">{budget.category}</h3>
-                      <p className="mt-1 text-xs text-[var(--ink-soft)]">{formatCents(budget.spentCents, currencyCode)} sur {formatCents(budget.monthlyBudgetCents, currencyCode)}</p>
-                    </div>
-                    <StatusBadge status={budget.status} />
-                  </div>
-                  <div aria-label={`${budget.percentageConsumed} % du budget ${budget.category} consommé`} aria-valuemax={100} aria-valuemin={0} aria-valuenow={budget.progressPercent} className="ui-progress mt-3" role="progressbar">
-                    <span className={budget.status === "exceeded" ? "is-danger" : budget.status === "near" || budget.status === "reached" ? "is-warning" : ""} style={{ width: `${budget.progressPercent}%` }} />
-                  </div>
-                  <p className="mt-2 text-xs font-bold text-[var(--ink-soft)]">
-                    {budget.remainingCents < 0 ? `Dépassé de ${formatCents(Math.abs(budget.remainingCents), currencyCode)}` : `${formatCents(budget.remainingCents, currencyCode)} restants`}{" · "}{budget.percentageConsumed} % consommé
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </article>
+      <div className="dashboard-content-grid">
+        <div className="dashboard-primary-column">
+          <section className="ui-panel dashboard-chart-card" aria-labelledby="balance-chart-heading">
+            <DashboardSectionHeader id="balance-chart-heading" title="Reste réel au fil du mois" />
+            <p className="dashboard-section-note">
+              Le solde quotidien tient compte des transactions enregistrées.
+            </p>
+            {transactionCount === 0 ? (
+              <p className="dashboard-inline-empty">Aucune variation pour le moment. La courbe évoluera avec vos transactions.</p>
+            ) : null}
+            <MonthlyBalanceChart
+              currencyCode={currencyCode}
+              currentDay={currentDay}
+              points={balanceTrend}
+            />
+          </section>
 
-        <article className="ui-panel cockpit-goal-card">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="ui-kicker">Objectif en avant</p>
-              <h2 className="ui-card-title">Votre prochain cap</h2>
-            </div>
-            <Link className="ui-icon-link" href="/goals" aria-label="Voir tous les objectifs">↗</Link>
-          </div>
-          {featuredGoal ? (
-            <div className="mt-7">
-              <div className="goal-orbit" style={{ "--goal-progress": `${featuredGoal.progressPercent * 3.6}deg` } as CSSProperties}>
-                <div><strong>{featuredGoal.progressPercent} %</strong><span>atteint</span></div>
+          <section className="ui-panel dashboard-transactions-card" aria-labelledby="recent-transactions-title">
+            <DashboardSectionHeader href="/transactions" id="recent-transactions-title" linkLabel="Voir toutes" title="Transactions récentes" />
+            {recentTransactions.length === 0 ? (
+              <div className="dashboard-table-empty">
+                <p>Aucune transaction ce mois-ci</p>
+                <span>Les dépenses ponctuelles apparaîtront ici.</span>
               </div>
-              <h3 className="mt-5 truncate font-display text-xl font-semibold tracking-[-0.03em]">{featuredGoal.name}</h3>
-              <p className="mt-1 text-xs text-[var(--ink-soft)]">{formatCents(featuredGoal.currentAmountCents, currencyCode)} sur {formatCents(featuredGoal.targetAmountCents, currencyCode)}</p>
-              <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-[var(--line)] pt-4 text-xs">
-                <div><dt className="text-[var(--ink-soft)]">Allocation / mois</dt><dd className="font-amount mt-1 font-extrabold">{formatCents(featuredGoal.monthlyAllocationCents, currencyCode)}</dd></div>
-                <div><dt className="text-[var(--ink-soft)]">Estimation</dt><dd className="mt-1 font-extrabold">{featuredGoal.isReached ? "Atteint" : featuredGoal.estimatedMonths === null ? "Indisponible" : `${featuredGoal.estimatedMonths} mois`}</dd></div>
-              </dl>
-            </div>
-          ) : (
-            <div className="ui-compact-empty mt-6">
-              <p className="font-extrabold">Aucun objectif d’épargne</p>
-              <p className="mt-1 text-xs leading-5 text-[var(--ink-soft)]">Créez un cap pour donner une direction à votre épargne.</p>
-              <Link className="ui-text-link mt-4" href="/goals">Créer un objectif</Link>
-            </div>
-          )}
-        </article>
-
-        <article className="cockpit-insights-card">
-          <div className="flex items-start justify-between gap-4">
-            <div><p className="ui-kicker text-[var(--cockpit-muted)]">Analyse déterministe</p><h2 className="ui-card-title text-white">Ce que dit votre mois</h2></div>
-            <span className="ui-badge border border-[var(--cockpit-line)] text-[var(--cockpit-muted)]">Sans IA</span>
-          </div>
-          <ol className="mt-6 space-y-5">
-            {insights.map((insight, index) => {
-              const content = getInsightContent({ currencyCode, insight });
-              return (
-                <li className="grid grid-cols-[28px_1fr] gap-3" key={`${insight.kind}-${index}`}>
-                  <span className={`insight-index is-${insight.tone}`}>{String(index + 1).padStart(2, "0")}</span>
-                  <div><h3 className="text-sm font-extrabold text-white">{content.title}</h3><p className="mt-1 text-xs leading-5 text-[var(--cockpit-muted)]">{content.detail}</p></div>
-                </li>
-              );
-            })}
-          </ol>
-        </article>
-      </section>
-
-      <section className="ui-panel overflow-hidden" aria-labelledby="monthly-plan-title">
-        <div className="flex flex-col gap-2 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div><p className="ui-kicker">Structure du mois</p><h2 className="ui-card-title" id="monthly-plan-title">Le plan qui construit votre reste</h2></div>
-          <p className="text-xs text-[var(--ink-soft)]">Montants mensuels actifs uniquement</p>
+            ) : (
+              <div className="dashboard-table-scroll">
+                <table className="dashboard-transactions-table">
+                  <caption className="sr-only">Transactions les plus récentes du mois en cours</caption>
+                  <thead><tr><th>Date</th><th>Description</th><th>Catégorie</th><th>Montant</th></tr></thead>
+                  <tbody>
+                    {recentTransactions.map((transaction, index) => (
+                      <tr key={`${transaction.transactionDate}-${transaction.description}-${index}`}>
+                        <td>{formatTransactionDate(transaction.transactionDate)}</td>
+                        <td><strong>{transaction.description}</strong></td>
+                        <td><span className="transaction-category-dot" aria-hidden="true" />{transaction.category}</td>
+                        <td className="font-amount">−{formatCents(transaction.amountCents, currencyCode)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
         </div>
-        <div className="border-t border-[var(--line)] lg:grid lg:grid-cols-4">
-          <PlanMetric detail={getRecurringEntryDashboardDetail("income", { activeCount: activeIncomeCount, totalCount: incomeCount })} href="/incomes" label="Revenus mensuels" value={formatCents(snapshot.totalIncomeCents, currencyCode)} />
-          <PlanMetric detail={getRecurringEntryDashboardDetail("expense", { activeCount: activeExpenseCount, totalCount: expenseCount })} href="/expenses" label="Dépenses fixes" value={formatCents(snapshot.totalFixedExpensesCents, currencyCode)} />
-          <PlanMetric detail={transactionCount === 0 ? "Aucune transaction enregistrée ce mois-ci." : `${transactionCount} transaction${transactionCount > 1 ? "s" : ""} ce mois-ci.`} href="/transactions" label="Dépenses ponctuelles" value={formatCents(snapshot.totalTransactionsCents, currencyCode)} />
-          <PlanMetric detail={goalCount === 0 ? "Aucun objectif d’épargne enregistré." : snapshot.activeGoalCount === 0 ? "Tous vos objectifs sont atteints." : `${snapshot.activeGoalCount} objectif${snapshot.activeGoalCount > 1 ? "s" : ""} encore en route.`} href="/goals" label="Objectifs actifs" value={String(snapshot.activeGoalCount)} />
-        </div>
-      </section>
+
+        <aside className="dashboard-secondary-column" aria-label="Repères complémentaires">
+          <section className="ui-panel dashboard-goal-card">
+            <DashboardSectionHeader href="/goals" linkLabel="Voir tout" title="Objectif principal" />
+            {featuredGoal ? (
+              <>
+                <div className="dashboard-goal-summary">
+                  <div className="goal-orbit" style={{ "--goal-progress": `${featuredGoal.progressPercent * 3.6}deg` } as CSSProperties}>
+                    <div><strong>{featuredGoal.progressPercent} %</strong><span>atteint</span></div>
+                  </div>
+                  <div>
+                    <h3>{featuredGoal.name}</h3>
+                    <p>{formatCents(featuredGoal.currentAmountCents, currencyCode)} sur {formatCents(featuredGoal.targetAmountCents, currencyCode)}</p>
+                  </div>
+                </div>
+                <dl className="dashboard-detail-list">
+                  <div><dt>Estimation</dt><dd>{featuredGoal.isReached ? "Atteint" : featuredGoal.estimatedMonths === null ? "Indisponible" : `${featuredGoal.estimatedMonths} mois`}</dd></div>
+                  <div><dt>Allocation mensuelle</dt><dd className="font-amount">{formatCents(featuredGoal.monthlyAllocationCents, currencyCode)}</dd></div>
+                  <div><dt>Épargne restante</dt><dd className="font-amount">{formatCents(featuredGoal.remainingAmountCents, currencyCode)}</dd></div>
+                </dl>
+              </>
+            ) : (
+              <div className="dashboard-module-empty"><p>Aucun objectif d’épargne</p><Link href="/goals">Créer un objectif</Link></div>
+            )}
+          </section>
+
+          <section className="ui-panel dashboard-budgets-card">
+            <DashboardSectionHeader href="/budgets" linkLabel="Voir tout" title="Budgets à surveiller" />
+            {visibleBudgets.length === 0 ? (
+              <div className="dashboard-module-empty"><p>Aucun budget configuré</p><Link href="/budgets">Créer un budget</Link></div>
+            ) : (
+              <ul>
+                {visibleBudgets.map((budget) => (
+                  <li key={budget.id}>
+                    <div className="dashboard-budget-heading">
+                      <div><h3>{budget.category}</h3><span>{formatCents(budget.spentCents, currencyCode)} sur {formatCents(budget.monthlyBudgetCents, currencyCode)}</span></div>
+                      <StatusBadge status={budget.status} />
+                    </div>
+                    <div aria-label={`${budget.percentageConsumed} % du budget ${budget.category} consommé`} aria-valuemax={100} aria-valuemin={0} aria-valuenow={budget.progressPercent} className="ui-progress" role="progressbar"><span className={budget.status === "exceeded" ? "is-danger" : budget.status === "near" || budget.status === "reached" ? "is-warning" : ""} style={{ width: `${budget.progressPercent}%` }} /></div>
+                    <p className="dashboard-budget-status">
+                      {budget.remainingCents < 0
+                        ? `Dépassé de ${formatCents(Math.abs(budget.remainingCents), currencyCode)}`
+                        : `${formatCents(budget.remainingCents, currencyCode)} restants`}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <article className="ui-panel dashboard-plan-card">
+            <DashboardSectionHeader title="Plan mensuel" />
+            <dl className="dashboard-detail-list">
+              <div><dt>Budget disponible</dt><dd className="font-amount">{formatCents(snapshot.availableCents, currencyCode)}</dd><small>Après charges fixes et épargne prévue.</small></div>
+              <div><dt>Revenus mensuels</dt><dd className="font-amount">{formatCents(snapshot.totalIncomeCents, currencyCode)}</dd><small>{recurringIncomeDetail}</small></div>
+              <div><dt>Dépenses fixes</dt><dd className="font-amount">{formatCents(snapshot.totalFixedExpensesCents, currencyCode)}</dd><small>{recurringExpenseDetail}</small></div>
+              <div><dt>Dépenses ponctuelles</dt><dd className="font-amount">{formatCents(snapshot.totalTransactionsCents, currencyCode)}</dd><small>{transactionCount === 0 ? "Aucune transaction enregistrée ce mois-ci." : `${transactionCount} transaction${transactionCount > 1 ? "s" : ""} ce mois-ci.`}</small></div>
+              <div><dt>Objectifs actifs</dt><dd>{snapshot.activeGoalCount}</dd><small>{goalCount === 0 ? "Aucun objectif d’épargne enregistré." : snapshot.activeGoalCount === 0 ? "Tous vos objectifs sont atteints." : `${goalCount} objectif${goalCount > 1 ? "s" : ""} au total.`}</small></div>
+            </dl>
+          </article>
+        </aside>
+      </div>
     </div>
   );
 }

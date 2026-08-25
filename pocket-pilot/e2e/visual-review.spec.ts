@@ -13,7 +13,7 @@ import {
 } from "./support/ui";
 
 const privatePages = [
-  { name: "dashboard", path: "/", title: "Vue d’ensemble" },
+  { name: "dashboard", path: "/", title: "Bonjour !" },
   {
     name: "transactions",
     path: "/transactions",
@@ -163,11 +163,12 @@ test("les pages principales restent cohérentes dans le viewport de référence"
         page.getByRole("img", { name: "Évolution du reste réel pendant le mois" }),
       ).toBeVisible();
       await expect(
-        page.getByRole("heading", { name: "Ce que dit votre mois" }),
+        page.getByRole("heading", { name: "Transactions récentes" }),
       ).toBeVisible();
       await expect(
-        page.getByRole("heading", { name: "Votre prochain cap" }),
+        page.getByRole("heading", { name: "Objectif principal" }),
       ).toBeVisible();
+      await expect(page.getByText("Chaussures", { exact: true })).toBeVisible();
     }
     await prepareVisualCapture(page);
     await page.screenshot({
