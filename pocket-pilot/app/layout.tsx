@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  applicationName: "PocketPilot",
   title: "PocketPilot — Vos projets, en ligne de mire",
   description:
     "Planifiez votre épargne avec un cap clair, sans complexité bancaire.",

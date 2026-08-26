@@ -2,12 +2,14 @@
 
 import type { ErrorInfo } from "next/error";
 
+import { PocketPilotLogo } from "@/app/_components/pocketpilot-logo";
+
 export default function ErrorPage({ retry }: ErrorInfo) {
   return (
     <main className="grid min-h-screen place-items-center bg-[var(--canvas)] px-5 py-12">
       <section className="ui-panel w-full max-w-xl p-8 text-center sm:p-12">
         <span className="brand-mark mx-auto">
-          P
+          <PocketPilotLogo decorative={false} size={36} />
         </span>
         <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.17em] text-[var(--accent)]">
           Chargement interrompu

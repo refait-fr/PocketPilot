@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { PocketPilotLogo } from "@/app/_components/pocketpilot-logo";
 import { OnboardingForm } from "@/app/onboarding/onboarding-form";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,7 +22,7 @@ export default async function OnboardingPage() {
 
   return (
     <main className="min-h-screen bg-[var(--canvas)] px-5 py-7 sm:px-8 sm:py-10">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between"><span className="font-display text-2xl font-semibold tracking-[-0.04em]">PocketPilot</span><span className="ui-badge bg-[var(--surface-strong)] text-[var(--ink-soft)]">Étape 1 sur 1</span></div>
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between"><div className="flex items-center gap-3"><PocketPilotLogo priority size={34} /><span className="font-display text-2xl font-semibold tracking-[-0.04em]">PocketPilot</span></div><span className="ui-badge bg-[var(--surface-strong)] text-[var(--ink-soft)]">Étape 1 sur 1</span></div>
       <section className="ui-panel mx-auto mt-8 grid w-full max-w-5xl overflow-hidden lg:grid-cols-[0.9fr_1.1fr]">
         <div className="auth-showcase onboarding-showcase p-8 text-white sm:p-10 lg:min-h-[500px]">
           <p className="mb-4 text-xs font-extrabold uppercase tracking-[0.16em] text-[#aebde8]">Configuration initiale</p>

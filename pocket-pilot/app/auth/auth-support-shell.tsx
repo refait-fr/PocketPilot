@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
+import { PocketPilotLogo } from "@/app/_components/pocketpilot-logo";
+
 type AuthSupportShellProps = {
   children: ReactNode;
   description: string;
@@ -21,8 +23,8 @@ export function AuthSupportShell({
           className="inline-flex items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--forest)]"
           href="/auth"
         >
-          <span className="brand-mark">
-            P
+          <span className="brand-mark" aria-hidden="true">
+            <PocketPilotLogo size={34} />
           </span>
           <span className="font-display text-2xl font-semibold tracking-[-0.04em]">
             PocketPilot

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { AppIcon } from "@/app/_components/app-icon";
+import { PocketPilotLogo } from "@/app/_components/pocketpilot-logo";
 import { SignOutButton } from "@/app/_components/sign-out-button";
 import { signOut } from "@/app/auth/actions";
 import type { AuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
@@ -54,7 +55,9 @@ type AppShellProps = {
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <Link className="brand-lockup" href="/" aria-label="PocketPilot, accueil">
-      <span className="brand-mark" aria-hidden="true">P</span>
+      <span className="brand-mark" aria-hidden="true">
+        <PocketPilotLogo size={compact ? 30 : 32} />
+      </span>
       {compact ? null : <span className="brand-name">PocketPilot</span>}
     </Link>
   );
