@@ -20,7 +20,7 @@ export default async function OnboardingPage() {
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw new Error("Impossible de vérifier le profil utilisateur.");
-  if (profile) redirect("/");
+  if (profile) redirect("/dashboard");
 
   return (
     <main className="min-h-screen bg-[var(--canvas)] px-5 py-7 sm:px-8 sm:py-10">

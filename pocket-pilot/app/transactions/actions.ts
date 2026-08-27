@@ -41,7 +41,7 @@ function validateTransactionForm(formData: FormData, maximumTransactionDate: str
 }
 
 function revalidateTransactionViews() {
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath("/budgets");
   revalidatePath("/purchase-checker");
   revalidatePath("/transactions");

@@ -44,7 +44,7 @@ export async function proxy(request: NextRequest) {
   const userId = claimsData?.claims.sub;
   const pathname = request.nextUrl.pathname;
   const isAuthPage = pathname === "/auth";
-  const isPublicPage = pathname === "/privacy";
+  const isPublicPage = pathname === "/" || pathname === "/privacy";
   const isAuthEndpoint = [
     "/auth/confirm",
     "/auth/callback",
@@ -67,7 +67,7 @@ export async function proxy(request: NextRequest) {
     .maybeSingle();
   if (profileError) return response;
   if (!profile && pathname !== "/onboarding") return redirectWithCookies(request, "/onboarding", response);
-  if (profile && (isAuthPage || pathname === "/onboarding")) return redirectWithCookies(request, "/", response);
+  if (profile && (isAuthPage || pathname === "/onboarding")) return redirectWithCookies(request, "/dashboard", response);
 
   return response;
 }

@@ -24,7 +24,7 @@ function invalidExpenseState(
 }
 
 function revalidateExpenseViews() {
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath("/expenses");
 }
 

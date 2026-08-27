@@ -56,7 +56,7 @@ export async function saveProfile(
     };
   }
 
-  if (existingProfile) redirect("/");
+  if (existingProfile) redirect("/dashboard");
 
   const { error } = await supabase.from("profiles").insert({
     user_id: userId,
@@ -72,5 +72,5 @@ export async function saveProfile(
     };
   }
 
-  redirect("/");
+  redirect("/dashboard");
 }

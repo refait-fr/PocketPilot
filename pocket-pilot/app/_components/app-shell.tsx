@@ -8,7 +8,7 @@ import { signOut } from "@/app/auth/actions";
 import type { AuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
 
 const primaryNavigation = [
-  { href: "/", icon: "home", label: "Vue d’ensemble" },
+  { href: "/dashboard", icon: "home", label: "Vue d’ensemble" },
   { href: "/transactions", icon: "transaction", label: "Transactions" },
   { href: "/budgets", icon: "budget", label: "Budgets" },
   { href: "/goals", icon: "goal", label: "Objectifs" },
@@ -26,7 +26,7 @@ const desktopNavigation = [
 ] as const;
 
 const mobileNavigation = [
-  { href: "/", icon: "home", label: "Accueil" },
+  { href: "/dashboard", icon: "home", label: "Accueil" },
   { href: "/transactions", icon: "transaction", label: "Transactions" },
   { href: "/budgets", icon: "budget", label: "Budgets" },
   { href: "/goals", icon: "goal", label: "Objectifs" },
@@ -54,7 +54,7 @@ type AppShellProps = {
 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <Link className="brand-lockup" href="/" aria-label="PocketPilot, accueil">
+    <Link className="brand-lockup" href="/dashboard" aria-label="PocketPilot, tableau de bord">
       <span className="brand-mark" aria-hidden="true">
         <PocketPilotLogo size={compact ? 30 : 32} />
       </span>
@@ -117,7 +117,7 @@ function MobileMenu({ activePath, currencyCode }: { activePath?: AppPath; curren
 }
 
 export function AppShell({ activePath, children, description, eyebrow, profile, title }: AppShellProps) {
-  const isDashboard = activePath === "/";
+  const isDashboard = activePath === "/dashboard";
 
   return (
     <div className="app-frame">

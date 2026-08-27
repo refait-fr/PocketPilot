@@ -83,7 +83,7 @@ export function PurchaseTransactionConfirmation({
         </p>
         <Link
           className="ui-button-primary mt-4"
-          href="/"
+          href="/dashboard"
         >
           Voir le dashboard
         </Link>

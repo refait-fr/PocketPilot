@@ -29,7 +29,7 @@ function invalidGoalState(
 }
 
 function revalidateGoalViews() {
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath("/goals");
 }
 

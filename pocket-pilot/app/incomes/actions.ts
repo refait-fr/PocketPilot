@@ -26,7 +26,7 @@ function invalidIncomeState(
 }
 
 function revalidateIncomeViews() {
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath("/incomes");
 }
 

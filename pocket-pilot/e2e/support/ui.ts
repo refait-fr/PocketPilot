@@ -10,7 +10,7 @@ export async function login(page: Page, account: TestAccount): Promise<void> {
 }
 
 export async function expectDashboard(page: Page): Promise<void> {
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/dashboard$/);
   await expect(
     page.getByRole("heading", { name: "Bonjour !" }),
   ).toBeVisible();

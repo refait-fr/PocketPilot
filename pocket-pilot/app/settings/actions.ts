@@ -82,7 +82,7 @@ export async function updateProfileSettings(
     };
   }
 
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath("/settings");
 
   return {

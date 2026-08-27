@@ -103,7 +103,7 @@ export async function signIn(
     };
   }
 
-  redirect("/");
+  redirect("/dashboard");
 }
 
 export async function signUp(

@@ -1,39 +1,29 @@
-import { DashboardOverview } from "@/app/_components/dashboard-overview";
-import { AppShell } from "@/app/_components/app-shell";
-import { loadCurrentMonthOverview } from "@/lib/dashboard/current-month-overview";
-import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
+import type { Metadata } from "next";
 
-export default async function Home() {
-  const { profile, supabase, userId } = await requireAuthenticatedProfile();
-  const overview = await loadCurrentMonthOverview({
-    supabase,
-    timeZone: profile.timeZone,
-    userId,
-  });
+import { LandingPage } from "@/app/_components/landing/landing-page";
 
-  return (
-    <AppShell
-      activePath="/"
-      description="Synthèse du plan, des dépenses et des objectifs pour le mois en cours."
-      eyebrow="Mois en cours · Synthèse financière"
-      profile={profile}
-      title="Bonjour !"
-    >
-      <DashboardOverview
-        activeExpenseCount={overview.activeExpenseCount}
-        activeIncomeCount={overview.activeIncomeCount}
-        balanceTrend={overview.balanceTrend}
-        currencyCode={profile.currencyCode}
-        categoryBudgets={overview.rankedCategoryBudgets}
-        currentDay={overview.currentDay}
-        expenseCount={overview.expenseCount}
-        featuredGoal={overview.featuredGoal}
-        goalCount={overview.goalCount}
-        incomeCount={overview.incomeCount}
-        recentTransactions={overview.recentTransactions}
-        snapshot={overview.snapshot}
-        transactionCount={overview.transactionCount}
-      />
-    </AppShell>
-  );
+const title = "PocketPilot — Know what you really have left";
+const description =
+  "PocketPilot turns your income, expenses, budgets and goals into one clear view of what you really have left this month.";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  description,
+  openGraph: {
+    description,
+    siteName: "PocketPilot",
+    title,
+    type: "website",
+    url: "/",
+  },
+  title,
+  twitter: {
+    card: "summary",
+    description,
+    title,
+  },
+};
+
+export default function HomePage() {
+  return <LandingPage />;
 }

@@ -50,7 +50,7 @@ export default async function ResetPasswordPage({
           {AUTH_MESSAGES.serviceUnavailable}
         </div>
       ) : hasValidSession ? (
-        <PasswordUpdateForm returnHref="/" returnLabel="Retourner dans PocketPilot" />
+        <PasswordUpdateForm returnHref="/dashboard" returnLabel="Retourner dans PocketPilot" />
       ) : (
         <div className="grid gap-5">
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800" role="alert">

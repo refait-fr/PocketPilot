@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Manrope } from "next/font/google";
 import "./globals.css";
+import "./landing.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -14,6 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   applicationName: "PocketPilot",
+  metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
   title: "PocketPilot — Vos projets, en ligne de mire",
   description:
     "Planifiez votre épargne avec un cap clair, sans complexité bancaire.",

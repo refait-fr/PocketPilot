@@ -26,16 +26,13 @@ async function createTransaction(
   const creationDisclosure = page.locator(".creation-disclosure");
   const disclosureButton = creationDisclosure.locator(".creation-summary");
   await expect(disclosureButton).toBeVisible();
-  if ((await disclosureButton.getAttribute("aria-expanded")) === "false") {
-    await expect.poll(async () => {
-      if ((await disclosureButton.getAttribute("aria-expanded")) === "true") {
-        return true;
-      }
+  await expect.poll(async () => {
+    if (await submitButton.isVisible()) return true;
+    if ((await disclosureButton.getAttribute("aria-expanded")) === "false") {
       await disclosureButton.click();
-      return false;
-    }).toBe(true);
-  }
-  await expect(submitButton).toBeVisible();
+    }
+    return false;
+  }).toBe(true);
   const form = submitButton.locator("xpath=ancestor::form");
   await form.getByLabel("Montant").fill(amount);
   await form.getByLabel("Catégorie").selectOption("Shopping");

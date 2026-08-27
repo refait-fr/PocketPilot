@@ -13,7 +13,7 @@ import {
 } from "./support/ui";
 
 const privatePages = [
-  { name: "dashboard", path: "/", title: "Bonjour !" },
+  { name: "dashboard", path: "/dashboard", title: "Bonjour !" },
   {
     name: "transactions",
     path: "/transactions",

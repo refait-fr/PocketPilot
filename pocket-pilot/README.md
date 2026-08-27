@@ -93,7 +93,7 @@ PocketPilot fournit une URL de redirection construite uniquement depuis `SITE_UR
 npm run dev
 ```
 
-Ouvrez [http://localhost:3000](http://localhost:3000). Une session anonyme est redirigée vers `/auth`, une session sans profil vers `/onboarding`, puis un profil complet vers le dashboard.
+Ouvrez [http://localhost:3000](http://localhost:3000) pour afficher la landing publique. Le dashboard authentifié se trouve sur `/dashboard` : une session anonyme y est redirigée vers `/auth`, une session sans profil vers `/onboarding`, puis un profil complet vers le dashboard.
 
 ## Tests et qualité
 
@@ -185,8 +185,8 @@ npm run test:db
 
 | Zone | Responsabilité |
 | --- | --- |
-| `app/` | routes App Router, Server Components, Server Actions et états UI |
-| `app/_components/` | composants partagés du shell, du dashboard et des entrées récurrentes |
+| `app/` | routes App Router, landing publique, Server Components, Server Actions et états UI |
+| `app/_components/` | composants partagés du shell, du dashboard, de la landing et des entrées récurrentes |
 | `lib/finance/` | validation et calculs financiers purs et déterministes |
 | `lib/supabase/` | clients SSR/navigateur et garde de session avec profil |
 | `proxy.ts` | rafraîchissement de session et redirections Auth/onboarding |

@@ -29,7 +29,7 @@ function validateForm(formData: FormData) {
 }
 
 function revalidateBudgetViews() {
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath("/budgets");
   revalidatePath("/purchase-checker");
 }
