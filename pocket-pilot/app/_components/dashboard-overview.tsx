@@ -258,6 +258,12 @@ export function DashboardOverview({
               <div><dt>Dépenses ponctuelles</dt><dd className="font-amount">{formatCents(snapshot.totalTransactionsCents, currencyCode)}</dd><small>{transactionCount === 0 ? "Aucune transaction enregistrée ce mois-ci." : `${transactionCount} transaction${transactionCount > 1 ? "s" : ""} ce mois-ci.`}</small></div>
               <div><dt>Objectifs actifs</dt><dd>{snapshot.activeGoalCount}</dd><small>{goalCount === 0 ? "Aucun objectif d’épargne enregistré." : snapshot.activeGoalCount === 0 ? "Tous vos objectifs sont atteints." : `${goalCount} objectif${goalCount > 1 ? "s" : ""} au total.`}</small></div>
             </dl>
+            {incomeCount === 0 || expenseCount === 0 ? (
+              <div className="mt-5 flex flex-wrap gap-2 border-t border-[var(--line)] pt-5">
+                {incomeCount === 0 ? <Link className="ui-button-primary min-h-10 px-3 py-2 text-xs" href="/incomes">Ajouter un revenu</Link> : null}
+                {expenseCount === 0 ? <Link className="ui-button-secondary min-h-10 px-3 py-2 text-xs" href="/expenses">Ajouter une charge fixe</Link> : null}
+              </div>
+            ) : null}
           </article>
         </aside>
       </div>

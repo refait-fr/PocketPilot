@@ -44,6 +44,7 @@ export async function proxy(request: NextRequest) {
   const userId = claimsData?.claims.sub;
   const pathname = request.nextUrl.pathname;
   const isAuthPage = pathname === "/auth";
+  const isPublicPage = pathname === "/privacy";
   const isAuthEndpoint = [
     "/auth/confirm",
     "/auth/callback",
@@ -53,11 +54,11 @@ export async function proxy(request: NextRequest) {
   ].includes(pathname);
 
   if (!userId) {
-    if (!isAuthPage && !isAuthEndpoint) return redirectWithCookies(request, "/auth", response);
+    if (!isAuthPage && !isAuthEndpoint && !isPublicPage) return redirectWithCookies(request, "/auth", response);
     return response;
   }
 
-  if (isAuthEndpoint) return response;
+  if (isAuthEndpoint || isPublicPage) return response;
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")

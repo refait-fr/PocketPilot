@@ -4,6 +4,10 @@ import test from "node:test";
 import { getAuthNotice } from "./auth-notice.ts";
 
 test("retourne uniquement les messages Auth internes autorisés", () => {
+  assert.deepEqual(getAuthNotice("account-deleted"), {
+    kind: "success",
+    message: "Votre compte et ses données ont été supprimés.",
+  });
   assert.deepEqual(getAuthNotice("signed-out"), {
     kind: "success",
     message: "Vous êtes déconnecté.",

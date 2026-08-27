@@ -93,3 +93,46 @@ test("refuse les dates calendaires impossibles", () => {
     assert.equal(isValidTransactionDate(value), false);
   }
 });
+
+test("refuse une transaction future selon la date du profil", () => {
+  const baseInput = {
+    amount: "10",
+    category: "Autre",
+    description: "",
+    maximumTransactionDate: "2026-08-27",
+  };
+
+  for (const transactionDate of ["2026-08-26", "2026-08-27"]) {
+    assert.equal(validateTransactionInput({ ...baseInput, transactionDate }).valid, true);
+  }
+
+  const tomorrow = validateTransactionInput({
+    ...baseInput,
+    transactionDate: "2026-08-28",
+  });
+  assert.equal(tomorrow.valid, false);
+  if (!tomorrow.valid) {
+    assert.equal(
+      tomorrow.fieldErrors.transactionDate,
+      "Une transaction future ne peut pas être enregistrée.",
+    );
+  }
+});
+
+test("applique correctement la limite aux changements de mois", () => {
+  const januaryLimit = {
+    amount: "10",
+    category: "Autre",
+    description: "",
+    maximumTransactionDate: "2027-01-31",
+  };
+
+  assert.equal(
+    validateTransactionInput({ ...januaryLimit, transactionDate: "2027-01-31" }).valid,
+    true,
+  );
+  assert.equal(
+    validateTransactionInput({ ...januaryLimit, transactionDate: "2027-02-01" }).valid,
+    false,
+  );
+});

@@ -28,6 +28,7 @@ export default async function TransactionsPage({
 }) {
   const { profile, supabase, userId } = await requireAuthenticatedProfile();
   const currentMonth = getCalendarMonthInTimeZone(new Date(), profile.timeZone);
+  const maximumTransactionDate = getCalendarDateInTimeZone(new Date(), profile.timeZone);
   const rawMonth = (await searchParams).month;
   const selectedMonth =
     rawMonth === undefined ? currentMonth : parseCalendarMonthParam(rawMonth);
@@ -87,9 +88,10 @@ export default async function TransactionsPage({
           amount: "",
           category: "Alimentation",
           description: "",
-          transactionDate: getCalendarDateInTimeZone(new Date(), profile.timeZone),
+          transactionDate: maximumTransactionDate,
         }}
         isCurrentMonth={isSameCalendarMonth(selectedMonth, currentMonth)}
+        maximumTransactionDate={maximumTransactionDate}
         monthLabel={formatCalendarMonth(selectedMonth)}
         nextMonthHref={`/transactions?month=${formatCalendarMonthParam(nextMonth)}`}
         previousMonthHref={`/transactions?month=${formatCalendarMonthParam(previousMonth)}`}

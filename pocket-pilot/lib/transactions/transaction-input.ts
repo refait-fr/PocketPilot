@@ -70,6 +70,7 @@ export function validateTransactionInput(input: {
   amount: unknown;
   category: unknown;
   description: unknown;
+  maximumTransactionDate?: string;
   transactionDate: unknown;
 }): TransactionInputValidation {
   const values = {
@@ -100,6 +101,11 @@ export function validateTransactionInput(input: {
 
   if (!isValidTransactionDate(values.transactionDate)) {
     fieldErrors.transactionDate = "Choisissez une date valide.";
+  } else if (
+    input.maximumTransactionDate &&
+    values.transactionDate > input.maximumTransactionDate
+  ) {
+    fieldErrors.transactionDate = "Une transaction future ne peut pas être enregistrée.";
   }
 
   if (

@@ -13,6 +13,7 @@ export function TransactionManagement({
   currencyCode,
   defaultValues,
   isCurrentMonth,
+  maximumTransactionDate,
   monthLabel,
   nextMonthHref,
   previousMonthHref,
@@ -22,6 +23,7 @@ export function TransactionManagement({
   currencyCode: string;
   defaultValues: TransactionInputValues;
   isCurrentMonth: boolean;
+  maximumTransactionDate: string;
   monthLabel: string;
   nextMonthHref: string;
   previousMonthHref: string;
@@ -94,6 +96,7 @@ export function TransactionManagement({
               <TransactionRow
                 currencyCode={currencyCode}
                 key={transaction.id}
+                maximumTransactionDate={maximumTransactionDate}
                 transaction={transaction}
               />
             ))}
@@ -107,7 +110,7 @@ export function TransactionManagement({
         eyebrow="Nouvelle dépense ponctuelle"
         title="Ajouter une transaction"
       >
-        <TransactionForm action={createTransaction} defaultValues={defaultValues} mode="create" />
+        <TransactionForm action={createTransaction} defaultValues={defaultValues} maximumTransactionDate={maximumTransactionDate} mode="create" />
       </CreationDisclosure>
     </div>
   );

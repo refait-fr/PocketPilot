@@ -43,9 +43,11 @@ function DeleteButton() {
 
 export function TransactionRow({
   currencyCode,
+  maximumTransactionDate,
   transaction,
 }: {
   currencyCode: string;
+  maximumTransactionDate: string;
   transaction: TransactionView;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -75,6 +77,7 @@ export function TransactionRow({
             description: transaction.description,
             transactionDate: transaction.transactionDate,
           }}
+          maximumTransactionDate={maximumTransactionDate}
           mode="edit"
         />
       </li>

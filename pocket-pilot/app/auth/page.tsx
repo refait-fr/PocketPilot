@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { AuthForm } from "@/app/auth/auth-form";
 import { PocketPilotLogo } from "@/app/_components/pocketpilot-logo";
 import { getAuthNotice } from "@/lib/auth/auth-notice";
@@ -32,6 +34,10 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
           <h2 className="font-display text-3xl font-semibold leading-tight tracking-[-0.04em] sm:text-4xl">Connexion à PocketPilot</h2>
           <p className="mb-7 mt-3 text-sm leading-6 text-[var(--ink-soft)]">Connecte-toi ou crée ton compte pour retrouver ton plan financier.</p>
           <AuthForm initialNotice={initialNotice} />
+          <p className="mt-7 text-center text-xs leading-5 text-[var(--ink-soft)]">
+            En utilisant PocketPilot, vous pouvez consulter notre{" "}
+            <Link className="font-bold underline" href="/privacy">politique de confidentialité</Link>.
+          </p>
         </div>
       </section>
     </main>

@@ -3,17 +3,19 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(30);
+select plan(45);
 
 insert into auth.users (id, email)
 values
   ('11111111-1111-1111-1111-111111111111', 'pocketpilot-a@example.test'),
-  ('22222222-2222-2222-2222-222222222222', 'pocketpilot-b@example.test');
+  ('22222222-2222-2222-2222-222222222222', 'pocketpilot-b@example.test'),
+  ('33333333-3333-3333-3333-333333333333', 'pocketpilot-c@example.test');
 
 insert into public.profiles (user_id, currency_code, time_zone)
 values
   ('11111111-1111-1111-1111-111111111111', 'EUR', 'Europe/Paris'),
-  ('22222222-2222-2222-2222-222222222222', 'USD', 'America/New_York');
+  ('22222222-2222-2222-2222-222222222222', 'USD', 'America/New_York'),
+  ('33333333-3333-3333-3333-333333333333', 'EUR', 'UTC');
 
 insert into public.recurring_incomes (user_id, label, amount_cents)
 values
@@ -196,6 +198,43 @@ select throws_ok(
   '23505',
   null,
   'A cannot create two budgets for the same category'
+);
+
+select throws_ok(
+  $$update public.profiles set currency_code = 'USD' where user_id = '11111111-1111-1111-1111-111111111111'$$,
+  '23514',
+  null,
+  'A cannot change currency while financial data exists'
+);
+select lives_ok(
+  $$update public.profiles set time_zone = 'UTC' where user_id = '11111111-1111-1111-1111-111111111111'$$,
+  'A can still change time zone while financial data exists'
+);
+
+set local request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select lives_ok(
+  $$update public.profiles set currency_code = 'CHF' where user_id = '33333333-3333-3333-3333-333333333333'$$,
+  'C can change currency before creating financial data'
+);
+select ok(not has_function_privilege('anon', 'public.delete_current_user()', 'EXECUTE'), 'anonymous users cannot execute account deletion');
+select ok(has_function_privilege('authenticated', 'public.delete_current_user()', 'EXECUTE'), 'authenticated users can execute account deletion');
+
+set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select lives_ok($$select public.delete_current_user()$$, 'A can delete only the currently authenticated account');
+
+reset role;
+select results_eq($$select count(*) from auth.users where id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A Auth account is deleted');
+select results_eq($$select count(*) from public.profiles where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A profile is cascaded');
+select results_eq($$select count(*) from public.recurring_incomes where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A incomes are cascaded');
+select results_eq($$select count(*) from public.recurring_fixed_expenses where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A expenses are cascaded');
+select results_eq($$select count(*) from public.savings_goals where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A goals are cascaded');
+select results_eq($$select count(*) from public.transactions where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A transactions are cascaded');
+select results_eq($$select count(*) from public.category_budgets where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A budgets are cascaded');
+select results_eq($$select count(*) from auth.users where id = '22222222-2222-2222-2222-222222222222'$$, array[1::bigint], 'B Auth account remains after A deletion');
+select results_eq(
+  $$select (select count(*) from public.profiles where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.recurring_incomes where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.recurring_fixed_expenses where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.savings_goals where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.transactions where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.category_budgets where user_id = '22222222-2222-2222-2222-222222222222')$$,
+  array[6::bigint],
+  'all B data remains after A deletion'
 );
 
 select * from finish();

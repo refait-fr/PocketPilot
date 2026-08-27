@@ -30,11 +30,12 @@ function invalidTransactionState(
   };
 }
 
-function validateTransactionForm(formData: FormData) {
+function validateTransactionForm(formData: FormData, maximumTransactionDate: string) {
   return validateTransactionInput({
     amount: formData.get("amount"),
     category: formData.get("category"),
     description: formData.get("description"),
+    maximumTransactionDate,
     transactionDate: formData.get("transactionDate"),
   });
 }
@@ -50,7 +51,9 @@ export async function createTransaction(
   _previousState: TransactionActionState,
   formData: FormData,
 ): Promise<TransactionActionState> {
-  const validation = validateTransactionForm(formData);
+  const { profile, supabase, userId } = await requireAuthenticatedProfile();
+  const maximumTransactionDate = getCalendarDateInTimeZone(new Date(), profile.timeZone);
+  const validation = validateTransactionForm(formData, maximumTransactionDate);
 
   if (!validation.valid) {
     return {
@@ -61,7 +64,6 @@ export async function createTransaction(
     };
   }
 
-  const { profile, supabase, userId } = await requireAuthenticatedProfile();
   const { error } = await supabase.from("transactions").insert({
     amount_cents: validation.data.amountCents,
     category: validation.data.category,
@@ -85,7 +87,7 @@ export async function createTransaction(
     status: "success",
     values: {
       ...emptyTransactionValues,
-      transactionDate: getCalendarDateInTimeZone(new Date(), profile.timeZone),
+      transactionDate: maximumTransactionDate,
     },
   };
 }
@@ -99,7 +101,9 @@ export async function updateTransaction(
     return invalidTransactionState("Cette transaction est introuvable.");
   }
 
-  const validation = validateTransactionForm(formData);
+  const { profile, supabase, userId } = await requireAuthenticatedProfile();
+  const maximumTransactionDate = getCalendarDateInTimeZone(new Date(), profile.timeZone);
+  const validation = validateTransactionForm(formData, maximumTransactionDate);
 
   if (!validation.valid) {
     return {
@@ -110,7 +114,6 @@ export async function updateTransaction(
     };
   }
 
-  const { supabase, userId } = await requireAuthenticatedProfile();
   const { data, error } = await supabase
     .from("transactions")
     .update({

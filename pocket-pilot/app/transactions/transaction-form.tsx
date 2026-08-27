@@ -17,6 +17,7 @@ type TransactionFormProps = {
   action: TransactionFormAction;
   cancelEditing?: () => void;
   defaultValues: TransactionInputValues;
+  maximumTransactionDate: string;
   mode: "create" | "edit";
 };
 
@@ -42,6 +43,7 @@ export function TransactionForm({
   action,
   cancelEditing,
   defaultValues,
+  maximumTransactionDate,
   mode,
 }: TransactionFormProps) {
   const initialState: TransactionActionState = {
@@ -131,6 +133,7 @@ export function TransactionForm({
             defaultValue={state.values.transactionDate}
             id={`${idPrefix}-date`}
             name="transactionDate"
+            max={maximumTransactionDate}
             required
             type="date"
           />

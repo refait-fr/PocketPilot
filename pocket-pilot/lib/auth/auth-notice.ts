@@ -4,6 +4,10 @@ export type AuthNotice = {
 };
 
 const authNotices = {
+  "account-deleted": {
+    kind: "success",
+    message: "Votre compte et ses données ont été supprimés.",
+  },
   "confirmation-failed": {
     kind: "error",
     message:

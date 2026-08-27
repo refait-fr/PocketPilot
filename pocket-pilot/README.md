@@ -1,12 +1,12 @@
 # PocketPilot
 
-PocketPilot est un MVP de planification financière par objectifs pour étudiants et jeunes actifs. Il relie revenus récurrents, dépenses fixes et allocations d’épargne pour calculer un reste mensuel disponible, sans suivi exhaustif des transactions.
+PocketPilot est un MVP de planification financière par objectifs pour étudiants et jeunes actifs. Il relie revenus récurrents, dépenses fixes, transactions ponctuelles, budgets et allocations d’épargne pour calculer un reste mensuel disponible.
 
 ## Périmètre du MVP
 
-Le produit couvre l’authentification email/mot de passe, le profil financier en devise unique, les revenus récurrents, les dépenses fixes récurrentes, les objectifs d’épargne et un dashboard synthétique.
+Le produit couvre l’authentification email/mot de passe, le profil financier en devise unique, les revenus récurrents, les dépenses fixes récurrentes, les objectifs d’épargne, les transactions ponctuelles, les budgets par catégorie, le Purchase Checker et un dashboard synthétique.
 
-Il ne couvre pas les transactions quotidiennes, les catégories budgétaires, la synchronisation bancaire, la multi-devise, les investissements, l’IA ni les graphiques avancés.
+Il ne couvre pas la synchronisation bancaire, la multi-devise avec conversion, les investissements, l’IA ni les graphiques avancés.
 
 ## Stack
 
@@ -32,7 +32,7 @@ npm ci
 Copy-Item .env.example .env.local
 ```
 
-Renseignez ensuite les trois variables applicatives de `.env.local`. Les variables réservées aux tests sont documentées séparément dans `e2e/.env.example` et ne doivent pas être copiées vers un environnement de production.
+Renseignez ensuite les cinq variables applicatives de `.env.local`. Les variables réservées aux tests sont documentées séparément dans `e2e/.env.example` et ne doivent pas être copiées vers un environnement de production.
 
 ## Variables d’environnement
 
@@ -41,6 +41,8 @@ Renseignez ensuite les trois variables applicatives de `.env.local`. Les variabl
 | `SITE_URL` | oui | origine publique exacte de l’application, par exemple `http://localhost:3000` ou `https://app.example.com` |
 | `NEXT_PUBLIC_SUPABASE_URL` | oui | URL publique de l’API du projet Supabase ciblé par l’environnement |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | oui | clé publique navigateur utilisée avec les sessions Auth et les politiques RLS |
+| `PRIVACY_CONTROLLER_NAME` | avant ouverture publique | identité réelle du responsable de traitement affichée sur `/privacy` |
+| `PRIVACY_CONTACT_EMAIL` | avant ouverture publique | adresse réelle pour l’exercice des droits relatifs aux données |
 
 La clé publishable est publique par conception. Une clé `service_role`, `sb_secret_...` ou tout autre secret privilégié ne doit jamais être ajouté à l’application, à une variable préfixée par `NEXT_PUBLIC_` ou au dépôt. Voir la [documentation des clés Supabase](https://supabase.com/docs/guides/getting-started/api-keys).
 
@@ -157,7 +159,7 @@ Deux configurations sont prises en charge :
 
 Le scénario d’inscription utilise l’interface réelle, récupère le message dans Mailpit et ouvre le lien de confirmation SSR. Le scénario de récupération fait de même avec le lien Supabase réel. La suite complète exige donc une inbox lisible via `E2E_MAILPIT_URL` ; aucun parcours email n’est simulé par le SDK.
 
-Les comptes ont des adresses uniques par exécution et sont supprimés par l’API Admin en fin de test. Les données financières associées sont supprimées par les clés étrangères `ON DELETE CASCADE`.
+Les comptes ont des adresses uniques par exécution et sont supprimés par l’API Admin en fin de test. La clé privilégiée reste exclusivement dans les fixtures Node ; elle n’est jamais transmise au navigateur ni au serveur Next.js. Les données financières associées sont supprimées par les clés étrangères `ON DELETE CASCADE`.
 
 ### Couverture E2E
 
@@ -167,7 +169,7 @@ Restent dépendants d’une infrastructure email adaptée : lien de récupérati
 
 ### Tests PostgreSQL et RLS
 
-La suite `supabase/tests/database/pocketpilot_rls.test.sql` vérifie l’isolation des quatre tables entre deux utilisateurs authentifiés. Elle s’exécute exclusivement contre une instance locale jetable :
+La suite `supabase/tests/database/pocketpilot_rls.test.sql` vérifie l’isolation des six tables, le verrouillage de la devise et la suppression en cascade entre plusieurs utilisateurs authentifiés. Elle s’exécute exclusivement contre une instance locale jetable :
 
 ```powershell
 # Prérequis : Supabase CLI et Docker Desktop démarré.
@@ -204,6 +206,8 @@ Les Server Actions récupèrent `userId` depuis la session Supabase SSR. Elles i
 - le mois courant compte comme premier mois d’allocation ;
 - une allocation nulle ne produit aucune estimation ;
 - les projections sont des estimations, jamais des garanties.
+- une transaction future est refusée selon la date du fuseau horaire du profil ;
+- la devise peut changer uniquement avant la création de toute donnée financière, car aucune conversion automatique n’est effectuée.
 
 ## Build et déploiement
 
@@ -215,16 +219,16 @@ npm start
 
 Avant la mise en production :
 
-1. configurez les deux variables publiques sur l’hébergeur ;
+1. configurez les cinq variables de `.env.example` sur l’hébergeur ;
 2. appliquez la migration au projet Supabase de production ;
-3. vérifiez les quatre tables et leurs politiques RLS dans le Dashboard Supabase ;
+3. vérifiez les six tables, leurs politiques RLS et la fonction de suppression du compte dans le Dashboard Supabase ;
 4. configurez la `Site URL`, les Redirect URLs et le modèle d’email ;
 5. activez le fournisseur email/mot de passe et vérifiez le service d’envoi d’emails ;
 6. exécutez lint, typecheck, tests, build et un parcours Auth/CRUD sur l’URL déployée.
 
 ## Limites connues
 
-- les réglages affichent la devise et le fuseau horaire mais ne permettent pas encore leur modification ;
+- l’identité du responsable de traitement, le contact confidentialité et les durées de conservation des sauvegardes/journaux doivent être confirmés avant ouverture publique ;
 - les tests RLS et le lanceur E2E local nécessitent un moteur Docker-compatible actif ;
 - la suite E2E complète nécessite Mailpit ou une inbox de test lisible ; elle échoue explicitement si `E2E_MAILPIT_URL` manque ;
 - les erreurs techniques Supabase restent volontairement remplacées par des messages génériques ;
@@ -232,17 +236,8 @@ Avant la mise en production :
 
 ## Intégration continue
 
-Le workflow `.github/workflows/ci.yml` s’exécute sur les pushes vers `main` et les pull requests ciblant `main`, avec Node.js 22 et le cache npm. Il lance `npm ci`, l’audit, ESLint, TypeScript, les tests unitaires et le build.
+Le workflow `.github/workflows/ci.yml` s’exécute sur les pushes vers `main` et les pull requests ciblant `main`, avec Node.js 22 et le cache npm. Le job qualité lance `npm ci`, l’audit, ESLint, TypeScript, les tests unitaires et le build.
 
-Les E2E sont lancés uniquement lorsque les quatre secrets GitHub suivants et la variable d’inbox sont présents :
+Un second job obligatoire démarre une instance Supabase locale jetable sur le runner GitHub, applique et lint les migrations, exécute pgTAP puis Playwright avec `E2E_CONFIRM_NON_PRODUCTION=true`. Les credentials locaux sont découverts dynamiquement par le lanceur et aucun secret GitHub n’est requis. Un échec de démarrage Supabase ou d’E2E fait échouer la CI ; la couverture navigateur n’est donc plus signalée comme réussie lorsqu’elle est absente. Le rapport HTML et les traces d’échec sont déposés comme artefact pendant 14 jours.
 
-- `E2E_SUPABASE_URL` ;
-- `E2E_SUPABASE_PUBLISHABLE_KEY` ;
-- `E2E_SUPABASE_SERVICE_ROLE_KEY` ;
-- `E2E_CONFIRM_NON_PRODUCTION`, avec la valeur exacte `true`.
-
-La variable GitHub `E2E_MAILPIT_URL` doit pointer vers l’inbox du projet de test. Elle ne contient pas de secret.
-
-Sans cette configuration, le workflow affiche explicitement que Playwright a été ignoré, tandis que toutes les validations sans service externe restent obligatoires. En cas d’exécution E2E, le rapport HTML et les traces d’échec sont déposés comme artefact GitHub pendant 14 jours.
-
-Dernière révision : 24 août 2026.
+Dernière révision : 27 août 2026.

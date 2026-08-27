@@ -145,3 +145,36 @@ export async function deleteTestAccountByEmail(email: string): Promise<void> {
     await deleteTestAccount(user.id);
   }
 }
+
+export async function testAccountExists(email: string): Promise<boolean> {
+  return Boolean(await findUserByEmail(email));
+}
+
+export async function countFinancialRowsForUser(userId: string): Promise<number> {
+  const admin = getAdminClient();
+  const tables = [
+    "profiles",
+    "recurring_incomes",
+    "recurring_fixed_expenses",
+    "savings_goals",
+    "transactions",
+    "category_budgets",
+  ] as const;
+  const results = await Promise.all(
+    tables.map((table) =>
+      admin.from(table).select("user_id", { count: "exact", head: true }).eq("user_id", userId),
+    ),
+  );
+
+  const failedTables = results.flatMap(({ error }, index) =>
+    error
+      ? [`${tables[index]} (${error.code ?? error.name ?? "erreur inconnue"}: ${error.message ?? "sans message"})`]
+      : [],
+  );
+
+  if (failedTables.length > 0) {
+    throw new Error(`Impossible de vérifier les cascades du compte E2E : ${failedTables.join(", ")}.`);
+  }
+
+  return results.reduce((total, { count }) => total + (count ?? 0), 0);
+}
