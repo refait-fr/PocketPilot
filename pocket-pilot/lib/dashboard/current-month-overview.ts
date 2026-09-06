@@ -58,7 +58,7 @@ export async function loadCurrentMonthOverview({
         .order("created_at", { ascending: false }),
       supabase
         .from("transactions")
-        .select("amount_cents, category, description, transaction_date")
+        .select("id, amount_cents, category, description, transaction_date")
         .eq("user_id", userId)
         .gte("transaction_date", currentMonthRange.startInclusive)
         .lt("transaction_date", currentMonthRange.endExclusive)
@@ -85,6 +85,7 @@ export async function loadCurrentMonthOverview({
   const transactions = transactionsResult.data ?? [];
   const categoryTransactions = transactions.map((transaction) => {
     if (
+      typeof transaction.id !== "string" ||
       !isTransactionCategory(transaction.category) ||
       typeof transaction.description !== "string" ||
       transaction.description.trim().length >
@@ -100,6 +101,7 @@ export async function loadCurrentMonthOverview({
       }),
       category: transaction.category,
       description: transaction.description.trim(),
+      id: transaction.id,
       transactionDate: transaction.transaction_date,
     };
   });

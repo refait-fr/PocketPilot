@@ -17,6 +17,7 @@ type RecentTransaction = {
   amountCents: number;
   category: TransactionCategory;
   description: string;
+  id: string;
   transactionDate: string;
 };
 
@@ -185,8 +186,8 @@ export function DashboardOverview({
                   <caption className="sr-only">Transactions les plus récentes du mois en cours</caption>
                   <thead><tr><th>Date</th><th>Description</th><th>Catégorie</th><th>Montant</th></tr></thead>
                   <tbody>
-                    {recentTransactions.map((transaction, index) => (
-                      <tr key={`${transaction.transactionDate}-${transaction.description}-${index}`}>
+                    {recentTransactions.map((transaction) => (
+                      <tr key={transaction.id}>
                         <td>{formatTransactionDate(transaction.transactionDate)}</td>
                         <td><strong>{transaction.description}</strong></td>
                         <td><span className="transaction-category-dot" aria-hidden="true" />{transaction.category}</td>
