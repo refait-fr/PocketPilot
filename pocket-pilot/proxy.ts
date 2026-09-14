@@ -9,6 +9,11 @@ function redirectWithCookies(request: NextRequest, path: string, response: NextR
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+
+  // Les routes API portent leur propre authentification (ex. jeton Bearer
+  // du Raccourci iOS) : le proxy ne doit jamais les rediriger vers /auth.
+  if (request.nextUrl.pathname.startsWith("/api/")) return response;
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
