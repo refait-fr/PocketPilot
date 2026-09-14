@@ -1,7 +1,6 @@
-import Link from "next/link";
-
 import { AppShell } from "@/app/_components/app-shell";
 import { IncomeManagement } from "@/app/incomes/income-management";
+import { IncomeTabs } from "@/app/incomes/income-tabs";
 import { getCalendarDateInTimeZone } from "@/lib/finance/calendar-month";
 import {
   isValidRecurringStartDate,
@@ -51,13 +50,7 @@ export default async function IncomesPage() {
       profile={profile}
       title="Revenus"
     >
-      <p className="mb-5 text-sm leading-6 text-[var(--ink-soft)]">
-        Les dépôts exceptionnels se gèrent dans les{" "}
-        <Link className="underline" href="/incomes/ponctuels">
-          revenus ponctuels
-        </Link>
-        .
-      </p>
+      <IncomeTabs active="recurrents" />
       <IncomeManagement
         currencyCode={profile.currencyCode}
         entries={incomes}

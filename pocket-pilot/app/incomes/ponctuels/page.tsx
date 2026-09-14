@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/app/_components/app-shell";
+import { IncomeTabs } from "@/app/incomes/income-tabs";
 import { OneTimeIncomeManagement } from "@/app/incomes/ponctuels/one-time-income-management";
 import {
   addCalendarMonths,
@@ -98,6 +99,7 @@ export default async function OneTimeIncomesPage({
       profile={profile}
       title="Revenus ponctuels"
     >
+      <IncomeTabs active="ponctuels" />
       <OneTimeIncomeManagement
         allowNextMonth={
           formatCalendarMonthParam(nextMonth) <=
