@@ -14,6 +14,7 @@ export type SavingsGoalAmounts = {
 
 export type MonthlySnapshot = {
   totalIncomeCents: number;
+  totalOneTimeIncomeCents: number;
   totalFixedExpensesCents: number;
   totalGoalAllocationsCents: number;
   availableCents: number;
@@ -24,6 +25,7 @@ export type MonthlySnapshot = {
 
 type MonthlySnapshotInput = {
   incomeAmountsCents: readonly unknown[];
+  oneTimeIncomeAmountsCents?: readonly unknown[];
   fixedExpenseAmountsCents: readonly unknown[];
   goals: readonly SavingsGoalAmounts[];
   transactionAmountsCents?: readonly unknown[];
@@ -39,11 +41,20 @@ function sumCents(values: readonly unknown[], fieldName: string): number {
 
 export function calculateMonthlySnapshot({
   incomeAmountsCents,
+  oneTimeIncomeAmountsCents = [],
   fixedExpenseAmountsCents,
   goals,
   transactionAmountsCents = [],
 }: MonthlySnapshotInput): MonthlySnapshot {
-  const totalIncomeCents = sumCents(incomeAmountsCents, "Le revenu");
+  const totalRecurringIncomeCents = sumCents(incomeAmountsCents, "Le revenu");
+  const totalOneTimeIncomeCents = sumCents(
+    oneTimeIncomeAmountsCents,
+    "Le revenu ponctuel",
+  );
+  const totalIncomeCents = addCents(
+    totalRecurringIncomeCents,
+    totalOneTimeIncomeCents,
+  );
   const totalFixedExpensesCents = sumCents(
     fixedExpenseAmountsCents,
     "La dépense fixe",
@@ -75,7 +86,10 @@ export function calculateMonthlySnapshot({
     }
 
     if (currentAmountCents < targetAmountCents) {
-      const remainingAmountCents = targetAmountCents - currentAmountCents;
+      const remainingAmountCents = subtractCents(
+        targetAmountCents,
+        currentAmountCents,
+      );
       const effectiveAllocationCents = Math.min(
         monthlyAllocationCents,
         remainingAmountCents,
@@ -89,14 +103,10 @@ export function calculateMonthlySnapshot({
     }
   }
 
-  const availableCents =
-    totalIncomeCents -
-    totalFixedExpensesCents -
-    totalGoalAllocationsCents;
-
-  if (!Number.isSafeInteger(availableCents)) {
-    throw new Error("Le reste mensuel dépasse la précision entière disponible.");
-  }
+  const availableCents = subtractCents(
+    subtractCents(totalIncomeCents, totalFixedExpensesCents),
+    totalGoalAllocationsCents,
+  );
   const realAvailableCents = subtractCents(
     availableCents,
     totalTransactionsCents,
@@ -104,6 +114,7 @@ export function calculateMonthlySnapshot({
 
   return {
     totalIncomeCents,
+    totalOneTimeIncomeCents,
     totalFixedExpensesCents,
     totalGoalAllocationsCents,
     availableCents,

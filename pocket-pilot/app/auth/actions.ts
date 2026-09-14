@@ -4,9 +4,11 @@ import { redirect } from "next/navigation";
 
 import {
   getPasswordValidationMessage,
+  getSignInPasswordMessage,
   readEmailAddress,
 } from "@/lib/auth/auth-input";
 import { getAuthEmailRedirectUrl } from "@/lib/auth/auth-redirect-url";
+import { logServerError } from "@/lib/observability/server-log";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = {
@@ -53,7 +55,10 @@ function getSignUpErrorMessage(error: SignUpError): string {
   }
 }
 
-function readCredentials(formData: FormData): CredentialsResult {
+function readCredentials(
+  formData: FormData,
+  passwordMessage: (password: string) => string | undefined,
+): CredentialsResult {
   const emailResult = readEmailAddress(formData.get("email"));
   const password = String(formData.get("password") ?? "");
 
@@ -65,24 +70,34 @@ function readCredentials(formData: FormData): CredentialsResult {
     };
   }
 
-  const passwordMessage = getPasswordValidationMessage(password);
+  const message = passwordMessage(password);
 
-  if (passwordMessage) {
+  if (message) {
     return {
       valid: false,
       email: emailResult.email,
-      message: passwordMessage,
+      message,
     };
   }
 
   return { valid: true, email: emailResult.email, password };
 }
 
+function readSignInCredentials(formData: FormData): CredentialsResult {
+  // La connexion n'applique pas les règles de robustesse : un compte créé
+  // avant leur introduction doit toujours pouvoir se connecter.
+  return readCredentials(formData, getSignInPasswordMessage);
+}
+
+function readSignUpCredentials(formData: FormData): CredentialsResult {
+  return readCredentials(formData, getPasswordValidationMessage);
+}
+
 export async function signIn(
   _previousState: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  const credentials = readCredentials(formData);
+  const credentials = readSignInCredentials(formData);
 
   if (!credentials.valid) {
     return {
@@ -110,7 +125,7 @@ export async function signUp(
   _previousState: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  const credentials = readCredentials(formData);
+  const credentials = readSignUpCredentials(formData);
 
   if (!credentials.valid) {
     return {
@@ -140,6 +155,7 @@ export async function signUp(
   });
 
   if (error) {
+    logServerError("auth:sign-up", error);
     return {
       status: "error",
       message: getSignUpErrorMessage(error),

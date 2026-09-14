@@ -5,9 +5,8 @@ import { revalidatePath } from "next/cache";
 import type { BudgetActionState } from "@/app/budgets/budget-types";
 import { validateCategoryBudgetInput } from "@/lib/budgets/category-budget";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
-
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { logServerError } from "@/lib/observability/server-log";
+import { isUuid } from "@/lib/validation/uuid";
 
 const emptyValues: BudgetActionState["values"] = {
   category: "Alimentation",
@@ -57,6 +56,7 @@ export async function createCategoryBudget(
   });
 
   if (error) {
+    if (error.code !== "23505") logServerError("budgets:create", error);
     return errorState(
       error.code === "23505"
         ? "Un budget existe déjà pour cette catégorie."
@@ -79,7 +79,7 @@ export async function updateCategoryBudget(
   _previousState: BudgetActionState,
   formData: FormData,
 ): Promise<BudgetActionState> {
-  if (!UUID_PATTERN.test(budgetId)) {
+  if (!isUuid(budgetId)) {
     return errorState("Ce budget est introuvable.");
   }
 
@@ -104,6 +104,7 @@ export async function updateCategoryBudget(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("budgets:update", error);
     return errorState(
       "Le budget n’a pas pu être modifié. Il est peut-être introuvable.",
       validation.values,
@@ -127,7 +128,7 @@ export async function deleteCategoryBudget(
   void _previousState;
   void _formData;
 
-  if (!UUID_PATTERN.test(budgetId)) {
+  if (!isUuid(budgetId)) {
     return errorState("Ce budget est introuvable.");
   }
 
@@ -141,6 +142,7 @@ export async function deleteCategoryBudget(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("budgets:delete", error);
     return errorState("Le budget n’a pas pu être supprimé.");
   }
 

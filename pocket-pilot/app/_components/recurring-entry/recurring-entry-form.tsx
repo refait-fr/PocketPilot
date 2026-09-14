@@ -16,9 +16,10 @@ import { MAX_RECURRING_ENTRY_LABEL_LENGTH } from "@/lib/finance/recurring-entry-
 type RecurringEntryFormProps = {
   action: RecurringEntryFormAction;
   cancelEditing?: () => void;
-  defaultValues?: { label: string; monthlyAmount: string };
+  defaultValues?: { label: string; monthlyAmount: string; startDate?: string };
   kind: RecurringEntryKind;
   mode: "create" | "edit";
+  todayIso: string;
 };
 
 function SubmitButton({
@@ -51,18 +52,20 @@ export function RecurringEntryForm({
   defaultValues = { label: "", monthlyAmount: "" },
   kind,
   mode,
+  todayIso,
 }: RecurringEntryFormProps) {
   const initialState: RecurringEntryActionState = {
     status: "idle",
     message: "",
     fieldErrors: {},
-    values: defaultValues,
+    values: { ...defaultValues, startDate: defaultValues.startDate ?? todayIso },
   };
   const [state, formAction] = useActionState(action, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const idPrefix = useId();
   const labelId = `${idPrefix}-label`;
   const amountId = `${idPrefix}-amount`;
+  const startDateId = `${idPrefix}-start-date`;
 
   useEffect(() => {
     if (mode === "create" && state.status === "success") {
@@ -153,6 +156,30 @@ export function RecurringEntryForm({
         >
           {state.fieldErrors.monthlyAmount ??
             "Deux décimales maximum, converties en centimes."}
+        </span>
+      </label>
+
+      <label className="ui-label" htmlFor={startDateId}>
+        Début de prise en compte
+        <input
+          aria-describedby={state.fieldErrors.startDate ? `${startDateId}-error` : `${startDateId}-hint`}
+          aria-invalid={Boolean(state.fieldErrors.startDate)}
+          className="ui-input"
+          defaultValue={state.values.startDate}
+          id={startDateId}
+          name="startDate"
+          required
+          type="date"
+        />
+        <span
+          className={
+            state.fieldErrors.startDate
+              ? "text-xs text-red-700"
+              : "text-xs font-normal text-[var(--ink-soft)]"
+          }
+          id={state.fieldErrors.startDate ? `${startDateId}-error` : `${startDateId}-hint`}
+        >
+          {state.fieldErrors.startDate ?? "Une date future est possible : l’entrée comptera à partir de ce mois-là."}
         </span>
       </label>
 

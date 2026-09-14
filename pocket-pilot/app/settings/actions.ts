@@ -3,14 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { isCurrencyCode } from "@/lib/profile-options";
+import { logServerError } from "@/lib/observability/server-log";
 import { validateProfileSettings } from "@/lib/profile-settings";
-import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
+import {
+  requireAuthenticatedUser,
+  requireRawProfile,
+} from "@/lib/supabase/require-authenticated-profile";
 
 const financialTables = [
   "recurring_incomes",
   "recurring_fixed_expenses",
   "savings_goals",
   "transactions",
+  "one_time_incomes",
   "category_budgets",
 ] as const;
 
@@ -26,7 +32,7 @@ export type DeleteAccountActionState = {
 };
 
 async function userHasFinancialData(
-  supabase: Awaited<ReturnType<typeof requireAuthenticatedProfile>>["supabase"],
+  supabase: Awaited<ReturnType<typeof requireAuthenticatedUser>>["supabase"],
   userId: string,
 ): Promise<boolean> {
   const results = await Promise.all(
@@ -49,11 +55,15 @@ export async function updateProfileSettings(
   _previousState: ProfileSettingsActionState,
   formData: FormData,
 ): Promise<ProfileSettingsActionState> {
-  const { profile, supabase, userId } = await requireAuthenticatedProfile();
+  // Profil brut volontairement : la réparation d'un profil invalide passe
+  // par cette action. Le garde-fou base (trigger 23514) reste le filet.
+  const { rawProfile, supabase, userId } = await requireRawProfile();
   const hasFinancialData = await userHasFinancialData(supabase, userId);
   const validation = validateProfileSettings({
     currencyCode: formData.get("currencyCode"),
-    currentCurrencyCode: profile.currencyCode,
+    currentCurrencyCode: isCurrencyCode(rawProfile.currencyCode)
+      ? rawProfile.currencyCode
+      : null,
     hasFinancialData,
     timeZone: formData.get("timeZone"),
   });
@@ -75,8 +85,12 @@ export async function updateProfileSettings(
     .eq("user_id", userId);
 
   if (error) {
+    if (error.code !== "23514") logServerError("settings:profile-update", error);
     return {
-      message: "Les préférences n’ont pas pu être enregistrées. Réessayez dans un instant.",
+      message:
+        error.code === "23514"
+          ? "La devise ne peut plus être modifiée tant que des données financières existent. PocketPilot ne convertit pas automatiquement les montants."
+          : "Les préférences n’ont pas pu être enregistrées. Réessayez dans un instant.",
       status: "error",
       values: validation.values,
     };
@@ -103,10 +117,45 @@ export async function deleteAccount(
     };
   }
 
-  const { supabase } = await requireAuthenticatedProfile();
+  const password = String(formData.get("password") ?? "");
+
+  if (!password) {
+    return {
+      message: "Saisissez votre mot de passe pour confirmer la suppression définitive.",
+      status: "error",
+    };
+  }
+
+  const { supabase } = await requireAuthenticatedUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user?.email) {
+    if (userError) logServerError("settings:delete-account", userError);
+    return {
+      message: "Le compte n’a pas pu être supprimé. Réessayez dans un instant.",
+      status: "error",
+    };
+  }
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password,
+  });
+
+  if (signInError) {
+    return {
+      message: "Le mot de passe actuel est incorrect.",
+      status: "error",
+    };
+  }
+
   const { error } = await supabase.rpc("delete_current_user");
 
   if (error) {
+    logServerError("settings:delete-account", error);
     return {
       message: "Le compte n’a pas pu être supprimé. Réessayez dans un instant.",
       status: "error",

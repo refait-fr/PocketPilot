@@ -62,10 +62,17 @@ function Fields({
         Adresse email
         <input autoComplete="email" className="ui-input" defaultValue={defaultEmail} id="email" maxLength={254} name="email" placeholder="vous@exemple.fr" required type="email" />
       </label>
-      <label className="ui-label" htmlFor="password">
-        Mot de passe
-        <input autoComplete={mode === "login" ? "current-password" : "new-password"} className="ui-input" id="password" maxLength={72} minLength={8} name="password" placeholder="8 caractères minimum" required type="password" />
-      </label>
+      <div className="grid gap-1">
+        <label className="ui-label" htmlFor="password">
+          Mot de passe
+          <input autoComplete={mode === "login" ? "current-password" : "new-password"} className="ui-input" id="password" maxLength={72} minLength={8} name="password" placeholder="8 caractères minimum" required type="password" />
+        </label>
+        {mode === "signup" ? (
+          <span className="text-xs font-normal leading-5 text-[var(--ink-soft)]">
+            8 caractères minimum, avec au moins une lettre et un chiffre.
+          </span>
+        ) : null}
+      </div>
     </>
   );
 }

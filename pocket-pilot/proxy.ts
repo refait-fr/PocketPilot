@@ -14,7 +14,24 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !supabasePublishableKey) {
-    throw new Error("Supabase environment variables are not configured.");
+    // Jamais de throw ici : un 500 global sur chaque route serait pire
+    // qu'une redirection vers /auth pour les pages protégées.
+    console.error("Supabase environment variables are not configured.");
+    const pathname = request.nextUrl.pathname;
+    const isPublicEntry =
+      pathname === "/" ||
+      pathname === "/privacy" ||
+      pathname === "/auth" ||
+      [
+        "/auth/confirm",
+        "/auth/callback",
+        "/auth/forgot-password",
+        "/auth/resend-confirmation",
+        "/auth/reset-password",
+      ].includes(pathname);
+
+    if (!isPublicEntry) return redirectWithCookies(request, "/auth", response);
+    return response;
   }
 
   const supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
@@ -36,6 +53,9 @@ export async function proxy(request: NextRequest) {
     },
   });
 
+  // Vérification volontairement redondante avec les pages : le proxy ne fait
+  // que router, chaque page ré-authentifie côté serveur (frontière de
+  // confiance). La sélection profil reste minimale (user_id seul).
   const { data: claimsData, error: claimsError } =
     await supabase.auth.getClaims();
 

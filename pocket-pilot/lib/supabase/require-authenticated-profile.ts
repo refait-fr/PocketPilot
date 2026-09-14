@@ -12,7 +12,12 @@ export type AuthenticatedProfile = {
   timeZone: string;
 };
 
-export async function requireAuthenticatedProfile() {
+export type RawProfile = {
+  currencyCode: string;
+  timeZone: string;
+};
+
+export async function requireAuthenticatedUser() {
   const supabase = await createClient();
   const { data: claimsData, error: claimsError } =
     await supabase.auth.getClaims();
@@ -26,6 +31,12 @@ export async function requireAuthenticatedProfile() {
   if (!userId) {
     redirect("/auth");
   }
+
+  return { supabase, userId };
+}
+
+export async function requireRawProfile() {
+  const { supabase, userId } = await requireAuthenticatedUser();
 
   const { data: profile, error } = await supabase
     .from("profiles")
@@ -41,17 +52,31 @@ export async function requireAuthenticatedProfile() {
     redirect("/onboarding");
   }
 
+  const rawProfile: RawProfile = {
+    currencyCode:
+      typeof profile.currency_code === "string" ? profile.currency_code : "",
+    timeZone: typeof profile.time_zone === "string" ? profile.time_zone : "",
+  };
+
+  return { rawProfile, supabase, userId };
+}
+
+export async function requireAuthenticatedProfile() {
+  const { rawProfile, supabase, userId } = await requireRawProfile();
+
   if (
-    !isCurrencyCode(profile.currency_code) ||
-    !isValidTimeZone(profile.time_zone)
+    !isCurrencyCode(rawProfile.currencyCode) ||
+    !isValidTimeZone(rawProfile.timeZone)
   ) {
-    throw new Error("Le profil financier est invalide.");
+    // Chemin de réparation : les paramètres n'exigent pas un profil valide
+    // et permettent de corriger devise et fuseau au lieu d'afficher un 500.
+    redirect("/settings?notice=profile-invalid");
   }
 
   return {
     profile: {
-      currencyCode: profile.currency_code,
-      timeZone: profile.time_zone,
+      currencyCode: rawProfile.currencyCode,
+      timeZone: rawProfile.timeZone,
     } satisfies AuthenticatedProfile,
     supabase,
     userId,

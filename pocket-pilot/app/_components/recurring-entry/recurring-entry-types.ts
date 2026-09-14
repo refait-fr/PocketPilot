@@ -15,6 +15,7 @@ export type RecurringEntryView = {
   label: string;
   amountCents: number;
   isActive: boolean;
+  startDate: string;
 };
 
 export type RecurringEntryFormAction = (

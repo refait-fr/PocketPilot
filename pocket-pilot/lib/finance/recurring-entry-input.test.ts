@@ -19,6 +19,7 @@ test("convertit exactement les montants mensuels en centimes", () => {
     const result = validateRecurringEntryInput({
       label: "Loyer",
       monthlyAmount,
+      startDate: "2026-09-14",
     });
     assert.equal(result.valid, true);
 
@@ -33,6 +34,7 @@ test("refuse les montants nuls, négatifs et non numériques", () => {
     const result = validateRecurringEntryInput({
       label: "Loyer",
       monthlyAmount,
+      startDate: "2026-09-14",
     });
     assert.equal(result.valid, false);
   }
@@ -42,6 +44,7 @@ test("conserve les valeurs saisies lorsqu’une correction est nécessaire", () 
   const result = validateRecurringEntryInput({
     label: "  Stage été  ",
     monthlyAmount: "12,345",
+    startDate: "2026-09-14",
   });
 
   assert.equal(result.valid, false);
@@ -50,6 +53,7 @@ test("conserve les valeurs saisies lorsqu’une correction est nécessaire", () 
     assert.deepEqual(result.values, {
       label: "  Stage été  ",
       monthlyAmount: "12,345",
+      startDate: "2026-09-14",
     });
   }
 });
@@ -59,6 +63,7 @@ test("refuse les sous-centimes et les dépassements de précision", () => {
     const result = validateRecurringEntryInput({
       label: "Loyer",
       monthlyAmount,
+      startDate: "2026-09-14",
     });
     assert.equal(result.valid, false);
   }
@@ -68,6 +73,7 @@ test("accepte exactement la valeur monétaire sûre maximale", () => {
   const result = validateRecurringEntryInput({
     label: "a".repeat(100),
     monthlyAmount: "90071992547409,91",
+    startDate: "2026-09-14",
   });
 
   assert.equal(result.valid, true);
@@ -82,6 +88,7 @@ test("normalise le libellé et refuse les longueurs invalides", () => {
   const valid = validateRecurringEntryInput({
     label: "  Loyer étudiant  ",
     monthlyAmount: "650,00",
+    startDate: "2026-09-14",
   });
   assert.equal(valid.valid, true);
 
@@ -90,16 +97,50 @@ test("normalise le libellé et refuse les longueurs invalides", () => {
   }
 
   assert.equal(
-    validateRecurringEntryInput({ label: "   ", monthlyAmount: "10" }).valid,
+    validateRecurringEntryInput({ label: "   ", monthlyAmount: "10", startDate: "2026-09-14" }).valid,
     false,
   );
   assert.equal(
     validateRecurringEntryInput({
       label: "a".repeat(101),
       monthlyAmount: "10",
+      startDate: "2026-09-14",
     }).valid,
     false,
   );
+});
+
+test("accepte une date de début future pour un abonnement à venir", () => {
+  const result = validateRecurringEntryInput({
+    label: "Basic Fit",
+    monthlyAmount: "29,99",
+    startDate: "2026-11-16",
+  });
+
+  assert.equal(result.valid, true);
+
+  if (result.valid) {
+    assert.equal(result.data.startDate, "2026-11-16");
+  }
+});
+
+test("refuse une date de début absente ou impossible", () => {
+  for (const startDate of ["", "16/11/2026", "2026-02-30", "2026-13-01"]) {
+    const result = validateRecurringEntryInput({
+      label: "Basic Fit",
+      monthlyAmount: "29,99",
+      startDate,
+    });
+
+    assert.equal(result.valid, false);
+
+    if (!result.valid) {
+      assert.equal(
+        result.fieldErrors.startDate,
+        "Choisissez une date de début valide.",
+      );
+    }
+  }
 });
 
 test("valide et reformate les centimes stockés sans arrondi", () => {

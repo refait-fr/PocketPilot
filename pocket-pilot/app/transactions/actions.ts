@@ -7,9 +7,8 @@ import { getCalendarDateInTimeZone } from "@/lib/finance/calendar-month";
 import { TRANSACTION_CATEGORIES } from "@/lib/transactions/categories";
 import { validateTransactionInput } from "@/lib/transactions/transaction-input";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
-
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { logServerError } from "@/lib/observability/server-log";
+import { isUuid } from "@/lib/validation/uuid";
 
 const emptyTransactionValues: TransactionActionState["values"] = {
   amount: "",
@@ -73,6 +72,7 @@ export async function createTransaction(
   });
 
   if (error) {
+    logServerError("transactions:create", error);
     return invalidTransactionState(
       "La transaction n’a pas pu être créée. Réessayez dans un instant.",
       validation.values,
@@ -97,7 +97,7 @@ export async function updateTransaction(
   _previousState: TransactionActionState,
   formData: FormData,
 ): Promise<TransactionActionState> {
-  if (!UUID_PATTERN.test(transactionId)) {
+  if (!isUuid(transactionId)) {
     return invalidTransactionState("Cette transaction est introuvable.");
   }
 
@@ -128,6 +128,7 @@ export async function updateTransaction(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("transactions:update", error);
     return invalidTransactionState(
       "La transaction n’a pas pu être modifiée. Elle est peut-être introuvable.",
       validation.values,
@@ -152,7 +153,7 @@ export async function deleteTransaction(
   void _previousState;
   void _formData;
 
-  if (!UUID_PATTERN.test(transactionId)) {
+  if (!isUuid(transactionId)) {
     return invalidTransactionState("Cette transaction est introuvable.");
   }
 
@@ -166,6 +167,7 @@ export async function deleteTransaction(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("transactions:delete", error);
     return invalidTransactionState("La transaction n’a pas pu être supprimée.");
   }
 

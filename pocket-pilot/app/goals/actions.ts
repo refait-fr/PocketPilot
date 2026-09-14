@@ -5,9 +5,8 @@ import { revalidatePath } from "next/cache";
 import type { GoalActionState } from "@/app/goals/goal-types";
 import { validateSavingsGoalInput } from "@/lib/finance/savings-goal";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
-
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { logServerError } from "@/lib/observability/server-log";
+import { isUuid } from "@/lib/validation/uuid";
 
 const emptyGoalValues: GoalActionState["values"] = {
   name: "",
@@ -67,6 +66,7 @@ export async function createGoal(
   });
 
   if (error) {
+    logServerError("goals:create", error);
     return invalidGoalState(
       "L’objectif n’a pas pu être créé. Réessayez dans un instant.",
       validation.values,
@@ -93,7 +93,7 @@ export async function updateGoal(
   _previousState: GoalActionState,
   formData: FormData,
 ): Promise<GoalActionState> {
-  if (!UUID_PATTERN.test(goalId)) {
+  if (!isUuid(goalId)) {
     return invalidGoalState("Cet objectif est introuvable.");
   }
 
@@ -123,6 +123,7 @@ export async function updateGoal(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("goals:update", error);
     return invalidGoalState(
       "L’objectif n’a pas pu être modifié. Il est peut-être introuvable.",
       validation.values,
@@ -147,7 +148,7 @@ export async function deleteGoal(
   void _previousState;
   void _formData;
 
-  if (!UUID_PATTERN.test(goalId)) {
+  if (!isUuid(goalId)) {
     return invalidGoalState("Cet objectif est introuvable.");
   }
 
@@ -161,6 +162,7 @@ export async function deleteGoal(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("goals:delete", error);
     return invalidGoalState("L’objectif n’a pas pu être supprimé.");
   }
 

@@ -7,15 +7,14 @@ import {
   validateRecurringEntryInput,
 } from "@/lib/finance/recurring-entry-input";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
+import { logServerError } from "@/lib/observability/server-log";
+import { isUuid } from "@/lib/validation/uuid";
 
 export type IncomeActionState = RecurringEntryActionState;
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 function invalidIncomeState(
   message: string,
-  values: IncomeActionState["values"] = { label: "", monthlyAmount: "" },
+  values: IncomeActionState["values"] = { label: "", monthlyAmount: "", startDate: "" },
 ): IncomeActionState {
   return {
     status: "error",
@@ -37,6 +36,7 @@ export async function createIncome(
   const validation = validateRecurringEntryInput({
     label: formData.get("label"),
     monthlyAmount: formData.get("monthlyAmount"),
+    startDate: formData.get("startDate"),
   });
 
   if (!validation.valid) {
@@ -53,10 +53,12 @@ export async function createIncome(
     user_id: userId,
     label: validation.data.label,
     amount_cents: validation.data.amountCents,
+    start_date: validation.data.startDate,
     is_active: true,
   });
 
   if (error) {
+    logServerError("incomes:create", error);
     return invalidIncomeState(
       "Le revenu n’a pas pu être créé. Réessayez dans un instant.",
       validation.values,
@@ -69,7 +71,7 @@ export async function createIncome(
     status: "success",
     message: "Le revenu a été ajouté au plan mensuel.",
     fieldErrors: {},
-    values: { label: "", monthlyAmount: "" },
+    values: { label: "", monthlyAmount: "", startDate: "" },
   };
 }
 
@@ -78,13 +80,14 @@ export async function updateIncome(
   _previousState: IncomeActionState,
   formData: FormData,
 ): Promise<IncomeActionState> {
-  if (!UUID_PATTERN.test(incomeId)) {
+  if (!isUuid(incomeId)) {
     return invalidIncomeState("Ce revenu est introuvable.");
   }
 
   const validation = validateRecurringEntryInput({
     label: formData.get("label"),
     monthlyAmount: formData.get("monthlyAmount"),
+    startDate: formData.get("startDate"),
   });
 
   if (!validation.valid) {
@@ -102,6 +105,7 @@ export async function updateIncome(
     .update({
       label: validation.data.label,
       amount_cents: validation.data.amountCents,
+      start_date: validation.data.startDate,
     })
     .eq("id", incomeId)
     .eq("user_id", userId)
@@ -109,6 +113,7 @@ export async function updateIncome(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("incomes:update", error);
     return invalidIncomeState(
       "Le revenu n’a pas pu être modifié. Il est peut-être introuvable.",
       validation.values,
@@ -134,7 +139,7 @@ export async function setIncomeActive(
   void _previousState;
   void _formData;
 
-  if (!UUID_PATTERN.test(incomeId) || typeof nextIsActive !== "boolean") {
+  if (!isUuid(incomeId) || typeof nextIsActive !== "boolean") {
     return invalidIncomeState("Ce revenu est introuvable.");
   }
 
@@ -148,6 +153,7 @@ export async function setIncomeActive(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("incomes:set-active", error);
     return invalidIncomeState(
       "Le statut du revenu n’a pas pu être modifié.",
     );
@@ -161,7 +167,7 @@ export async function setIncomeActive(
       ? "Le revenu est de nouveau inclus dans le dashboard."
       : "Le revenu est exclu des calculs du dashboard.",
     fieldErrors: {},
-    values: { label: "", monthlyAmount: "" },
+    values: { label: "", monthlyAmount: "", startDate: "" },
   };
 }
 
@@ -173,7 +179,7 @@ export async function deleteIncome(
   void _previousState;
   void _formData;
 
-  if (!UUID_PATTERN.test(incomeId)) {
+  if (!isUuid(incomeId)) {
     return invalidIncomeState("Ce revenu est introuvable.");
   }
 
@@ -187,6 +193,7 @@ export async function deleteIncome(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("incomes:delete", error);
     return invalidIncomeState("Le revenu n’a pas pu être supprimé.");
   }
 
@@ -196,6 +203,6 @@ export async function deleteIncome(
     status: "success",
     message: "Le revenu a été supprimé.",
     fieldErrors: {},
-    values: { label: "", monthlyAmount: "" },
+    values: { label: "", monthlyAmount: "", startDate: "" },
   };
 }

@@ -4,7 +4,16 @@ import { safeNextPath } from "@/lib/auth/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
-  const siteOrigin = getSiteOrigin();
+  let siteOrigin: string;
+
+  try {
+    siteOrigin = getSiteOrigin();
+  } catch {
+    // Configuration SITE_URL absente ou invalide : on reste sur l'origine
+    // de la requête plutôt que de répondre 500 sur le parcours d'auth.
+    siteOrigin = request.nextUrl.origin;
+  }
+
   const code = request.nextUrl.searchParams.get("code");
   const next = safeNextPath(request.nextUrl.searchParams.get("next"));
   if (code) {

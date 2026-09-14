@@ -79,7 +79,7 @@ button, a, input, select, summary { -webkit-tap-highlight-color: transparent; }
 }
 .ui-input:hover, .ui-select:hover { border-color: #aab1bd; }
 .ui-input:focus, .ui-select:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgb(17 17 19 / 0.12); }
-.ui-input::placeholder { color: #98a0ad; }
+.ui-input::placeholder { color: #6f7683; }
 
 .ui-button-primary,
 .ui-button-secondary,
@@ -110,9 +110,11 @@ button:disabled { cursor: wait; opacity: 0.62; transform: none !important; }
 
 .ui-feedback-error,
 .ui-feedback-success,
+.ui-feedback-warning,
 .ui-feedback-info { border-radius: 0.65rem; border: 1px solid; padding: 0.75rem 0.9rem; font-size: 0.8rem; line-height: 1.45; }
 .ui-feedback-error { border-color: #f3c8cb; background: var(--danger-soft); color: #8c2e35; }
 .ui-feedback-success { border-color: #bfe3d3; background: var(--positive-soft); color: #125c41; }
+.ui-feedback-warning { border-color: #ecd9a0; background: var(--warning-soft); color: #6b4a08; }
 .ui-feedback-info { border-color: #d4d4d7; background: var(--accent-soft); color: #303034; }
 
 .ui-kicker { color: var(--ink-soft); font-size: 0.67rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }

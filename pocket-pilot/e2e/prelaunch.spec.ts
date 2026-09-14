@@ -77,6 +77,7 @@ test("la suppression de compte efface Auth et toutes les données sans toucher �
 
     await settingsLink(page).click();
     await page.getByLabel("Saisissez SUPPRIMER pour confirmer").fill("SUPPRIMER");
+    await page.getByLabel("Saisissez votre mot de passe pour valider").fill(accountA.password);
     await page.getByRole("button", { name: "Supprimer définitivement mon compte" }).click();
     await expect(page).toHaveURL(/\/auth\?notice=account-deleted$/);
     await expect(page.getByRole("status")).toHaveText("Votre compte et ses données ont été supprimés.");

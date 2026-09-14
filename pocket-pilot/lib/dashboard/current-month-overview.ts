@@ -4,10 +4,13 @@ import {
   calculateCategoryBudgetUsages,
 } from "@/lib/budgets/category-budget";
 import {
+  formatCalendarMonth,
   getCalendarDateInTimeZone,
   getCalendarMonthInTimeZone,
   getCalendarMonthRange,
 } from "@/lib/finance/calendar-month";
+import { estimateCompletionMonth } from "@/lib/finance/savings-goal";
+import { readPositiveOneTimeIncomeCents } from "@/lib/finance/one-time-income-input";
 import {
   buildMonthlyBalanceTrend,
   rankCategoryBudgets,
@@ -15,6 +18,7 @@ import {
 } from "@/lib/dashboard/monthly-cockpit";
 import { calculateMonthlySnapshot } from "@/lib/finance/monthly-snapshot";
 import { readStoredCents } from "@/lib/finance/money";
+import { fetchAllWithRange } from "@/lib/supabase/paginate";
 import { isTransactionCategory } from "@/lib/transactions/categories";
 import {
   isValidTransactionDate,
@@ -30,59 +34,100 @@ export async function loadCurrentMonthOverview({
   timeZone: string;
   userId: string;
 }) {
-  const currentMonthRange = getCalendarMonthRange(
-    getCalendarMonthInTimeZone(new Date(), timeZone),
-  );
-  const [
-    incomesResult,
-    expensesResult,
-    goalsResult,
-    transactionsResult,
-    budgetsResult,
-  ] =
-    await Promise.all([
-      supabase
-        .from("recurring_incomes")
-        .select("amount_cents, is_active")
-        .eq("user_id", userId),
-      supabase
-        .from("recurring_fixed_expenses")
-        .select("amount_cents, is_active")
-        .eq("user_id", userId),
-      supabase
-        .from("savings_goals")
-        .select(
-          "name, current_amount_cents, target_amount_cents, monthly_allocation_cents, created_at",
-        )
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("transactions")
-        .select("id, amount_cents, category, description, transaction_date")
-        .eq("user_id", userId)
-        .gte("transaction_date", currentMonthRange.startInclusive)
-        .lt("transaction_date", currentMonthRange.endExclusive)
-        .order("transaction_date", { ascending: false }),
-      supabase
-        .from("category_budgets")
-        .select("id, category, monthly_budget_cents")
-        .eq("user_id", userId),
-    ]);
+  const todayIso = getCalendarDateInTimeZone(new Date(), timeZone);
+  const currentMonth = getCalendarMonthInTimeZone(new Date(), timeZone);
+  const currentMonthRange = getCalendarMonthRange(currentMonth);
+  // Pagination explicite : PostgREST plafonne à max_rows (1000) sans erreur,
+  // un mois tronqué fausserait sinon le snapshot. L'ordre inclut toujours
+  // l'id pour rester déterministe d'une page à l'autre.
+  let incomes: { amount_cents: unknown; is_active: unknown; start_date: unknown }[];
+  let expenses: { amount_cents: unknown; is_active: unknown; start_date: unknown }[];
+  let goals: {
+    name: unknown;
+    current_amount_cents: unknown;
+    target_amount_cents: unknown;
+    monthly_allocation_cents: unknown;
+  }[];
+  let transactions: {
+    id: unknown;
+    amount_cents: unknown;
+    category: unknown;
+    description: unknown;
+    transaction_date: unknown;
+  }[];
+  let budgets: { id: unknown; category: unknown; monthly_budget_cents: unknown }[];
+  let oneTimeIncomes: {
+    id: unknown;
+    label: unknown;
+    amount_cents: unknown;
+    income_date: unknown;
+  }[];
 
-  if (
-    incomesResult.error ||
-    expensesResult.error ||
-    goalsResult.error ||
-    transactionsResult.error ||
-    budgetsResult.error
-  ) {
+  try {
+    [incomes, expenses, goals, transactions, budgets, oneTimeIncomes] =
+      await Promise.all([
+      fetchAllWithRange((from, to) =>
+        supabase
+          .from("recurring_incomes")
+          .select("amount_cents, is_active, start_date")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      fetchAllWithRange((from, to) =>
+        supabase
+          .from("recurring_fixed_expenses")
+          .select("amount_cents, is_active, start_date")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      fetchAllWithRange((from, to) =>
+        supabase
+          .from("savings_goals")
+          .select(
+            "name, current_amount_cents, target_amount_cents, monthly_allocation_cents, created_at",
+          )
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .range(from, to),
+      ),
+      fetchAllWithRange((from, to) =>
+        supabase
+          .from("transactions")
+          .select("id, amount_cents, category, description, transaction_date")
+          .eq("user_id", userId)
+          .gte("transaction_date", currentMonthRange.startInclusive)
+          .lt("transaction_date", currentMonthRange.endExclusive)
+          .order("transaction_date", { ascending: false })
+          .order("id", { ascending: false })
+          .range(from, to),
+      ),
+      fetchAllWithRange((from, to) =>
+        supabase
+          .from("category_budgets")
+          .select("id, category, monthly_budget_cents")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      fetchAllWithRange((from, to) =>
+        supabase
+          .from("one_time_incomes")
+          .select("id, label, amount_cents, income_date")
+          .eq("user_id", userId)
+          .gte("income_date", currentMonthRange.startInclusive)
+          .lt("income_date", currentMonthRange.endExclusive)
+          .order("income_date", { ascending: false })
+          .order("id", { ascending: false })
+          .range(from, to),
+      ),
+    ]);
+  } catch {
     throw new Error("Impossible de charger les données financières du mois.");
   }
 
-  const goals = goalsResult.data ?? [];
-  const incomes = incomesResult.data ?? [];
-  const expenses = expensesResult.data ?? [];
-  const transactions = transactionsResult.data ?? [];
   const categoryTransactions = transactions.map((transaction) => {
     if (
       typeof transaction.id !== "string" ||
@@ -105,7 +150,7 @@ export async function loadCurrentMonthOverview({
       transactionDate: transaction.transaction_date,
     };
   });
-  const categoryBudgets = (budgetsResult.data ?? []).map((budget) => {
+  const categoryBudgets = budgets.map((budget) => {
     if (typeof budget.id !== "string" || !isTransactionCategory(budget.category)) {
       throw new Error("Un budget contient des données invalides.");
     }
@@ -122,11 +167,65 @@ export async function loadCurrentMonthOverview({
     categoryBudgets,
     categoryTransactions,
   );
-  const activeIncomes = incomes.filter((income) => income.is_active);
-  const activeExpenses = expenses.filter((expense) => expense.is_active);
+  // Une entrée récurrente compte pour le mois dès que son début est atteint
+  // (comparaison ISO sûre : start_date < 1er jour du mois suivant).
+  const startedIncomes = incomes.filter(
+    (income) =>
+      income.is_active === true &&
+      typeof income.start_date === "string" &&
+      isValidTransactionDate(income.start_date) &&
+      income.start_date < currentMonthRange.endExclusive,
+  );
+  const startedExpenses = expenses.filter(
+    (expense) =>
+      expense.is_active === true &&
+      typeof expense.start_date === "string" &&
+      isValidTransactionDate(expense.start_date) &&
+      expense.start_date < currentMonthRange.endExclusive,
+  );
+
+  for (const entry of [...incomes, ...expenses]) {
+    if (
+      typeof entry.start_date !== "string" ||
+      !isValidTransactionDate(entry.start_date)
+    ) {
+      throw new Error("Une entrée récurrente contient des données invalides.");
+    }
+  }
+
+  const upcomingIncomeCount = incomes.filter(
+    (income) =>
+      typeof income.start_date === "string" && income.start_date > todayIso,
+  ).length;
+  const upcomingExpenseCount = expenses.filter(
+    (expense) =>
+      typeof expense.start_date === "string" && expense.start_date > todayIso,
+  ).length;
+
+  const monthOneTimeIncomes = oneTimeIncomes.map((income) => {
+    if (
+      typeof income.id !== "string" ||
+      typeof income.label !== "string" ||
+      income.label.trim().length === 0 ||
+      income.label.length > 100 ||
+      !isValidTransactionDate(income.income_date)
+    ) {
+      throw new Error("Un revenu ponctuel contient des données invalides.");
+    }
+
+    return {
+      amountCents: readPositiveOneTimeIncomeCents(income.amount_cents),
+      id: income.id,
+      incomeDate: income.income_date,
+      label: income.label.trim(),
+    };
+  });
   const snapshot = calculateMonthlySnapshot({
-    incomeAmountsCents: activeIncomes.map((income) => income.amount_cents),
-    fixedExpenseAmountsCents: activeExpenses.map(
+    incomeAmountsCents: startedIncomes.map((income) => income.amount_cents),
+    oneTimeIncomeAmountsCents: monthOneTimeIncomes.map(
+      (income) => income.amountCents,
+    ),
+    fixedExpenseAmountsCents: startedExpenses.map(
       (expense) => expense.amount_cents,
     ),
     goals: goals.map((goal) => ({
@@ -154,7 +253,19 @@ export async function loadCurrentMonthOverview({
       targetAmountCents: goal.target_amount_cents,
     };
   });
-  const featuredGoal = selectFeaturedGoal(dashboardGoals);
+  const selectedGoal = selectFeaturedGoal(dashboardGoals);
+  const featuredGoal =
+    selectedGoal &&
+    !selectedGoal.isReached &&
+    selectedGoal.estimatedMonths !== null &&
+    selectedGoal.estimatedMonths > 0
+      ? {
+          ...selectedGoal,
+          estimatedArrivalLabel: formatCalendarMonth(
+            estimateCompletionMonth(currentMonth, selectedGoal.estimatedMonths),
+          ),
+        }
+      : selectedGoal;
   const rankedCategoryBudgets = rankCategoryBudgets(categoryBudgetUsages);
   const monthDate = getCalendarDateInTimeZone(new Date(), timeZone);
   const balanceTrend = buildMonthlyBalanceTrend({
@@ -163,11 +274,14 @@ export async function loadCurrentMonthOverview({
     transactions: categoryTransactions,
   });
   return {
-    activeExpenseCount: activeExpenses.length,
-    activeIncomeCount: activeIncomes.length,
+    activeExpenseCount: startedExpenses.length,
+    activeIncomeCount: startedIncomes.length,
     expenseCount: expenses.length,
     goalCount: goals.length,
     incomeCount: incomes.length,
+    oneTimeIncomeCount: monthOneTimeIncomes.length,
+    upcomingExpenseCount,
+    upcomingIncomeCount,
     categoryBudgetUsages,
     balanceTrend,
     currentDay: Number(monthDate.slice(8, 10)),

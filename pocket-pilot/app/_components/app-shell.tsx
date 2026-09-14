@@ -5,7 +5,6 @@ import { AppIcon } from "@/app/_components/app-icon";
 import { PocketPilotLogo } from "@/app/_components/pocketpilot-logo";
 import { SignOutButton } from "@/app/_components/sign-out-button";
 import { signOut } from "@/app/auth/actions";
-import type { AuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
 
 const primaryNavigation = [
   { href: "/dashboard", icon: "home", label: "Vue d’ensemble" },
@@ -48,7 +47,9 @@ type AppShellProps = {
   children: ReactNode;
   description: string;
   eyebrow: string;
-  profile: AuthenticatedProfile;
+  // Chaîne opaque affichée telle quelle : les paramètres peuvent transmettre
+  // un profil brut en cours de réparation, sans devise valide.
+  profile: { currencyCode: string; timeZone: string };
   title: string;
 };
 

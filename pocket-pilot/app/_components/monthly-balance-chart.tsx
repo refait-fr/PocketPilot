@@ -25,8 +25,11 @@ function getGeometry(points: readonly MonthlyBalancePoint[]) {
   const linePath = coordinates.map((point, index) => `${index === 0 ? "M" : "L"}${point.x},${point.y}`).join(" ");
   const baselineY = HEIGHT - PADDING.bottom;
   const areaPath = `${linePath} L${coordinates.at(-1)?.x ?? PADDING.left},${baselineY} L${PADDING.left},${baselineY} Z`;
+  const zeroY = minimum < 0 && maximum > 0
+    ? PADDING.top + (maximum / range) * drawableHeight
+    : null;
 
-  return { areaPath, coordinates, drawableWidth, lastDay, linePath, maximum, minimum };
+  return { areaPath, coordinates, drawableWidth, lastDay, linePath, maximum, minimum, zeroY };
 }
 
 export function MonthlyBalanceChart({
@@ -57,13 +60,14 @@ export function MonthlyBalanceChart({
       <div className="chart-toolbar">
         <span>{formatCents(geometry.maximum, currencyCode)}</span>
         <span><i aria-hidden="true" /> Solde journalier</span>
+        {geometry.minimum < 0 ? <span>Min : {formatCents(geometry.minimum, currencyCode)}</span> : null}
       </div>
       <div className="chart-stage">
         <div
           className="chart-tooltip"
           style={{ left: `${Math.min(90, Math.max(10, (activePoint.x / WIDTH) * 100))}%` }}
         >
-          <span>Jour {activePoint.day || 1}</span>
+          <span>{activePoint.day === 0 ? "Début du mois" : `Jour ${activePoint.day}`}</span>
           <strong>{formatCents(activePoint.remainingCents, currencyCode)}</strong>
           <small>{formatCents(activePoint.spentCents, currencyCode)} dépensés</small>
         </div>
@@ -86,6 +90,9 @@ export function MonthlyBalanceChart({
           ))}
           <path d={geometry.areaPath} fill="url(#balance-area-premium)" />
           <path className="chart-line-path" d={geometry.linePath} />
+          {geometry.zeroY !== null ? (
+            <line className="chart-grid-line" x1={PADDING.left} x2={WIDTH - PADDING.right} y1={geometry.zeroY} y2={geometry.zeroY} />
+          ) : null}
           <line className="chart-crosshair" x1={activePoint.x} x2={activePoint.x} y1={PADDING.top} y2={HEIGHT - PADDING.bottom} />
           <circle className="chart-active-dot" cx={activePoint.x} cy={activePoint.y} r="5" />
           {tickDays.map((day) => {
@@ -104,7 +111,7 @@ export function MonthlyBalanceChart({
           value={activeDay}
         />
       </div>
-      <p className="sr-only" aria-live="polite" role="status">Jour {activePoint.day || 1} : {formatCents(activePoint.remainingCents, currencyCode)} disponibles.</p>
+      <p className="sr-only" aria-live="polite" role="status">{activePoint.day === 0 ? "Début du mois" : `Jour ${activePoint.day}`} : {formatCents(activePoint.remainingCents, currencyCode)} disponibles.</p>
       <div className="chart-footnote"><span>Début du mois</span><span>Aujourd’hui · {initialDay}</span><span>Fin du mois · {lastPoint?.day}</span></div>
     </div>
   );
