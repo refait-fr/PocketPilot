@@ -9,7 +9,6 @@ import {
 } from "@/app/settings/actions";
 import {
   currencyOptions,
-  type CurrencyCode,
   MAX_TIME_ZONE_LENGTH,
 } from "@/lib/profile-options";
 
@@ -29,7 +28,7 @@ export function ProfileSettingsForm({
   timeZone,
 }: {
   canChangeCurrency: boolean;
-  currencyCode: CurrencyCode;
+  currencyCode: string;
   timeZone: string;
 }) {
   const initialState: ProfileSettingsActionState = {

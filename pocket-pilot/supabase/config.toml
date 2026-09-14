@@ -185,7 +185,11 @@ enable_manual_linking = false
 minimum_password_length = 8
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
-password_requirements = ""
+# letters_digits mirrors the application rule in lib/auth/auth-input.ts (at
+# least one letter and one digit). Sign-in stays permissive so legacy
+# passwords can still connect; the composition rule applies at creation and
+# at password change.
+password_requirements = "letters_digits"
 
 # Configure passkey sign-ins.
 # [auth.passkey]
@@ -228,6 +232,10 @@ double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
 enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
+# Kept disabled because the recovery flow has no current password; the
+# application instead requires the current password on every settings change
+# (see requireCurrentPassword in password-update-form.tsx) and before account
+# deletion. Supabase-side reauthentication (nonce) remains a fallback.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"

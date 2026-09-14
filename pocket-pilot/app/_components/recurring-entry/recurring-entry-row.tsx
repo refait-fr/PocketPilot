@@ -16,13 +16,16 @@ import type {
   RecurringEntryView,
 } from "@/app/_components/recurring-entry/recurring-entry-types";
 import { formatCents } from "@/lib/finance/format-cents";
-import { formatCentsForInput } from "@/lib/finance/recurring-entry-input";
+import {
+  formatCentsForInput,
+  formatRecurringStartDate,
+} from "@/lib/finance/recurring-entry-input";
 
 const initialMutationState: RecurringEntryActionState = {
   status: "idle",
   message: "",
   fieldErrors: {},
-  values: { label: "", monthlyAmount: "" },
+  values: { label: "", monthlyAmount: "", startDate: "" },
 };
 
 function PendingButton({
@@ -75,6 +78,7 @@ export function RecurringEntryRow({
   entry,
   kind,
   setEntryActive,
+  todayIso,
   updateEntry,
 }: {
   currencyCode: string;
@@ -82,6 +86,7 @@ export function RecurringEntryRow({
   entry: RecurringEntryView;
   kind: RecurringEntryKind;
   setEntryActive: RecurringEntryToggleAction;
+  todayIso: string;
   updateEntry: RecurringEntryUpdateAction;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -116,9 +121,11 @@ export function RecurringEntryRow({
           defaultValues={{
             label: entry.label,
             monthlyAmount: formatCentsForInput(entry.amountCents),
+            startDate: entry.startDate,
           }}
           kind={kind}
           mode="edit"
+          todayIso={todayIso}
         />
       </li>
     );
@@ -147,6 +154,11 @@ export function RecurringEntryRow({
             >
               {entry.isActive ? "Actif" : "En pause"}
             </span>
+            {entry.startDate > todayIso ? (
+              <span className="ui-badge bg-[var(--accent-soft)] text-[var(--accent-dark)]">
+                Débute le {formatRecurringStartDate(entry.startDate)}
+              </span>
+            ) : null}
           </div>
           <p className="font-amount mt-1.5 break-words text-xl font-extrabold text-[var(--foreground)]">
             {formatCents(entry.amountCents, currencyCode)}

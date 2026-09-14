@@ -13,7 +13,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit",
-    "test:unit": "node --test --experimental-strip-types e2e/support/environment.test.ts lib/auth/auth-input.test.ts lib/auth/auth-messages.test.ts lib/auth/auth-notice.test.ts lib/auth/auth-redirect-url.test.ts lib/auth/safe-next-path.test.ts lib/budgets/category-budget.test.ts lib/dashboard/monthly-cockpit.test.ts lib/dashboard/recurring-entry-detail.test.ts lib/finance/calendar-month.test.ts lib/finance/monthly-snapshot.test.ts lib/finance/purchase-checker.test.ts lib/finance/recurring-entry-input.test.ts lib/finance/savings-goal.test.ts lib/profile-options.test.ts lib/profile-settings.test.ts lib/transactions/monthly-summary.test.ts lib/transactions/transaction-input.test.ts",
+    "test:unit": "node --test --experimental-strip-types e2e/support/environment.test.ts lib/auth/auth-input.test.ts lib/auth/auth-messages.test.ts lib/auth/auth-notice.test.ts lib/auth/auth-redirect-url.test.ts lib/auth/safe-next-path.test.ts lib/budgets/category-budget.test.ts lib/dashboard/monthly-cockpit.test.ts lib/dashboard/recurring-entry-detail.test.ts lib/finance/calendar-month.test.ts lib/finance/format-cents.test.ts lib/finance/money.test.ts lib/finance/monthly-snapshot.test.ts lib/finance/one-time-income-input.test.ts lib/finance/purchase-checker.test.ts lib/finance/recurring-entry-input.test.ts lib/finance/savings-goal.test.ts lib/profile-options.test.ts lib/profile-settings.test.ts lib/legal/privacy-config.test.ts lib/supabase/paginate.test.ts lib/transactions/monthly-summary.test.ts lib/transactions/transaction-input.test.ts lib/validation/uuid.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:local": "node scripts/run-local-e2e.mjs",
     "test:e2e:local:stable": "npm run test:e2e:local && npm run test:e2e:local",
@@ -30,7 +30,7 @@
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.7",
     "gsap": "^3.15.0",
-    "next": "16.3.2",
+    "next": "^16.3.5",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -41,7 +41,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.2",
+    "eslint-config-next": "^16.3.5",
     "supabase": "2.115.0",
     "tailwindcss": "^4",
     "typescript": "^5"

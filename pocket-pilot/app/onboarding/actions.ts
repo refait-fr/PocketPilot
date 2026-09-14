@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { logServerError } from "@/lib/observability/server-log";
 import { isCurrencyCode, isValidTimeZone } from "@/lib/profile-options";
 import { createClient } from "@/lib/supabase/server";
 
@@ -49,6 +50,7 @@ export async function saveProfile(
     .maybeSingle();
 
   if (profileLookupError) {
+    logServerError("onboarding:save-profile", profileLookupError);
     return {
       status: "error",
       message:
@@ -65,6 +67,7 @@ export async function saveProfile(
   });
 
   if (error) {
+    logServerError("onboarding:save-profile", error);
     return {
       status: "error",
       message:

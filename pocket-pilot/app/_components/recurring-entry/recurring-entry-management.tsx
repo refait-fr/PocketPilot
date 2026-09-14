@@ -24,6 +24,7 @@ export function RecurringEntryManagement({
   entries,
   kind,
   setEntryActive,
+  todayIso,
   updateEntry,
 }: {
   createEntry: RecurringEntryFormAction;
@@ -32,9 +33,10 @@ export function RecurringEntryManagement({
   entries: RecurringEntryView[];
   kind: RecurringEntryKind;
   setEntryActive: RecurringEntryToggleAction;
+  todayIso: string;
   updateEntry: RecurringEntryUpdateAction;
 }) {
-  const summary = summarizeRecurringEntries(entries);
+  const summary = summarizeRecurringEntries(entries, todayIso);
   const copy = recurringEntryCopy[kind];
   const listTitleId = `${kind}-list-title`;
 
@@ -54,6 +56,12 @@ export function RecurringEntryManagement({
             <dt>En pause</dt>
             <dd>{summary.inactiveCount}</dd>
           </div>
+          {summary.upcomingCount > 0 ? (
+            <div className="pilot-metric">
+              <dt>À venir</dt>
+              <dd>{summary.upcomingCount}</dd>
+            </div>
+          ) : null}
         </dl>
 
         <div className="management-list-heading">
@@ -90,6 +98,7 @@ export function RecurringEntryManagement({
                 key={entry.id}
                 kind={kind}
                 setEntryActive={setEntryActive}
+                todayIso={todayIso}
                 updateEntry={updateEntry}
               />
             ))}
@@ -103,7 +112,7 @@ export function RecurringEntryManagement({
         eyebrow={copy.formEyebrow}
         title={copy.formTitle}
       >
-        <RecurringEntryForm action={createEntry} kind={kind} mode="create" />
+        <RecurringEntryForm action={createEntry} kind={kind} mode="create" todayIso={todayIso} />
       </CreationDisclosure>
     </div>
   );

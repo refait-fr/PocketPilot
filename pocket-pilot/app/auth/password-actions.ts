@@ -83,6 +83,11 @@ export async function updatePassword(
 
   const nonce = String(formData.get("nonce") ?? "").trim();
   const currentPassword = String(formData.get("currentPassword") ?? "");
+  // Les paramètres exigent le mot de passe actuel dès le premier envoi
+  // (champ caché requireCurrentPassword). Le parcours de récupération par
+  // email n'a pas de mot de passe actuel et ne positionne pas ce champ.
+  const expectCurrentPassword =
+    formData.get("requireCurrentPassword") === "true";
 
   if (previousState.requirements.nonce && !/^\d{6}$/.test(nonce)) {
     return verificationState(
@@ -92,10 +97,19 @@ export async function updatePassword(
     );
   }
 
-  if (previousState.requirements.currentPassword && !currentPassword) {
+  if (
+    (expectCurrentPassword ||
+      previousState.requirements.currentPassword) &&
+    !currentPassword
+  ) {
     return verificationState(
-      AUTH_MESSAGES.currentPasswordRequired,
-      previousState.requirements,
+      expectCurrentPassword && !previousState.requirements.currentPassword
+        ? AUTH_MESSAGES.confirmWithCurrentPassword
+        : AUTH_MESSAGES.currentPasswordRequired,
+      {
+        currentPassword: true,
+        nonce: previousState.requirements.nonce,
+      },
       { currentPassword: "Saisissez votre mot de passe actuel." },
     );
   }

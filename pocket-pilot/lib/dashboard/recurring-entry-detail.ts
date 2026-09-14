@@ -5,6 +5,7 @@ import { addCents, readStoredCents } from "../finance/money.ts";
 type RecurringEntrySummaryInput = {
   amountCents: number;
   isActive: boolean;
+  startDate?: string;
 };
 
 export type RecurringEntrySummary = {
@@ -12,19 +13,33 @@ export type RecurringEntrySummary = {
   inactiveCount: number;
   totalActiveCents: number;
   totalCount: number;
+  upcomingCount: number;
 };
 
 export function summarizeRecurringEntries(
   entries: readonly RecurringEntrySummaryInput[],
+  // Date calendaire ISO du jour (fuseau du profil) : quand elle est fournie,
+  // les entrées actives dont le début est futur sont comptées à part.
+  todayIso?: string,
 ): RecurringEntrySummary {
   let activeCount = 0;
   let totalActiveCents = 0;
+  let upcomingCount = 0;
 
   for (const entry of entries) {
     const amountCents = readStoredCents(entry.amountCents, {
       allowZero: false,
       fieldName: "Le montant récurrent",
     });
+
+    if (
+      todayIso !== undefined &&
+      typeof entry.startDate === "string" &&
+      entry.startDate > todayIso
+    ) {
+      upcomingCount += 1;
+      continue;
+    }
 
     if (entry.isActive) {
       activeCount += 1;
@@ -34,9 +49,10 @@ export function summarizeRecurringEntries(
 
   return {
     activeCount,
-    inactiveCount: entries.length - activeCount,
+    inactiveCount: entries.length - activeCount - upcomingCount,
     totalActiveCents,
     totalCount: entries.length,
+    upcomingCount,
   };
 }
 

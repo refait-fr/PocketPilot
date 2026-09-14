@@ -17,6 +17,7 @@ export type MonthlyBalancePoint = {
 
 export type DashboardGoal = SavingsGoalPlan & {
   currentAmountCents: number;
+  estimatedArrivalLabel: string | null;
   monthlyAllocationCents: number;
   name: string;
   targetAmountCents: number;
@@ -178,6 +179,7 @@ export function selectFeaturedGoal(
     return {
       ...plan,
       currentAmountCents,
+      estimatedArrivalLabel: null,
       monthlyAllocationCents,
       name: goal.name,
       targetAmountCents,

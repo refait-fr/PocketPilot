@@ -18,6 +18,7 @@ test("résume uniquement les montants récurrents actifs", () => {
       inactiveCount: 1,
       totalActiveCents: 200_000,
       totalCount: 3,
+      upcomingCount: 0,
     },
   );
 });
@@ -93,5 +94,25 @@ test("refuse des compteurs incohérents", () => {
       activeCount: 2,
       totalCount: 1,
     }),
+  );
+});
+
+test("isole les entrées à début futur du total actif", () => {
+  assert.deepEqual(
+    summarizeRecurringEntries(
+      [
+        { amountCents: 120_000, isActive: true, startDate: "2026-09-01" },
+        { amountCents: 2_999, isActive: true, startDate: "2026-11-16" },
+        { amountCents: 35_000, isActive: false, startDate: "2026-09-01" },
+      ],
+      "2026-09-14",
+    ),
+    {
+      activeCount: 1,
+      inactiveCount: 1,
+      totalActiveCents: 120_000,
+      totalCount: 3,
+      upcomingCount: 1,
+    },
   );
 });

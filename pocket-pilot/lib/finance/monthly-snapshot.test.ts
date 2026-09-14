@@ -12,6 +12,7 @@ test("calcule un mois vide sans approximation", () => {
     }),
     {
       totalIncomeCents: 0,
+      totalOneTimeIncomeCents: 0,
       totalFixedExpensesCents: 0,
       totalGoalAllocationsCents: 0,
       availableCents: 0,
@@ -42,6 +43,7 @@ test("soustrait les charges et les allocations des objectifs actifs", () => {
     }),
     {
       totalIncomeCents: 150_000,
+      totalOneTimeIncomeCents: 0,
       totalFixedExpensesCents: 75_000,
       totalGoalAllocationsCents: 15_000,
       availableCents: 60_000,
@@ -321,4 +323,17 @@ test("refuse les objectifs incohérents et les dépassements de précision", () 
       goals: [],
     }),
   );
+});
+
+test("additionne un dépôt ponctuel au revenu du mois", () => {
+  const snapshot = calculateMonthlySnapshot({
+    incomeAmountsCents: [150_000],
+    oneTimeIncomeAmountsCents: [2_000],
+    fixedExpenseAmountsCents: [70_000],
+    goals: [],
+  });
+
+  assert.equal(snapshot.totalOneTimeIncomeCents, 2_000);
+  assert.equal(snapshot.totalIncomeCents, 152_000);
+  assert.equal(snapshot.availableCents, 82_000);
 });

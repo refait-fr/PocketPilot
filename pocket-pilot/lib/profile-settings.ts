@@ -23,7 +23,9 @@ export type ProfileSettingsValidation =
 
 export function validateProfileSettings(input: {
   currencyCode: unknown;
-  currentCurrencyCode: CurrencyCode;
+  // null quand le profil stocké est invalide (réparation) : le verrouillage
+  // applicatif est levé et le trigger base 23514 reste le filet.
+  currentCurrencyCode: CurrencyCode | null;
   hasFinancialData: boolean;
   timeZone: unknown;
 }): ProfileSettingsValidation {
@@ -45,6 +47,7 @@ export function validateProfileSettings(input: {
   }
 
   if (
+    input.currentCurrencyCode !== null &&
     input.hasFinancialData &&
     values.currencyCode !== input.currentCurrencyCode
   ) {

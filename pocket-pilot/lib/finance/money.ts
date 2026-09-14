@@ -36,6 +36,13 @@ export function parseMoneyInput(
     };
   }
 
+  if (/^\d{1,3}([.,]\d{3})+([.,]\d{1,2})?$/.test(amount)) {
+    return {
+      valid: false,
+      message: "N’utilisez pas de séparateur de milliers, par exemple 1000,00.",
+    };
+  }
+
   if (/^\d+[.,]\d{3,}$/.test(amount)) {
     return {
       valid: false,

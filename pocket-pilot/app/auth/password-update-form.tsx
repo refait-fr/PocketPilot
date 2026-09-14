@@ -18,11 +18,13 @@ const initialState: PasswordActionState = {
 type PasswordUpdateFormProps = {
   returnHref: string;
   returnLabel: string;
+  requireCurrentPassword?: boolean;
 };
 
 export function PasswordUpdateForm({
   returnHref,
   returnLabel,
+  requireCurrentPassword = false,
 }: PasswordUpdateFormProps) {
   const [state, formAction, isPending] = useActionState(
     updatePassword,
@@ -31,7 +33,8 @@ export function PasswordUpdateForm({
   const isSuccess = state.status === "success";
   const isSessionInvalid = state.status === "session-invalid";
   const needsReauthentication = state.requirements.nonce;
-  const needsCurrentPassword = state.requirements.currentPassword;
+  const needsCurrentPassword =
+    requireCurrentPassword || state.requirements.currentPassword;
 
   return (
     <div className="grid gap-5">
@@ -57,27 +60,39 @@ export function PasswordUpdateForm({
 
       {!isSuccess && !isSessionInvalid ? (
         <form action={formAction} className="grid gap-5">
-          <label className="ui-label" htmlFor="new-password">
-            Nouveau mot de passe
+          {requireCurrentPassword ? (
             <input
-              aria-describedby={state.fieldErrors.password ? "new-password-error" : undefined}
-              aria-invalid={Boolean(state.fieldErrors.password)}
-              autoComplete="new-password"
-              className="ui-input"
-              disabled={isPending}
-              id="new-password"
-              maxLength={72}
-              minLength={8}
-              name="password"
-              required
-              type="password"
+              name="requireCurrentPassword"
+              type="hidden"
+              value="true"
             />
-            {state.fieldErrors.password ? (
-              <span className="text-sm font-normal text-red-700" id="new-password-error">
-                {state.fieldErrors.password}
-              </span>
-            ) : null}
-          </label>
+          ) : null}
+          <div className="grid gap-1">
+            <label className="ui-label" htmlFor="new-password">
+              Nouveau mot de passe
+              <input
+                aria-describedby={state.fieldErrors.password ? "new-password-error" : undefined}
+                aria-invalid={Boolean(state.fieldErrors.password)}
+                autoComplete="new-password"
+                className="ui-input"
+                disabled={isPending}
+                id="new-password"
+                maxLength={72}
+                minLength={8}
+                name="password"
+                required
+                type="password"
+              />
+              {state.fieldErrors.password ? (
+                <span className="text-sm font-normal text-red-700" id="new-password-error">
+                  {state.fieldErrors.password}
+                </span>
+              ) : null}
+            </label>
+            <span className="text-xs font-normal leading-5 text-[var(--ink-soft)]">
+              8 caractères minimum, avec au moins une lettre et un chiffre.
+            </span>
+          </div>
 
           <label className="ui-label" htmlFor="password-confirmation">
             Confirmer le nouveau mot de passe

@@ -15,6 +15,8 @@ export const AUTH_MESSAGES = {
   currentPasswordRequired:
     "Supabase exige votre mot de passe actuel pour autoriser cette modification.",
   currentPasswordInvalid: "Le mot de passe actuel est incorrect.",
+  confirmWithCurrentPassword:
+    "Saisissez votre mot de passe actuel pour confirmer cette modification.",
 } as const;
 
 type AuthErrorLike = {

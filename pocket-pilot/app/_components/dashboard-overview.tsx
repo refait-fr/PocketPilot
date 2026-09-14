@@ -4,9 +4,11 @@ import Link from "next/link";
 import { AppIcon } from "@/app/_components/app-icon";
 import { MonthlyBalanceChart } from "@/app/_components/monthly-balance-chart";
 import type { CategoryBudgetUsage } from "@/lib/budgets/category-budget";
-import type {
-  DashboardGoal,
-  MonthlyBalancePoint,
+import {
+  buildMonthlyInsights,
+  type DashboardGoal,
+  type MonthlyBalancePoint,
+  type MonthlyInsight,
 } from "@/lib/dashboard/monthly-cockpit";
 import { getRecurringEntryDashboardDetail } from "@/lib/dashboard/recurring-entry-detail";
 import { formatCents } from "@/lib/finance/format-cents";
@@ -32,9 +34,12 @@ type DashboardOverviewProps = {
   featuredGoal: DashboardGoal | null;
   goalCount: number;
   incomeCount: number;
+  oneTimeIncomeCount: number;
   recentTransactions: RecentTransaction[];
   snapshot: MonthlySnapshot;
   transactionCount: number;
+  upcomingExpenseCount: number;
+  upcomingIncomeCount: number;
 };
 
 function formatTransactionDate(date: string) {
@@ -100,6 +105,58 @@ function DashboardSectionHeader({
   );
 }
 
+function InsightBanners({
+  currencyCode,
+  insights,
+}: {
+  currencyCode: string;
+  insights: readonly MonthlyInsight[];
+}) {
+  // Seules les alertes actionnables sont affichées : le reste réel positif
+  // et la progression d'objectif sont déjà visibles dans les cartes.
+  const actionable = insights.filter(
+    (insight) => insight.tone === "negative" || insight.tone === "warning",
+  );
+
+  if (actionable.length === 0) return null;
+
+  return (
+    <section aria-label="Alertes du mois" className="grid gap-3">
+      {actionable.map((insight, index) => {
+        const key = `${insight.kind}-${index}`;
+        const tone =
+          insight.tone === "negative" ? "ui-feedback-error" : "ui-feedback-warning";
+
+        if (insight.kind === "real-available") {
+          return (
+            <p className={tone} key={key} role="alert">
+              Reste réel négatif ce mois-ci. Vos dépenses et allocations dépassent vos revenus : revoyez le plan mensuel.
+            </p>
+          );
+        }
+
+        if (insight.kind === "budget-exceeded") {
+          return (
+            <p className={tone} key={key} role="alert">
+              Budget {insight.category} dépassé de {formatCents(insight.overrunCents, currencyCode)}. <Link href="/budgets">Revoir les budgets<span aria-hidden="true">↗</span></Link>
+            </p>
+          );
+        }
+
+        if (insight.kind === "budget-near") {
+          return (
+            <p className={tone} key={key} role="status">
+              Budget {insight.category} bientôt épuisé ({insight.percentageConsumed} % consommé). <Link href="/budgets">Revoir les budgets<span aria-hidden="true">↗</span></Link>
+            </p>
+          );
+        }
+
+        return null;
+      })}
+    </section>
+  );
+}
+
 export function DashboardOverview({
   activeExpenseCount,
   activeIncomeCount,
@@ -111,9 +168,12 @@ export function DashboardOverview({
   featuredGoal,
   goalCount,
   incomeCount,
+  oneTimeIncomeCount,
   recentTransactions,
   snapshot,
   transactionCount,
+  upcomingExpenseCount,
+  upcomingIncomeCount,
 }: DashboardOverviewProps) {
   const visibleBudgets = categoryBudgets.slice(0, 3);
   const recurringIncomeDetail = getRecurringEntryDashboardDetail("income", {
@@ -125,8 +185,15 @@ export function DashboardOverview({
     totalCount: expenseCount,
   });
 
+  const insights = buildMonthlyInsights({
+    categoryBudgets,
+    featuredGoal,
+    realAvailableCents: snapshot.realAvailableCents,
+  });
+
   return (
     <div className="dashboard-layout">
+      <InsightBanners currencyCode={currencyCode} insights={insights} />
       <section className="dashboard-kpi-grid" aria-label="Synthèse financière du mois">
         <MetricCard
           detail="Disponible après votre plan et vos dépenses."
@@ -216,7 +283,7 @@ export function DashboardOverview({
                   </div>
                 </div>
                 <dl className="dashboard-detail-list">
-                  <div><dt>Estimation</dt><dd>{featuredGoal.isReached ? "Atteint" : featuredGoal.estimatedMonths === null ? "Indisponible" : `${featuredGoal.estimatedMonths} mois`}</dd></div>
+                  <div><dt>Estimation</dt><dd>{featuredGoal.isReached ? "Atteint" : featuredGoal.estimatedMonths === null ? "Indisponible" : featuredGoal.estimatedArrivalLabel ? `${featuredGoal.estimatedMonths} mois (≈ ${featuredGoal.estimatedArrivalLabel})` : `${featuredGoal.estimatedMonths} mois`}</dd></div>
                   <div><dt>Allocation mensuelle</dt><dd className="font-amount">{formatCents(featuredGoal.monthlyAllocationCents, currencyCode)}</dd></div>
                   <div><dt>Épargne restante</dt><dd className="font-amount">{formatCents(featuredGoal.remainingAmountCents, currencyCode)}</dd></div>
                 </dl>
@@ -254,8 +321,8 @@ export function DashboardOverview({
             <DashboardSectionHeader title="Plan mensuel" />
             <dl className="dashboard-detail-list">
               <div><dt>Budget disponible</dt><dd className="font-amount">{formatCents(snapshot.availableCents, currencyCode)}</dd><small>Après charges fixes et épargne prévue.</small></div>
-              <div><dt>Revenus mensuels</dt><dd className="font-amount">{formatCents(snapshot.totalIncomeCents, currencyCode)}</dd><small>{recurringIncomeDetail}</small></div>
-              <div><dt>Dépenses fixes</dt><dd className="font-amount">{formatCents(snapshot.totalFixedExpensesCents, currencyCode)}</dd><small>{recurringExpenseDetail}</small></div>
+              <div><dt>Revenus mensuels</dt><dd className="font-amount">{formatCents(snapshot.totalIncomeCents, currencyCode)}</dd><small>{recurringIncomeDetail}{oneTimeIncomeCount > 0 ? ` Dont ${oneTimeIncomeCount} ponctuel${oneTimeIncomeCount > 1 ? "s" : ""}.` : ""}{upcomingIncomeCount > 0 ? ` ${upcomingIncomeCount} à venir.` : ""}</small></div>
+              <div><dt>Dépenses fixes</dt><dd className="font-amount">{formatCents(snapshot.totalFixedExpensesCents, currencyCode)}</dd><small>{recurringExpenseDetail}{upcomingExpenseCount > 0 ? ` ${upcomingExpenseCount} à venir.` : ""}</small></div>
               <div><dt>Dépenses ponctuelles</dt><dd className="font-amount">{formatCents(snapshot.totalTransactionsCents, currencyCode)}</dd><small>{transactionCount === 0 ? "Aucune transaction enregistrée ce mois-ci." : `${transactionCount} transaction${transactionCount > 1 ? "s" : ""} ce mois-ci.`}</small></div>
               <div><dt>Objectifs actifs</dt><dd>{snapshot.activeGoalCount}</dd><small>{goalCount === 0 ? "Aucun objectif d’épargne enregistré." : snapshot.activeGoalCount === 0 ? "Tous vos objectifs sont atteints." : `${goalCount} objectif${goalCount > 1 ? "s" : ""} au total.`}</small></div>
             </dl>

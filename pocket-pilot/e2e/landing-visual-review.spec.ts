@@ -9,17 +9,17 @@ test("la landing publique raconte le produit sans bloquer le scroll", async ({
   await page.goto("/");
 
   await expect(
-    page.getByRole("heading", { name: "Know what you really have left." }),
+    page.getByRole("heading", { name: "Sachez ce qu’il vous reste vraiment." }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /Create my account/ }),
+    page.getByRole("link", { name: /Créer mon compte/ }),
   ).toHaveAttribute("href", "/auth");
-  await expect(page.getByRole("link", { name: "Sign in" }).first()).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Se connecter" }).first()).toHaveAttribute(
     "href",
     "/auth",
   );
   await expect(
-    page.getByRole("link", { name: /Read the privacy policy/ }),
+    page.getByRole("link", { name: /politique de confidentialité/ }),
   ).toHaveAttribute("href", "/privacy");
   await expectNoHorizontalOverflow(page);
 
@@ -36,8 +36,8 @@ test("la landing publique raconte le produit sans bloquer le scroll", async ({
     ([position, width]) => window.scrollTo(0, position + (width >= 1024 ? 950 : 180)),
     [purchaseOffset, viewportWidth],
   );
-  await expect(page.getByText("Left after purchase", { exact: true })).toBeVisible();
-  await expect(page.getByText("Comfortable", { exact: true })).toBeVisible();
+  await expect(page.getByText("Reste après achat", { exact: true })).toBeVisible();
+  await expect(page.getByText("Confortable", { exact: true })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
   if (viewportWidth >= 1024) {
@@ -76,9 +76,9 @@ test("la landing reste complète lorsque les animations sont réduites", async (
   await page.goto("/");
   await page.locator("[data-purchase-section]").scrollIntoViewIfNeeded();
 
-  await expect(page.getByText("Current real margin", { exact: true })).toBeVisible();
-  await expect(page.getByText("Left after purchase", { exact: true })).toBeVisible();
-  await expect(page.getByText("Comfortable", { exact: true })).toBeVisible();
+  await expect(page.getByText("Marge réelle actuelle", { exact: true })).toBeVisible();
+  await expect(page.getByText("Reste après achat", { exact: true })).toBeVisible();
+  await expect(page.getByText("Confortable", { exact: true })).toBeVisible();
   await expect(page.locator(".landing-purchase-pin")).toHaveCSS(
     "position",
     "static",
@@ -100,7 +100,7 @@ test("le dashboard dédié reste protégé et devient la destination Auth", asyn
 
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Know what you really have left." }),
+    page.getByRole("heading", { name: "Sachez ce qu’il vous reste vraiment." }),
   ).toBeVisible();
 
   await page.goto("/auth");

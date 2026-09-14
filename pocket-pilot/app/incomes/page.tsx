@@ -1,13 +1,20 @@
+import Link from "next/link";
+
 import { AppShell } from "@/app/_components/app-shell";
 import { IncomeManagement } from "@/app/incomes/income-management";
-import { readPositiveStoredCents } from "@/lib/finance/recurring-entry-input";
+import { getCalendarDateInTimeZone } from "@/lib/finance/calendar-month";
+import {
+  isValidRecurringStartDate,
+  readPositiveStoredCents,
+} from "@/lib/finance/recurring-entry-input";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
 
 export default async function IncomesPage() {
   const { profile, supabase, userId } = await requireAuthenticatedProfile();
+  const todayIso = getCalendarDateInTimeZone(new Date(), profile.timeZone);
   const { data, error } = await supabase
     .from("recurring_incomes")
-    .select("id, label, amount_cents, is_active, created_at")
+    .select("id, label, amount_cents, is_active, start_date, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -21,7 +28,8 @@ export default async function IncomesPage() {
       typeof income.label !== "string" ||
       income.label.trim().length === 0 ||
       income.label.length > 100 ||
-      typeof income.is_active !== "boolean"
+      typeof income.is_active !== "boolean" ||
+      !isValidRecurringStartDate(income.start_date)
     ) {
       throw new Error("Un revenu récurrent contient des données invalides.");
     }
@@ -31,20 +39,29 @@ export default async function IncomesPage() {
       label: income.label,
       amountCents: readPositiveStoredCents(income.amount_cents),
       isActive: income.is_active,
+      startDate: income.start_date,
     };
   });
 
   return (
     <AppShell
       activePath="/incomes"
-      description="Seuls les revenus actifs alimentent le budget disponible."
+      description="Seuls les revenus actifs et débutés alimentent le budget disponible."
       eyebrow="Plan mensuel"
       profile={profile}
-      title="Revenus récurrents"
+      title="Revenus"
     >
+      <p className="mb-5 text-sm leading-6 text-[var(--ink-soft)]">
+        Les dépôts exceptionnels se gèrent dans les{" "}
+        <Link className="underline" href="/incomes/ponctuels">
+          revenus ponctuels
+        </Link>
+        .
+      </p>
       <IncomeManagement
         currencyCode={profile.currencyCode}
         entries={incomes}
+        todayIso={todayIso}
       />
     </AppShell>
   );

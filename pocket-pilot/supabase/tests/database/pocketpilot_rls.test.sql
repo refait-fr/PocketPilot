@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(45);
+select plan(52);
 
 insert into auth.users (id, email)
 values
@@ -54,6 +54,16 @@ values
   ('11111111-1111-1111-1111-111111111111', 'Shopping', 10000),
   ('22222222-2222-2222-2222-222222222222', 'Transport', 20000);
 
+insert into public.one_time_incomes (
+  user_id,
+  label,
+  amount_cents,
+  income_date
+)
+values
+  ('11111111-1111-1111-1111-111111111111', 'Prime A', 20000, '2026-08-24'),
+  ('22222222-2222-2222-2222-222222222222', 'Prime B', 15000, '2026-08-23');
+
 set local role authenticated;
 set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 
@@ -87,6 +97,11 @@ select results_eq(
   array[1::bigint],
   'A can read their own category budget'
 );
+select results_eq(
+  $$select count(*) from public.one_time_incomes where user_id = '11111111-1111-1111-1111-111111111111'$$,
+  array[1::bigint],
+  'A can read their own one-time income'
+);
 
 select is_empty(
   $$select user_id from public.profiles where user_id = '22222222-2222-2222-2222-222222222222'$$,
@@ -111,6 +126,10 @@ select is_empty(
 select is_empty(
   $$select user_id from public.category_budgets where user_id = '22222222-2222-2222-2222-222222222222'$$,
   'A cannot read B category budget'
+);
+select is_empty(
+  $$select user_id from public.one_time_incomes where user_id = '22222222-2222-2222-2222-222222222222'$$,
+  'A cannot read B one-time income'
 );
 
 select is_empty(
@@ -137,6 +156,10 @@ select is_empty(
   $$update public.category_budgets set monthly_budget_cents = 1 where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
   'A cannot update B category budget'
 );
+select is_empty(
+  $$update public.one_time_incomes set label = 'Changed' where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
+  'A cannot update B one-time income'
+);
 
 select is_empty(
   $$delete from public.profiles where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
@@ -161,6 +184,10 @@ select is_empty(
 select is_empty(
   $$delete from public.category_budgets where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
   'A cannot delete B category budget'
+);
+select is_empty(
+  $$delete from public.one_time_incomes where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
+  'A cannot delete B one-time income'
 );
 
 select throws_ok(
@@ -192,6 +219,12 @@ select throws_ok(
   '42501',
   null,
   'A cannot create a category budget owned by B'
+);
+select throws_ok(
+  $$insert into public.one_time_incomes (user_id, label, amount_cents, income_date) values ('22222222-2222-2222-2222-222222222222', 'Injected one-time income', 1, '2026-08-24')$$,
+  '42501',
+  null,
+  'A cannot create a one-time income owned by B'
 );
 select throws_ok(
   $$insert into public.category_budgets (user_id, category, monthly_budget_cents) values ('11111111-1111-1111-1111-111111111111', 'Shopping', 1)$$,
@@ -230,10 +263,11 @@ select results_eq($$select count(*) from public.recurring_fixed_expenses where u
 select results_eq($$select count(*) from public.savings_goals where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A goals are cascaded');
 select results_eq($$select count(*) from public.transactions where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A transactions are cascaded');
 select results_eq($$select count(*) from public.category_budgets where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A budgets are cascaded');
+select results_eq($$select count(*) from public.one_time_incomes where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A one-time incomes are cascaded');
 select results_eq($$select count(*) from auth.users where id = '22222222-2222-2222-2222-222222222222'$$, array[1::bigint], 'B Auth account remains after A deletion');
 select results_eq(
-  $$select (select count(*) from public.profiles where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.recurring_incomes where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.recurring_fixed_expenses where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.savings_goals where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.transactions where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.category_budgets where user_id = '22222222-2222-2222-2222-222222222222')$$,
-  array[6::bigint],
+  $$select (select count(*) from public.profiles where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.recurring_incomes where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.recurring_fixed_expenses where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.savings_goals where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.transactions where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.one_time_incomes where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.category_budgets where user_id = '22222222-2222-2222-2222-222222222222')$$,
+  array[7::bigint],
   'all B data remains after A deletion'
 );
 

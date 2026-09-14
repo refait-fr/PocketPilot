@@ -12,9 +12,11 @@ import {
 export function ExpenseManagement({
   currencyCode,
   entries,
+  todayIso,
 }: {
   currencyCode: string;
   entries: RecurringEntryView[];
+  todayIso: string;
 }) {
   return (
     <RecurringEntryManagement
@@ -24,6 +26,7 @@ export function ExpenseManagement({
       entries={entries}
       kind="expense"
       setEntryActive={setExpenseActive}
+      todayIso={todayIso}
       updateEntry={updateExpense}
     />
   );

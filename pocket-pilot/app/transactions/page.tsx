@@ -12,6 +12,7 @@ import {
   isSameCalendarMonth,
   parseCalendarMonthParam,
 } from "@/lib/finance/calendar-month";
+import { fetchAllWithRange } from "@/lib/supabase/paginate";
 import { isTransactionCategory } from "@/lib/transactions/categories";
 import { summarizeMonthlyTransactions } from "@/lib/transactions/monthly-summary";
 import {
@@ -21,33 +22,57 @@ import {
 } from "@/lib/transactions/transaction-input";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
 
+function readFirstParam(value: string | string[] | undefined): string {
+  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
+}
+
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string | string[] }>;
+  searchParams: Promise<{
+    category?: string | string[];
+    month?: string | string[];
+    q?: string | string[];
+  }>;
 }) {
   const { profile, supabase, userId } = await requireAuthenticatedProfile();
   const currentMonth = getCalendarMonthInTimeZone(new Date(), profile.timeZone);
   const maximumTransactionDate = getCalendarDateInTimeZone(new Date(), profile.timeZone);
-  const rawMonth = (await searchParams).month;
+  const params = await searchParams;
+  const rawMonth = readFirstParam(params.month);
   const selectedMonth =
-    rawMonth === undefined ? currentMonth : parseCalendarMonthParam(rawMonth);
+    rawMonth === "" ? currentMonth : parseCalendarMonthParam(rawMonth);
+  const activeCategory = readFirstParam(params.category);
+  const categoryFilter = isTransactionCategory(activeCategory) ? activeCategory : "";
+  const searchQuery = readFirstParam(params.q).trim().slice(0, 100);
 
   if (!selectedMonth) {
     redirect(`/transactions?month=${formatCalendarMonthParam(currentMonth)}`);
   }
 
   const range = getCalendarMonthRange(selectedMonth);
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("id, amount_cents, category, description, transaction_date, created_at")
-    .eq("user_id", userId)
-    .gte("transaction_date", range.startInclusive)
-    .lt("transaction_date", range.endExclusive)
-    .order("transaction_date", { ascending: false })
-    .order("created_at", { ascending: false });
+  let data: {
+    id: unknown;
+    amount_cents: unknown;
+    category: unknown;
+    description: unknown;
+    transaction_date: unknown;
+  }[];
 
-  if (error) {
+  try {
+    data = await fetchAllWithRange((from, to) =>
+      supabase
+        .from("transactions")
+        .select("id, amount_cents, category, description, transaction_date, created_at")
+        .eq("user_id", userId)
+        .gte("transaction_date", range.startInclusive)
+        .lt("transaction_date", range.endExclusive)
+        .order("transaction_date", { ascending: false })
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(from, to),
+    );
+  } catch {
     throw new Error("Impossible de charger les transactions du mois.");
   }
 
@@ -73,6 +98,13 @@ export default async function TransactionsPage({
   const previousMonth = addCalendarMonths(selectedMonth, -1);
   const nextMonth = addCalendarMonths(selectedMonth, 1);
   const summary = summarizeMonthlyTransactions(transactions);
+  const normalizedQuery = searchQuery.toLowerCase();
+  const visibleTransactions = transactions.filter(
+    (transaction) =>
+      (!categoryFilter || transaction.category === categoryFilter) &&
+      (!normalizedQuery ||
+        transaction.description.toLowerCase().includes(normalizedQuery)),
+  );
 
   return (
     <AppShell
@@ -83,6 +115,11 @@ export default async function TransactionsPage({
       title="Transactions"
     >
       <TransactionManagement
+        activeCategory={categoryFilter}
+        allowNextMonth={
+          formatCalendarMonthParam(nextMonth) <=
+          formatCalendarMonthParam(currentMonth)
+        }
         currencyCode={profile.currencyCode}
         defaultValues={{
           amount: "",
@@ -93,10 +130,13 @@ export default async function TransactionsPage({
         isCurrentMonth={isSameCalendarMonth(selectedMonth, currentMonth)}
         maximumTransactionDate={maximumTransactionDate}
         monthLabel={formatCalendarMonth(selectedMonth)}
+        monthParam={formatCalendarMonthParam(selectedMonth)}
         nextMonthHref={`/transactions?month=${formatCalendarMonthParam(nextMonth)}`}
         previousMonthHref={`/transactions?month=${formatCalendarMonthParam(previousMonth)}`}
+        searchQuery={searchQuery}
         summary={summary}
-        transactions={transactions}
+        totalCount={transactions.length}
+        transactions={visibleTransactions}
       />
     </AppShell>
   );

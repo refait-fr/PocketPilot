@@ -5,15 +5,14 @@ import { revalidatePath } from "next/cache";
 import type { RecurringEntryActionState } from "@/app/_components/recurring-entry/recurring-entry-types";
 import { validateRecurringEntryInput } from "@/lib/finance/recurring-entry-input";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
+import { logServerError } from "@/lib/observability/server-log";
+import { isUuid } from "@/lib/validation/uuid";
 
 export type ExpenseActionState = RecurringEntryActionState;
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 function invalidExpenseState(
   message: string,
-  values: ExpenseActionState["values"] = { label: "", monthlyAmount: "" },
+  values: ExpenseActionState["values"] = { label: "", monthlyAmount: "", startDate: "" },
 ): ExpenseActionState {
   return {
     status: "error",
@@ -35,6 +34,7 @@ export async function createExpense(
   const validation = validateRecurringEntryInput({
     label: formData.get("label"),
     monthlyAmount: formData.get("monthlyAmount"),
+    startDate: formData.get("startDate"),
   });
 
   if (!validation.valid) {
@@ -51,10 +51,12 @@ export async function createExpense(
     user_id: userId,
     label: validation.data.label,
     amount_cents: validation.data.amountCents,
+    start_date: validation.data.startDate,
     is_active: true,
   });
 
   if (error) {
+    logServerError("expenses:create", error);
     return invalidExpenseState(
       "La dépense n’a pas pu être créée. Réessayez dans un instant.",
       validation.values,
@@ -67,7 +69,7 @@ export async function createExpense(
     status: "success",
     message: "La dépense a été ajoutée au plan mensuel.",
     fieldErrors: {},
-    values: { label: "", monthlyAmount: "" },
+    values: { label: "", monthlyAmount: "", startDate: "" },
   };
 }
 
@@ -76,13 +78,14 @@ export async function updateExpense(
   _previousState: ExpenseActionState,
   formData: FormData,
 ): Promise<ExpenseActionState> {
-  if (!UUID_PATTERN.test(expenseId)) {
+  if (!isUuid(expenseId)) {
     return invalidExpenseState("Cette dépense est introuvable.");
   }
 
   const validation = validateRecurringEntryInput({
     label: formData.get("label"),
     monthlyAmount: formData.get("monthlyAmount"),
+    startDate: formData.get("startDate"),
   });
 
   if (!validation.valid) {
@@ -100,6 +103,7 @@ export async function updateExpense(
     .update({
       label: validation.data.label,
       amount_cents: validation.data.amountCents,
+      start_date: validation.data.startDate,
     })
     .eq("id", expenseId)
     .eq("user_id", userId)
@@ -107,6 +111,7 @@ export async function updateExpense(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("expenses:update", error);
     return invalidExpenseState(
       "La dépense n’a pas pu être modifiée. Elle est peut-être introuvable.",
       validation.values,
@@ -132,7 +137,7 @@ export async function setExpenseActive(
   void _previousState;
   void _formData;
 
-  if (!UUID_PATTERN.test(expenseId) || typeof nextIsActive !== "boolean") {
+  if (!isUuid(expenseId) || typeof nextIsActive !== "boolean") {
     return invalidExpenseState("Cette dépense est introuvable.");
   }
 
@@ -146,6 +151,7 @@ export async function setExpenseActive(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("expenses:set-active", error);
     return invalidExpenseState(
       "Le statut de la dépense n’a pas pu être modifié.",
     );
@@ -159,7 +165,7 @@ export async function setExpenseActive(
       ? "La dépense est de nouveau incluse dans le dashboard."
       : "La dépense est exclue des calculs du dashboard.",
     fieldErrors: {},
-    values: { label: "", monthlyAmount: "" },
+    values: { label: "", monthlyAmount: "", startDate: "" },
   };
 }
 
@@ -171,7 +177,7 @@ export async function deleteExpense(
   void _previousState;
   void _formData;
 
-  if (!UUID_PATTERN.test(expenseId)) {
+  if (!isUuid(expenseId)) {
     return invalidExpenseState("Cette dépense est introuvable.");
   }
 
@@ -185,6 +191,7 @@ export async function deleteExpense(
     .maybeSingle();
 
   if (error || !data) {
+    if (error) logServerError("expenses:delete", error);
     return invalidExpenseState("La dépense n’a pas pu être supprimée.");
   }
 
@@ -194,6 +201,6 @@ export async function deleteExpense(
     status: "success",
     message: "La dépense a été supprimée.",
     fieldErrors: {},
-    values: { label: "", monthlyAmount: "" },
+    values: { label: "", monthlyAmount: "", startDate: "" },
   };
 }

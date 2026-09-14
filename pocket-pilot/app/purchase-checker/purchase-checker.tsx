@@ -23,17 +23,17 @@ type PurchaseResult = {
 const classificationPresentation = {
   comfortable: {
     label: "Achat confortable",
-    message: "Cet achat semble compatible avec ton budget actuel.",
+    message: "Cet achat semble compatible avec votre budget actuel.",
     tone: "bg-[var(--positive-soft)] text-[var(--positive)]",
   },
   significant: {
     label: "Impact significatif",
-    message: "Cet achat utiliserait une part notable de ton reste disponible ce mois-ci.",
+    message: "Cet achat utiliserait une part notable de votre reste disponible ce mois-ci.",
     tone: "bg-[var(--accent-soft)] text-[var(--accent-dark)]",
   },
   tight: {
     label: "Budget serré",
-    message: "Cet achat est possible, mais il réduirait fortement ton reste disponible ce mois-ci.",
+    message: "Cet achat est possible, mais il réduirait fortement votre reste disponible ce mois-ci.",
     tone: "bg-[var(--warning-soft)] text-[var(--warning)]",
   },
   "over-budget": {
@@ -106,7 +106,7 @@ export function PurchaseChecker({
     : null;
   const resultMessage =
     result?.classification === "over-budget"
-      ? `Cet achat dépasserait ton budget disponible actuel de ${formatCents(
+      ? `Cet achat dépasserait votre budget disponible actuel de ${formatCents(
           Math.abs(result.remainingAfterPurchaseCents),
           currencyCode,
         )}.`
@@ -125,7 +125,7 @@ export function PurchaseChecker({
           Achat à vérifier
         </p>
         <h2 className="font-display mt-2 text-2xl font-semibold tracking-[-0.04em]">
-          Tu veux acheter quoi ?
+          Que voulez-vous acheter ?
         </h2>
         <p className="mt-3 text-sm leading-6 text-[var(--ink-soft)]">
           Votre reste réel actuel est de {formatCents(currentRealAvailableCents, currencyCode)}.

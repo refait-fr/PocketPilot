@@ -42,3 +42,14 @@ test("autorise un changement de devise seulement sans données financières", ()
   assert.equal(allowed.valid, true);
   assert.equal(blocked.valid, false);
 });
+
+test("laisse passer la réparation quand le profil stocké est invalide", () => {
+  const result = validateProfileSettings({
+    currencyCode: "EUR",
+    currentCurrencyCode: null,
+    hasFinancialData: true,
+    timeZone: "Europe/Paris",
+  });
+
+  assert.equal(result.valid, true);
+});

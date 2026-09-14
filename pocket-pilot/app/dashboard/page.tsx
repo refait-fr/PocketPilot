@@ -30,9 +30,12 @@ export default async function DashboardPage() {
         featuredGoal={overview.featuredGoal}
         goalCount={overview.goalCount}
         incomeCount={overview.incomeCount}
+        oneTimeIncomeCount={overview.oneTimeIncomeCount}
         recentTransactions={overview.recentTransactions}
         snapshot={overview.snapshot}
         transactionCount={overview.transactionCount}
+        upcomingExpenseCount={overview.upcomingExpenseCount}
+        upcomingIncomeCount={overview.upcomingIncomeCount}
       />
     </AppShell>
   );
