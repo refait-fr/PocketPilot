@@ -15,6 +15,7 @@ import {
 type TransactionFormProps = {
   action: TransactionFormAction;
   allowedCategories: readonly string[];
+  autoFocusAmount?: boolean;
   cancelEditing?: () => void;
   defaultValues: TransactionInputValues;
   maximumTransactionDate: string;
@@ -42,6 +43,7 @@ function SubmitButton({ mode }: { mode: TransactionFormProps["mode"] }) {
 export function TransactionForm({
   action,
   allowedCategories,
+  autoFocusAmount = false,
   cancelEditing,
   defaultValues,
   maximumTransactionDate,
@@ -84,6 +86,7 @@ export function TransactionForm({
         <input
           aria-describedby={state.fieldErrors.amount ? `${idPrefix}-amount-error` : `${idPrefix}-amount-hint`}
           aria-invalid={Boolean(state.fieldErrors.amount)}
+          autoFocus={autoFocusAmount}
           className="ui-input"
           defaultValue={state.values.amount}
           id={`${idPrefix}-amount`}

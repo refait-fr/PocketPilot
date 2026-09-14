@@ -5,6 +5,8 @@ import { PasswordUpdateForm } from "@/app/auth/password-update-form";
 import { CategoryManagement } from "@/app/categories/category-management";
 import { DeleteAccountForm } from "@/app/settings/delete-account-form";
 import { ProfileSettingsForm } from "@/app/settings/profile-settings-form";
+import { ShortcutTokenManagement } from "@/app/settings/shortcut-token-management";
+import type { ShortcutTokenView } from "@/app/settings/actions";
 import { fetchUserCategoryNames } from "@/lib/transactions/user-categories";
 import { requireRawProfile } from "@/lib/supabase/require-authenticated-profile";
 
@@ -42,6 +44,33 @@ export default async function SettingsPage({
     .map(({ label }, index) => ({ count: counts[index]?.count ?? 0, label }))
     .filter(({ count }) => count > 0);
   const customCategoryNames = await fetchUserCategoryNames({ supabase, userId });
+  const { data: tokenRows, error: tokensError } = await supabase
+    .from("api_tokens")
+    .select("created_at, id, last_used_at, name, revoked_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (tokensError) {
+    throw new Error("Impossible de charger les jetons d’accès.");
+  }
+
+  const shortcutTokens: ShortcutTokenView[] = (tokenRows ?? []).flatMap((row) => {
+    if (
+      typeof row.id !== "string" ||
+      typeof row.name !== "string" ||
+      typeof row.created_at !== "string"
+    ) {
+      return [];
+    }
+
+    return [{
+      createdAt: row.created_at,
+      id: row.id,
+      lastUsedAt: typeof row.last_used_at === "string" ? row.last_used_at : null,
+      name: row.name,
+      revokedAt: typeof row.revoked_at === "string" ? row.revoked_at : null,
+    }];
+  });
   const [usedTransactionCategories, usedBudgetCategories] = await Promise.all([
     supabase.from("transactions").select("category").eq("user_id", userId),
     supabase.from("category_budgets").select("category").eq("user_id", userId),
@@ -89,6 +118,13 @@ export default async function SettingsPage({
           <h2 className="font-display mt-2 text-2xl font-semibold tracking-[-0.035em]">Catégories personnelles</h2>
           <p className="mb-7 mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">Ajoutez vos propres catégories, renommez-les ou supprimez celles qui ne servent plus. Elles apparaissent dans les transactions, les budgets et l’import CSV.</p>
           <CategoryManagement customCategories={customCategoryNames} usageByCategory={usageByCategory} />
+        </section>
+
+        <section className="ui-panel p-6 sm:p-8">
+          <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">Raccourci iOS</p>
+          <h2 className="font-display mt-2 text-2xl font-semibold tracking-[-0.035em]">Enregistrer sans ouvrir l’appli</h2>
+          <p className="mb-7 mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">Créez un jeton, collez-le dans votre Raccourci « double-tap au dos » : montant, catégorie et description partent en arrière-plan vers PocketPilot. Un jeton ouvre l’enregistrement des transactions comme votre mot de passe : ne le partagez pas, révoquez-le en cas de doute.</p>
+          <ShortcutTokenManagement tokens={shortcutTokens} />
         </section>
 
         <section className="ui-panel p-6 sm:p-8">

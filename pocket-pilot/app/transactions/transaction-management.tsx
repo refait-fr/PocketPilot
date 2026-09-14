@@ -138,6 +138,7 @@ export function TransactionManagement({
 
         <div className="management-list-heading">
           <div><p className="ui-kicker">Détail du mois</p><h2 className="management-title" id="transaction-list-title">Détail des transactions</h2></div>
+          <Link className="ui-button-secondary min-h-10 px-3 py-2 text-xs" href="/transactions/rapide">Ajout rapide</Link>
           <Link className="ui-button-secondary min-h-10 px-3 py-2 text-xs" href="/transactions/importer">Importer un fichier CSV</Link>
         </div>
 

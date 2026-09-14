@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(61);
+select plan(67);
 
 insert into auth.users (id, email)
 values
@@ -69,6 +69,11 @@ values
   ('11111111-1111-1111-1111-111111111111', 'Perso A'),
   ('22222222-2222-2222-2222-222222222222', 'Perso B');
 
+insert into public.api_tokens (user_id, name, token_hash)
+values
+  ('11111111-1111-1111-1111-111111111111', 'Token A', 'hash-a'),
+  ('22222222-2222-2222-2222-222222222222', 'Token B', 'hash-b');
+
 set local role authenticated;
 set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 
@@ -112,6 +117,11 @@ select results_eq(
   array[1::bigint],
   'A can read their own user category'
 );
+select results_eq(
+  $$select count(*) from public.api_tokens where user_id = '11111111-1111-1111-1111-111111111111'$$,
+  array[1::bigint],
+  'A can read their own api token'
+);
 
 select is_empty(
   $$select user_id from public.profiles where user_id = '22222222-2222-2222-2222-222222222222'$$,
@@ -144,6 +154,10 @@ select is_empty(
 select is_empty(
   $$select user_id from public.user_categories where user_id = '22222222-2222-2222-2222-222222222222'$$,
   'A cannot read B user category'
+);
+select is_empty(
+  $$select user_id from public.api_tokens where user_id = '22222222-2222-2222-2222-222222222222'$$,
+  'A cannot read B api token'
 );
 
 select is_empty(
@@ -178,6 +192,10 @@ select is_empty(
   $$update public.user_categories set name = 'Changed' where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
   'A cannot update B user category'
 );
+select is_empty(
+  $$update public.api_tokens set name = 'Changed' where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
+  'A cannot update B api token'
+);
 
 select is_empty(
   $$delete from public.profiles where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
@@ -210,6 +228,10 @@ select is_empty(
 select is_empty(
   $$delete from public.user_categories where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
   'A cannot delete B user category'
+);
+select is_empty(
+  $$delete from public.api_tokens where user_id = '22222222-2222-2222-2222-222222222222' returning user_id$$,
+  'A cannot delete B api token'
 );
 
 select throws_ok(
@@ -261,6 +283,12 @@ select throws_ok(
   'A cannot create a user category owned by B'
 );
 select throws_ok(
+  $$insert into public.api_tokens (user_id, name, token_hash) values ('22222222-2222-2222-2222-222222222222', 'Injected token', 'hash-injected')$$,
+  '42501',
+  null,
+  'A cannot create an api token owned by B'
+);
+select throws_ok(
   $$insert into public.user_categories (user_id, name) values ('11111111-1111-1111-1111-111111111111', 'Perso A')$$,
   '23505',
   null,
@@ -307,10 +335,11 @@ select results_eq($$select count(*) from public.transactions where user_id = '11
 select results_eq($$select count(*) from public.category_budgets where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A budgets are cascaded');
 select results_eq($$select count(*) from public.one_time_incomes where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A one-time incomes are cascaded');
 select results_eq($$select count(*) from public.user_categories where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A user categories are cascaded');
+select results_eq($$select count(*) from public.api_tokens where user_id = '11111111-1111-1111-1111-111111111111'$$, array[0::bigint], 'A api tokens are cascaded');
 select results_eq($$select count(*) from auth.users where id = '22222222-2222-2222-2222-222222222222'$$, array[1::bigint], 'B Auth account remains after A deletion');
 select results_eq(
-  $$select (select count(*) from public.profiles where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.recurring_incomes where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.recurring_fixed_expenses where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.savings_goals where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.transactions where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.one_time_incomes where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.category_budgets where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.user_categories where user_id = '22222222-2222-2222-2222-222222222222')$$,
-  array[8::bigint],
+  $$select (select count(*) from public.profiles where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.recurring_incomes where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.recurring_fixed_expenses where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.savings_goals where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.transactions where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.one_time_incomes where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.category_budgets where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.user_categories where user_id = '22222222-2222-2222-2222-222222222222') + (select count(*) from public.api_tokens where user_id = '22222222-2222-2222-2222-222222222222')$$,
+  array[9::bigint],
   'all B data remains after A deletion'
 );
 
