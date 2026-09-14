@@ -7,7 +7,6 @@ import type {
   BudgetActionState,
   BudgetFormAction,
 } from "@/app/budgets/budget-types";
-import type { TransactionCategory } from "@/lib/transactions/categories";
 
 function SubmitButton({ mode }: { mode: "create" | "edit" }) {
   const { pending } = useFormStatus();
@@ -35,7 +34,7 @@ export function BudgetForm({
   mode,
 }: {
   action: BudgetFormAction;
-  availableCategories: readonly TransactionCategory[];
+  availableCategories: readonly string[];
   cancelEditing?: () => void;
   defaultValues: BudgetActionState["values"];
   mode: "create" | "edit";

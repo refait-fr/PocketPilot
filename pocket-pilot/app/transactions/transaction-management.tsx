@@ -6,12 +6,12 @@ import { TransactionForm } from "@/app/transactions/transaction-form";
 import { TransactionRow } from "@/app/transactions/transaction-row";
 import type { TransactionView } from "@/app/transactions/transaction-types";
 import { formatCents } from "@/lib/finance/format-cents";
-import { TRANSACTION_CATEGORIES } from "@/lib/transactions/categories";
 import type { TransactionInputValues } from "@/lib/transactions/transaction-input";
 import type { MonthlyTransactionSummary } from "@/lib/transactions/monthly-summary";
 
 export function TransactionManagement({
   activeCategory,
+  allowedCategories,
   allowNextMonth,
   currencyCode,
   defaultValues,
@@ -27,6 +27,7 @@ export function TransactionManagement({
   transactions,
 }: {
   activeCategory: string;
+  allowedCategories: readonly string[];
   allowNextMonth: boolean;
   currencyCode: string;
   defaultValues: TransactionInputValues;
@@ -85,7 +86,7 @@ export function TransactionManagement({
               name="category"
             >
               <option value="">Toutes catégories</option>
-              {TRANSACTION_CATEGORIES.map((category) => (
+              {allowedCategories.map((category) => (
                 <option key={category} value={category}>{category}</option>
               ))}
             </select>
@@ -130,13 +131,14 @@ export function TransactionManagement({
           </div>
           <div className="pilot-metric">
             <dt>Catégorie principale</dt>
-            <dd>{summary.topCategory ?? "—"}</dd>
+            <dd>{summary.topCategory ?? "Non renseignée"}</dd>
             {summary.topCategory ? <small>{formatCents(summary.topCategoryCents, currencyCode)}</small> : null}
           </div>
         </dl>
 
         <div className="management-list-heading">
           <div><p className="ui-kicker">Détail du mois</p><h2 className="management-title" id="transaction-list-title">Détail des transactions</h2></div>
+          <Link className="ui-button-secondary min-h-10 px-3 py-2 text-xs" href="/transactions/importer">Importer un fichier CSV</Link>
         </div>
 
         {transactions.length === 0 ? (
@@ -154,6 +156,7 @@ export function TransactionManagement({
           <ul className="ui-divider-list ui-panel dense-finance-list overflow-hidden">
             {transactions.map((transaction) => (
               <TransactionRow
+                allowedCategories={allowedCategories}
                 currencyCode={currencyCode}
                 key={transaction.id}
                 maximumTransactionDate={maximumTransactionDate}
@@ -170,7 +173,7 @@ export function TransactionManagement({
         eyebrow="Nouvelle dépense ponctuelle"
         title="Ajouter une transaction"
       >
-        <TransactionForm action={createTransaction} defaultValues={defaultValues} maximumTransactionDate={maximumTransactionDate} mode="create" />
+        <TransactionForm action={createTransaction} allowedCategories={allowedCategories} defaultValues={defaultValues} maximumTransactionDate={maximumTransactionDate} mode="create" />
       </CreationDisclosure>
     </div>
   );

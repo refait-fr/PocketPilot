@@ -39,7 +39,7 @@ export default async function ResetPasswordPage({
             {invalidRecoveryNotice.message}
           </div>
           <Link
-            className="w-fit rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#244c43] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--forest)]"
+            className="w-fit rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--accent-dark)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--forest)]"
             href="/auth/forgot-password"
           >
             Demander un nouveau lien
@@ -57,7 +57,7 @@ export default async function ResetPasswordPage({
             Le lien de réinitialisation est invalide ou a expiré. Demandez un nouveau lien depuis la page de connexion.
           </div>
           <Link
-            className="w-fit rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#244c43] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--forest)]"
+            className="w-fit rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--accent-dark)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--forest)]"
             href="/auth/forgot-password"
           >
             Demander un nouveau lien

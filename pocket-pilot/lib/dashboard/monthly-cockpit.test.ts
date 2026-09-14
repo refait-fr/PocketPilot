@@ -157,6 +157,138 @@ test("les insights signalent le reste, le budget critique et la progression", ()
   );
 });
 
+test("les échéances signalent le prochain démarrage sous 30 jours", () => {
+  const insights = buildMonthlyInsights({
+    categoryBudgets: [],
+    featuredGoal: null,
+    realAvailableCents: 10_000,
+    todayIso: "2026-09-14",
+    upcomingStarts: [
+      {
+        amountCents: 30_000,
+        entryKind: "expense",
+        label: "Loyer futur",
+        startDate: "2026-10-01",
+      },
+      {
+        amountCents: 150_000,
+        entryKind: "income",
+        label: "Salaire futur",
+        startDate: "2026-09-20",
+      },
+    ],
+  });
+
+  assert.deepEqual(
+    insights.map((insight) => insight.kind),
+    ["real-available", "upcoming-start"],
+  );
+  assert.deepEqual(insights[1], {
+    amountCents: 150_000,
+    entryKind: "income",
+    kind: "upcoming-start",
+    label: "Salaire futur",
+    startDate: "2026-09-20",
+    tone: "warning",
+  });
+});
+
+test("les échéances ignorent le passé et les démarrages au-delà de 30 jours", () => {
+  const insights = buildMonthlyInsights({
+    categoryBudgets: [],
+    featuredGoal: null,
+    realAvailableCents: 10_000,
+    todayIso: "2026-09-14",
+    upcomingStarts: [
+      {
+        amountCents: 1_000,
+        entryKind: "expense",
+        label: "Passé",
+        startDate: "2026-09-10",
+      },
+      {
+        amountCents: 2_000,
+        entryKind: "expense",
+        label: "Aujourd’hui",
+        startDate: "2026-09-14",
+      },
+      {
+        amountCents: 3_000,
+        entryKind: "expense",
+        label: "Trop loin",
+        startDate: "2026-10-15",
+      },
+      {
+        amountCents: 4_000,
+        entryKind: "expense",
+        label: "Borne incluse",
+        startDate: "2026-10-14",
+      },
+    ],
+  });
+
+  assert.deepEqual(
+    insights.map((insight) => insight.kind),
+    ["real-available", "upcoming-start"],
+  );
+  const upcoming = insights[1];
+  assert.equal(upcoming?.kind, "upcoming-start");
+
+  if (upcoming?.kind === "upcoming-start") {
+    assert.equal(upcoming.label, "Borne incluse");
+  }
+});
+
+test("les échéances exigent la date du jour et des entrées valides", () => {
+  assert.throws(() =>
+    buildMonthlyInsights({
+      categoryBudgets: [],
+      featuredGoal: null,
+      realAvailableCents: 0,
+      upcomingStarts: [
+        {
+          amountCents: 1_000,
+          entryKind: "expense",
+          label: "Sans date du jour",
+          startDate: "2026-09-20",
+        },
+      ],
+    }),
+  );
+  assert.throws(() =>
+    buildMonthlyInsights({
+      categoryBudgets: [],
+      featuredGoal: null,
+      realAvailableCents: 0,
+      todayIso: "2026-09-14",
+      upcomingStarts: [
+        {
+          amountCents: 1_000,
+          entryKind: "expense",
+          label: "Impossible",
+          startDate: "2026-02-30",
+        },
+      ],
+    }),
+  );
+  assert.throws(() =>
+    buildMonthlyInsights({
+      categoryBudgets: [],
+      featuredGoal: null,
+      realAvailableCents: 0,
+      todayIso: "2026-13-01",
+      upcomingStarts: [
+        {
+          amountCents: 1_000,
+          entryKind: "expense",
+          label: "Valide",
+          startDate: "2026-09-20",
+        },
+      ],
+    }),
+  );
+});
+
 test("les insights conservent un reste réel négatif explicite", () => {
   const [insight] = buildMonthlyInsights({
     categoryBudgets: [],

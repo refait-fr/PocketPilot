@@ -1,13 +1,12 @@
 import { addCents } from "../finance/money.ts";
-import type { TransactionCategory } from "./categories.ts";
 
 type MonthlyTransaction = {
   amountCents: number;
-  category: TransactionCategory;
+  category: string;
 };
 
 export type MonthlyTransactionSummary = {
-  topCategory: TransactionCategory | null;
+  topCategory: string | null;
   topCategoryCents: number;
   totalCents: number;
   transactionCount: number;
@@ -16,7 +15,7 @@ export type MonthlyTransactionSummary = {
 export function summarizeMonthlyTransactions(
   transactions: readonly MonthlyTransaction[],
 ): MonthlyTransactionSummary {
-  const totalsByCategory = new Map<TransactionCategory, number>();
+  const totalsByCategory = new Map<string, number>();
   let totalCents = 0;
 
   for (const transaction of transactions) {
@@ -27,7 +26,7 @@ export function summarizeMonthlyTransactions(
     );
   }
 
-  let topCategory: TransactionCategory | null = null;
+  let topCategory: string | null = null;
   let topCategoryCents = 0;
 
   for (const [category, categoryTotalCents] of totalsByCategory) {

@@ -33,9 +33,11 @@ export default async function DashboardPage() {
         oneTimeIncomeCount={overview.oneTimeIncomeCount}
         recentTransactions={overview.recentTransactions}
         snapshot={overview.snapshot}
+        todayIso={overview.todayIso}
         transactionCount={overview.transactionCount}
         upcomingExpenseCount={overview.upcomingExpenseCount}
         upcomingIncomeCount={overview.upcomingIncomeCount}
+        upcomingStarts={overview.upcomingStarts}
       />
     </AppShell>
   );

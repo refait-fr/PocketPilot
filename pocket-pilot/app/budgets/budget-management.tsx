@@ -5,11 +5,11 @@ import { createCategoryBudget } from "@/app/budgets/actions";
 import { BudgetForm } from "@/app/budgets/budget-form";
 import { BudgetRow } from "@/app/budgets/budget-row";
 import type { BudgetView } from "@/app/budgets/budget-types";
-import { TRANSACTION_CATEGORIES } from "@/lib/transactions/categories";
 import { summarizeCategoryBudgets } from "@/lib/budgets/category-budget";
 import { formatCents } from "@/lib/finance/format-cents";
 
 export function BudgetManagement({
+  allowedCategories,
   budgets,
   currencyCode,
   isCurrentMonth,
@@ -17,6 +17,7 @@ export function BudgetManagement({
   nextMonthHref,
   previousMonthHref,
 }: {
+  allowedCategories: readonly string[];
   budgets: BudgetView[];
   currencyCode: string;
   isCurrentMonth: boolean;
@@ -25,7 +26,7 @@ export function BudgetManagement({
   previousMonthHref: string;
 }) {
   const configured = new Set(budgets.map((budget) => budget.category));
-  const availableCategories = TRANSACTION_CATEGORIES.filter(
+  const availableCategories = allowedCategories.filter(
     (category) => !configured.has(category),
   );
   const summary = summarizeCategoryBudgets(budgets);

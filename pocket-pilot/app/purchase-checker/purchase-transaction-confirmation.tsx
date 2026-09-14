@@ -12,7 +12,6 @@ import {
 } from "@/lib/budgets/category-budget";
 import { formatCents } from "@/lib/finance/format-cents";
 import { addCents, formatCentsForInput } from "@/lib/finance/money";
-import { TRANSACTION_CATEGORIES } from "@/lib/transactions/categories";
 
 function ConfirmationSubmitButton() {
   const { pending } = useFormStatus();
@@ -29,12 +28,14 @@ function ConfirmationSubmitButton() {
 }
 
 export function PurchaseTransactionConfirmation({
+  allowedCategories,
   categoryBudgets,
   currencyCode,
   currentDate,
   name,
   priceCents,
 }: {
+  allowedCategories: readonly string[];
   categoryBudgets: CategoryBudgetUsage[];
   currencyCode: string;
   currentDate: string;
@@ -144,7 +145,7 @@ export function PurchaseTransactionConfirmation({
           name="category"
           onChange={(event) => setSelectedCategory(event.target.value)}
         >
-          {TRANSACTION_CATEGORIES.map((category) => (
+          {allowedCategories.map((category) => (
             <option key={category} value={category}>
               {category}
             </option>

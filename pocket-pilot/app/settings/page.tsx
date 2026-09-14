@@ -2,8 +2,10 @@ import Link from "next/link";
 
 import { AppShell } from "@/app/_components/app-shell";
 import { PasswordUpdateForm } from "@/app/auth/password-update-form";
+import { CategoryManagement } from "@/app/categories/category-management";
 import { DeleteAccountForm } from "@/app/settings/delete-account-form";
 import { ProfileSettingsForm } from "@/app/settings/profile-settings-form";
+import { fetchUserCategoryNames } from "@/lib/transactions/user-categories";
 import { requireRawProfile } from "@/lib/supabase/require-authenticated-profile";
 
 const financialTables = [
@@ -39,6 +41,26 @@ export default async function SettingsPage({
   const dataSummary = financialTables
     .map(({ label }, index) => ({ count: counts[index]?.count ?? 0, label }))
     .filter(({ count }) => count > 0);
+  const customCategoryNames = await fetchUserCategoryNames({ supabase, userId });
+  const [usedTransactionCategories, usedBudgetCategories] = await Promise.all([
+    supabase.from("transactions").select("category").eq("user_id", userId),
+    supabase.from("category_budgets").select("category").eq("user_id", userId),
+  ]);
+  const usageByCategory: Record<string, { budgets: number; transactions: number }> = Object.fromEntries(
+    customCategoryNames.map((name) => [name, { budgets: 0, transactions: 0 }]),
+  );
+
+  for (const row of usedTransactionCategories.data ?? []) {
+    if (typeof row.category === "string" && usageByCategory[row.category]) {
+      usageByCategory[row.category].transactions += 1;
+    }
+  }
+
+  for (const row of usedBudgetCategories.data ?? []) {
+    if (typeof row.category === "string" && usageByCategory[row.category]) {
+      usageByCategory[row.category].budgets += 1;
+    }
+  }
 
   return (
     <AppShell activePath="/settings" description="Profil financier, confidentialité et sécurité du compte." eyebrow="Réglages" profile={rawProfile} title="Paramètres">
@@ -63,10 +85,20 @@ export default async function SettingsPage({
         </section>
 
         <section className="ui-panel p-6 sm:p-8">
+          <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">Organisation</p>
+          <h2 className="font-display mt-2 text-2xl font-semibold tracking-[-0.035em]">Catégories personnelles</h2>
+          <p className="mb-7 mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">Ajoutez vos propres catégories, renommez-les ou supprimez celles qui ne servent plus. Elles apparaissent dans les transactions, les budgets et l’import CSV.</p>
+          <CategoryManagement customCategories={customCategoryNames} usageByCategory={usageByCategory} />
+        </section>
+
+        <section className="ui-panel p-6 sm:p-8">
           <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--accent)]">Confidentialité</p>
           <h2 className="font-display mt-2 text-2xl font-semibold tracking-[-0.035em]">Vos données</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">Consultez les données enregistrées, leur usage et les moyens d’exercer vos droits.</p>
-          <Link className="ui-button-secondary mt-6" href="/privacy">Lire la politique de confidentialité</Link>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">Consultez les données enregistrées, leur usage et les moyens d’exercer vos droits. Téléchargez une copie CSV de vos revenus, charges, objectifs, transactions et budgets.</p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Link className="ui-button-secondary" href="/privacy">Lire la politique de confidentialité</Link>
+            <a className="ui-button-primary" download href="/settings/export">Exporter mes données (CSV)</a>
+          </div>
         </section>
 
         <section className="ui-panel border-red-200 p-6 sm:p-8">

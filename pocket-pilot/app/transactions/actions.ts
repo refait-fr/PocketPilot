@@ -4,15 +4,15 @@ import { revalidatePath } from "next/cache";
 
 import type { TransactionActionState } from "@/app/transactions/transaction-types";
 import { getCalendarDateInTimeZone } from "@/lib/finance/calendar-month";
-import { TRANSACTION_CATEGORIES } from "@/lib/transactions/categories";
 import { validateTransactionInput } from "@/lib/transactions/transaction-input";
+import { fetchUserCategoryNames } from "@/lib/transactions/user-categories";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
 import { logServerError } from "@/lib/observability/server-log";
 import { isUuid } from "@/lib/validation/uuid";
 
 const emptyTransactionValues: TransactionActionState["values"] = {
   amount: "",
-  category: TRANSACTION_CATEGORIES[0],
+  category: "Alimentation",
   description: "",
   transactionDate: "",
 };
@@ -29,10 +29,15 @@ function invalidTransactionState(
   };
 }
 
-function validateTransactionForm(formData: FormData, maximumTransactionDate: string) {
+function validateTransactionForm(
+  formData: FormData,
+  maximumTransactionDate: string,
+  customCategories: readonly string[],
+) {
   return validateTransactionInput({
     amount: formData.get("amount"),
     category: formData.get("category"),
+    customCategories,
     description: formData.get("description"),
     maximumTransactionDate,
     transactionDate: formData.get("transactionDate"),
@@ -52,7 +57,8 @@ export async function createTransaction(
 ): Promise<TransactionActionState> {
   const { profile, supabase, userId } = await requireAuthenticatedProfile();
   const maximumTransactionDate = getCalendarDateInTimeZone(new Date(), profile.timeZone);
-  const validation = validateTransactionForm(formData, maximumTransactionDate);
+  const customCategories = await fetchUserCategoryNames({ supabase, userId });
+  const validation = validateTransactionForm(formData, maximumTransactionDate, customCategories);
 
   if (!validation.valid) {
     return {
@@ -103,7 +109,8 @@ export async function updateTransaction(
 
   const { profile, supabase, userId } = await requireAuthenticatedProfile();
   const maximumTransactionDate = getCalendarDateInTimeZone(new Date(), profile.timeZone);
-  const validation = validateTransactionForm(formData, maximumTransactionDate);
+  const customCategories = await fetchUserCategoryNames({ supabase, userId });
+  const validation = validateTransactionForm(formData, maximumTransactionDate, customCategories);
 
   if (!validation.valid) {
     return {

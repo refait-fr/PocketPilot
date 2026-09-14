@@ -2,7 +2,6 @@ import type {
   TransactionInputFieldErrors,
   TransactionInputValues,
 } from "@/lib/transactions/transaction-input";
-import type { TransactionCategory } from "@/lib/transactions/categories";
 
 export type TransactionActionState = {
   fieldErrors: TransactionInputFieldErrors;
@@ -13,7 +12,7 @@ export type TransactionActionState = {
 
 export type TransactionView = {
   amountCents: number;
-  category: TransactionCategory;
+  category: string;
   description: string;
   id: string;
   transactionDate: string;

@@ -47,11 +47,13 @@ const classificationPresentation = {
 >;
 
 export function PurchaseChecker({
+  allowedCategories,
   categoryBudgets,
   currencyCode,
   currentDate,
   currentRealAvailableCents,
 }: {
+  allowedCategories: readonly string[];
   categoryBudgets: CategoryBudgetUsage[];
   currencyCode: string;
   currentDate: string;
@@ -263,6 +265,7 @@ export function PurchaseChecker({
                 : "Aucun budget de catégorie n’est configuré : l’impact concerne uniquement votre reste réel."}
             </p>
             <PurchaseTransactionConfirmation
+              allowedCategories={allowedCategories}
               categoryBudgets={categoryBudgets}
               currencyCode={currencyCode}
               currentDate={currentDate}

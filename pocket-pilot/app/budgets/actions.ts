@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import type { BudgetActionState } from "@/app/budgets/budget-types";
 import { validateCategoryBudgetInput } from "@/lib/budgets/category-budget";
+import { fetchUserCategoryNames } from "@/lib/transactions/user-categories";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
 import { logServerError } from "@/lib/observability/server-log";
 import { isUuid } from "@/lib/validation/uuid";
@@ -20,9 +21,10 @@ function errorState(
   return { fieldErrors: {}, message, status: "error", values };
 }
 
-function validateForm(formData: FormData) {
+function validateForm(formData: FormData, customCategories: readonly string[]) {
   return validateCategoryBudgetInput({
     category: formData.get("category"),
+    customCategories,
     monthlyBudget: formData.get("monthlyBudget"),
   });
 }
@@ -37,7 +39,9 @@ export async function createCategoryBudget(
   _previousState: BudgetActionState,
   formData: FormData,
 ): Promise<BudgetActionState> {
-  const validation = validateForm(formData);
+  const { supabase, userId } = await requireAuthenticatedProfile();
+  const customCategories = await fetchUserCategoryNames({ supabase, userId });
+  const validation = validateForm(formData, customCategories);
 
   if (!validation.valid) {
     return {
@@ -47,8 +51,6 @@ export async function createCategoryBudget(
       values: validation.values,
     };
   }
-
-  const { supabase, userId } = await requireAuthenticatedProfile();
   const { error } = await supabase.from("category_budgets").insert({
     category: validation.data.category,
     monthly_budget_cents: validation.data.monthlyBudgetCents,
@@ -83,7 +85,9 @@ export async function updateCategoryBudget(
     return errorState("Ce budget est introuvable.");
   }
 
-  const validation = validateForm(formData);
+  const { supabase, userId } = await requireAuthenticatedProfile();
+  const customCategories = await fetchUserCategoryNames({ supabase, userId });
+  const validation = validateForm(formData, customCategories);
 
   if (!validation.valid) {
     return {
@@ -94,7 +98,6 @@ export async function updateCategoryBudget(
     };
   }
 
-  const { supabase, userId } = await requireAuthenticatedProfile();
   const { data, error } = await supabase
     .from("category_budgets")
     .update({ monthly_budget_cents: validation.data.monthlyBudgetCents })

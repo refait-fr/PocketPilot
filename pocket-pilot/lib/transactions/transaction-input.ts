@@ -3,10 +3,7 @@ import {
   parseMoneyInput,
   readStoredCents,
 } from "../finance/money.ts";
-import {
-  isTransactionCategory,
-  type TransactionCategory,
-} from "./categories.ts";
+import { isAllowedCategory } from "./allowed-categories.ts";
 
 export const MAX_TRANSACTION_DESCRIPTION_LENGTH = 200;
 
@@ -26,7 +23,7 @@ export type TransactionInputValidation =
       valid: true;
       data: {
         amountCents: number;
-        category: TransactionCategory;
+        category: string;
         description: string;
         transactionDate: string;
       };
@@ -69,6 +66,7 @@ export function isValidTransactionDate(value: unknown): value is string {
 export function validateTransactionInput(input: {
   amount: unknown;
   category: unknown;
+  customCategories?: readonly unknown[];
   description: unknown;
   maximumTransactionDate?: string;
   transactionDate: unknown;
@@ -91,7 +89,10 @@ export function validateTransactionInput(input: {
     fieldErrors.amount = parsedAmount.message;
   }
 
-  if (!isTransactionCategory(values.category)) {
+  const customCategories = input.customCategories ?? [];
+  const categoryAllowed = isAllowedCategory(values.category, customCategories);
+
+  if (!categoryAllowed) {
     fieldErrors.category = "Choisissez une catégorie valide.";
   }
 
@@ -110,7 +111,7 @@ export function validateTransactionInput(input: {
 
   if (
     !parsedAmount.valid ||
-    !isTransactionCategory(values.category) ||
+    !categoryAllowed ||
     fieldErrors.description ||
     fieldErrors.transactionDate
   ) {

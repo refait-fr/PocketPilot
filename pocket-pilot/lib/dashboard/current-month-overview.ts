@@ -19,11 +19,12 @@ import {
 import { calculateMonthlySnapshot } from "@/lib/finance/monthly-snapshot";
 import { readStoredCents } from "@/lib/finance/money";
 import { fetchAllWithRange } from "@/lib/supabase/paginate";
-import { isTransactionCategory } from "@/lib/transactions/categories";
+import { isAllowedCategory } from "@/lib/transactions/allowed-categories";
 import {
   isValidTransactionDate,
   MAX_TRANSACTION_DESCRIPTION_LENGTH,
 } from "@/lib/transactions/transaction-input";
+import { fetchUserCategoryNames } from "@/lib/transactions/user-categories";
 
 export async function loadCurrentMonthOverview({
   supabase,
@@ -37,11 +38,12 @@ export async function loadCurrentMonthOverview({
   const todayIso = getCalendarDateInTimeZone(new Date(), timeZone);
   const currentMonth = getCalendarMonthInTimeZone(new Date(), timeZone);
   const currentMonthRange = getCalendarMonthRange(currentMonth);
+  const customCategoryNames = await fetchUserCategoryNames({ supabase, userId });
   // Pagination explicite : PostgREST plafonne à max_rows (1000) sans erreur,
   // un mois tronqué fausserait sinon le snapshot. L'ordre inclut toujours
   // l'id pour rester déterministe d'une page à l'autre.
-  let incomes: { amount_cents: unknown; is_active: unknown; start_date: unknown }[];
-  let expenses: { amount_cents: unknown; is_active: unknown; start_date: unknown }[];
+  let incomes: { amount_cents: unknown; is_active: unknown; label: unknown; start_date: unknown }[];
+  let expenses: { amount_cents: unknown; is_active: unknown; label: unknown; start_date: unknown }[];
   let goals: {
     name: unknown;
     current_amount_cents: unknown;
@@ -69,7 +71,7 @@ export async function loadCurrentMonthOverview({
       fetchAllWithRange((from, to) =>
         supabase
           .from("recurring_incomes")
-          .select("amount_cents, is_active, start_date")
+          .select("amount_cents, is_active, label, start_date")
           .eq("user_id", userId)
           .order("id")
           .range(from, to),
@@ -77,7 +79,7 @@ export async function loadCurrentMonthOverview({
       fetchAllWithRange((from, to) =>
         supabase
           .from("recurring_fixed_expenses")
-          .select("amount_cents, is_active, start_date")
+          .select("amount_cents, is_active, label, start_date")
           .eq("user_id", userId)
           .order("id")
           .range(from, to),
@@ -131,7 +133,7 @@ export async function loadCurrentMonthOverview({
   const categoryTransactions = transactions.map((transaction) => {
     if (
       typeof transaction.id !== "string" ||
-      !isTransactionCategory(transaction.category) ||
+      !isAllowedCategory(transaction.category, customCategoryNames) ||
       typeof transaction.description !== "string" ||
       transaction.description.trim().length >
         MAX_TRANSACTION_DESCRIPTION_LENGTH ||
@@ -151,7 +153,7 @@ export async function loadCurrentMonthOverview({
     };
   });
   const categoryBudgets = budgets.map((budget) => {
-    if (typeof budget.id !== "string" || !isTransactionCategory(budget.category)) {
+    if (typeof budget.id !== "string" || !isAllowedCategory(budget.category, customCategoryNames)) {
       throw new Error("Un budget contient des données invalides.");
     }
     return {
@@ -201,6 +203,42 @@ export async function loadCurrentMonthOverview({
     (expense) =>
       typeof expense.start_date === "string" && expense.start_date > todayIso,
   ).length;
+  // Seules les échéances futures bien formées alimentent les alertes : la
+  // sélection mensuelle exige un libellé, une date valide et un montant
+  // positif, et ignore le reste sans faire échouer le tableau de bord.
+  const upcomingStarts: {
+    amountCents: number;
+    entryKind: "income" | "expense";
+    label: string;
+    startDate: string;
+  }[] = [];
+
+  for (const [entries, entryKind] of [
+    [incomes, "income"],
+    [expenses, "expense"],
+  ] as const) {
+    for (const entry of entries) {
+      if (
+        typeof entry.label !== "string" ||
+        entry.label.trim().length === 0 ||
+        typeof entry.start_date !== "string" ||
+        !isValidTransactionDate(entry.start_date) ||
+        entry.start_date <= todayIso ||
+        typeof entry.amount_cents !== "number" ||
+        !Number.isSafeInteger(entry.amount_cents) ||
+        entry.amount_cents <= 0
+      ) {
+        continue;
+      }
+
+      upcomingStarts.push({
+        amountCents: entry.amount_cents,
+        entryKind,
+        label: entry.label.trim(),
+        startDate: entry.start_date,
+      });
+    }
+  }
 
   const monthOneTimeIncomes = oneTimeIncomes.map((income) => {
     if (
@@ -289,6 +327,8 @@ export async function loadCurrentMonthOverview({
     rankedCategoryBudgets,
     recentTransactions: categoryTransactions.slice(0, 5),
     snapshot,
+    todayIso,
     transactionCount: transactions.length,
+    upcomingStarts,
   };
 }

@@ -5,11 +5,7 @@ import {
   readStoredCents,
   subtractCents,
 } from "../finance/money.ts";
-import {
-  isTransactionCategory,
-  TRANSACTION_CATEGORIES,
-  type TransactionCategory,
-} from "../transactions/categories.ts";
+import { isAllowedCategory } from "../transactions/allowed-categories.ts";
 
 export const CATEGORY_BUDGET_THRESHOLDS = {
   nearPercent: 75,
@@ -28,7 +24,7 @@ export type CategoryBudgetInputFieldErrors = Partial<
 >;
 
 export type CategoryBudgetUsage = {
-  category: TransactionCategory;
+  category: string;
   id: string;
   monthlyBudgetCents: number;
   percentageConsumed: string;
@@ -48,14 +44,14 @@ export type CategoryBudgetSummary = {
 };
 
 type CategoryBudgetRecord = {
-  category: TransactionCategory;
+  category: string;
   id: string;
   monthlyBudgetCents: number;
 };
 
 type CategorizedAmount = {
   amountCents: number;
-  category: TransactionCategory;
+  category: string;
 };
 
 function readText(value: unknown): string {
@@ -64,6 +60,7 @@ function readText(value: unknown): string {
 
 export function validateCategoryBudgetInput(input: {
   category: unknown;
+  customCategories?: readonly unknown[];
   monthlyBudget: unknown;
 }) {
   const values: CategoryBudgetInputValues = {
@@ -77,7 +74,12 @@ export function validateCategoryBudgetInput(input: {
     invalidMessage: "Saisissez un montant numérique, par exemple 100,00.",
   });
 
-  if (!isTransactionCategory(values.category)) {
+  const categoryAllowed = isAllowedCategory(
+    values.category,
+    input.customCategories ?? [],
+  );
+
+  if (!categoryAllowed) {
     fieldErrors.category = "Choisissez une catégorie valide.";
   }
 
@@ -85,7 +87,7 @@ export function validateCategoryBudgetInput(input: {
     fieldErrors.monthlyBudget = parsedBudget.message;
   }
 
-  if (!isTransactionCategory(values.category) || !parsedBudget.valid) {
+  if (!categoryAllowed || !parsedBudget.valid) {
     return { valid: false as const, fieldErrors, values };
   }
 
@@ -145,9 +147,7 @@ export function calculateCategoryBudgetUsages(
   budgets: readonly CategoryBudgetRecord[],
   transactions: readonly CategorizedAmount[],
 ): CategoryBudgetUsage[] {
-  const spentByCategory = new Map<TransactionCategory, number>(
-    TRANSACTION_CATEGORIES.map((category) => [category, 0]),
-  );
+  const spentByCategory = new Map<string, number>();
 
   for (const transaction of transactions) {
     const amount = readStoredCents(transaction.amountCents, {
@@ -160,7 +160,7 @@ export function calculateCategoryBudgetUsages(
     );
   }
 
-  const seenCategories = new Set<TransactionCategory>();
+  const seenCategories = new Set<string>();
 
   return budgets.map((budget) => {
     if (seenCategories.has(budget.category)) {

@@ -13,13 +13,14 @@ import {
   parseCalendarMonthParam,
 } from "@/lib/finance/calendar-month";
 import { fetchAllWithRange } from "@/lib/supabase/paginate";
-import { isTransactionCategory } from "@/lib/transactions/categories";
+import { getAllowedCategories, isAllowedCategory } from "@/lib/transactions/allowed-categories";
 import { summarizeMonthlyTransactions } from "@/lib/transactions/monthly-summary";
 import {
   isValidTransactionDate,
   MAX_TRANSACTION_DESCRIPTION_LENGTH,
   readPositiveTransactionCents,
 } from "@/lib/transactions/transaction-input";
+import { fetchUserCategoryNames } from "@/lib/transactions/user-categories";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
 
 function readFirstParam(value: string | string[] | undefined): string {
@@ -42,8 +43,10 @@ export default async function TransactionsPage({
   const rawMonth = readFirstParam(params.month);
   const selectedMonth =
     rawMonth === "" ? currentMonth : parseCalendarMonthParam(rawMonth);
+  const customCategoryNames = await fetchUserCategoryNames({ supabase, userId });
+  const allowedCategories = getAllowedCategories(customCategoryNames);
   const activeCategory = readFirstParam(params.category);
-  const categoryFilter = isTransactionCategory(activeCategory) ? activeCategory : "";
+  const categoryFilter = isAllowedCategory(activeCategory, customCategoryNames) ? activeCategory : "";
   const searchQuery = readFirstParam(params.q).trim().slice(0, 100);
 
   if (!selectedMonth) {
@@ -79,7 +82,7 @@ export default async function TransactionsPage({
   const transactions = (data ?? []).map((transaction) => {
     if (
       typeof transaction.id !== "string" ||
-      !isTransactionCategory(transaction.category) ||
+      !isAllowedCategory(transaction.category, customCategoryNames) ||
       typeof transaction.description !== "string" ||
       transaction.description.trim().length > MAX_TRANSACTION_DESCRIPTION_LENGTH ||
       !isValidTransactionDate(transaction.transaction_date)
@@ -116,6 +119,7 @@ export default async function TransactionsPage({
     >
       <TransactionManagement
         activeCategory={categoryFilter}
+        allowedCategories={allowedCategories}
         allowNextMonth={
           formatCalendarMonthParam(nextMonth) <=
           formatCalendarMonthParam(currentMonth)

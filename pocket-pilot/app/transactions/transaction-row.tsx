@@ -42,10 +42,12 @@ function DeleteButton() {
 }
 
 export function TransactionRow({
+  allowedCategories,
   currencyCode,
   maximumTransactionDate,
   transaction,
 }: {
+  allowedCategories: readonly string[];
   currencyCode: string;
   maximumTransactionDate: string;
   transaction: TransactionView;
@@ -70,6 +72,7 @@ export function TransactionRow({
         </div>
         <TransactionForm
           action={updateTransaction.bind(null, transaction.id)}
+          allowedCategories={allowedCategories.includes(transaction.category) ? allowedCategories : [transaction.category, ...allowedCategories]}
           cancelEditing={() => setIsEditing(false)}
           defaultValues={{
             amount: formatTransactionCentsForInput(transaction.amountCents),

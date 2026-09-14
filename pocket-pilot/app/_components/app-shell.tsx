@@ -21,6 +21,7 @@ const planningNavigation = [
 const desktopNavigation = [
   ...primaryNavigation,
   ...planningNavigation,
+  { href: "/projection", icon: "budget", label: "Projection" },
   { href: "/purchase-checker", icon: "check", label: "Purchase Checker" },
 ] as const;
 
@@ -34,6 +35,7 @@ const mobileNavigation = [
 
 const secondaryNavigation = [
   ...planningNavigation,
+  { href: "/projection", icon: "budget", label: "Projection" },
   { href: "/settings", icon: "settings", label: "Paramètres" },
 ] as const;
 

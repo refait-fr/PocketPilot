@@ -13,14 +13,20 @@ import {
 import { getRecurringEntryDashboardDetail } from "@/lib/dashboard/recurring-entry-detail";
 import { formatCents } from "@/lib/finance/format-cents";
 import type { MonthlySnapshot } from "@/lib/finance/monthly-snapshot";
-import type { TransactionCategory } from "@/lib/transactions/categories";
 
 type RecentTransaction = {
   amountCents: number;
-  category: TransactionCategory;
+  category: string;
   description: string;
   id: string;
   transactionDate: string;
+};
+
+type UpcomingStart = {
+  amountCents: number;
+  entryKind: "income" | "expense";
+  label: string;
+  startDate: string;
 };
 
 type DashboardOverviewProps = {
@@ -37,9 +43,11 @@ type DashboardOverviewProps = {
   oneTimeIncomeCount: number;
   recentTransactions: RecentTransaction[];
   snapshot: MonthlySnapshot;
+  todayIso: string;
   transactionCount: number;
   upcomingExpenseCount: number;
   upcomingIncomeCount: number;
+  upcomingStarts: UpcomingStart[];
 };
 
 function formatTransactionDate(date: string) {
@@ -112,10 +120,13 @@ function InsightBanners({
   currencyCode: string;
   insights: readonly MonthlyInsight[];
 }) {
-  // Seules les alertes actionnables sont affichées : le reste réel positif
-  // et la progression d'objectif sont déjà visibles dans les cartes.
+  // Les alertes actionnables et les échéances à venir sont affichées ;
+  // le reste réel positif reste visible dans les cartes du mois.
   const actionable = insights.filter(
-    (insight) => insight.tone === "negative" || insight.tone === "warning",
+    (insight) =>
+      insight.tone === "negative" ||
+      insight.tone === "warning" ||
+      insight.kind === "goal-progress",
   );
 
   if (actionable.length === 0) return null;
@@ -125,7 +136,11 @@ function InsightBanners({
       {actionable.map((insight, index) => {
         const key = `${insight.kind}-${index}`;
         const tone =
-          insight.tone === "negative" ? "ui-feedback-error" : "ui-feedback-warning";
+          insight.tone === "negative"
+            ? "ui-feedback-error"
+            : insight.tone === "positive"
+              ? "ui-feedback-success"
+              : "ui-feedback-warning";
 
         if (insight.kind === "real-available") {
           return (
@@ -151,6 +166,30 @@ function InsightBanners({
           );
         }
 
+        if (insight.kind === "upcoming-start") {
+          const startLabel = new Intl.DateTimeFormat("fr-FR", {
+            day: "numeric",
+            month: "long",
+            timeZone: "UTC",
+          }).format(new Date(`${insight.startDate}T00:00:00Z`));
+          const target = insight.entryKind === "income" ? "/incomes" : "/expenses";
+          const targetLabel = insight.entryKind === "income" ? "Voir les revenus" : "Voir les charges";
+
+          return (
+            <p className={tone} key={key} role="status">
+              {insight.label} démarre le {startLabel} ({formatCents(insight.amountCents, currencyCode)}). <Link href={target}>{targetLabel}<span aria-hidden="true">↗</span></Link>
+            </p>
+          );
+        }
+
+        if (insight.kind === "goal-progress") {
+          return (
+            <p className={tone} key={key} role="status">
+              Objectif {insight.name} : {insight.progressPercent} % atteint. <Link href="/goals">Voir les objectifs<span aria-hidden="true">↗</span></Link>
+            </p>
+          );
+        }
+
         return null;
       })}
     </section>
@@ -171,9 +210,11 @@ export function DashboardOverview({
   oneTimeIncomeCount,
   recentTransactions,
   snapshot,
+  todayIso,
   transactionCount,
   upcomingExpenseCount,
   upcomingIncomeCount,
+  upcomingStarts,
 }: DashboardOverviewProps) {
   const visibleBudgets = categoryBudgets.slice(0, 3);
   const recurringIncomeDetail = getRecurringEntryDashboardDetail("income", {
@@ -189,6 +230,8 @@ export function DashboardOverview({
     categoryBudgets,
     featuredGoal,
     realAvailableCents: snapshot.realAvailableCents,
+    todayIso,
+    upcomingStarts,
   });
 
   return (

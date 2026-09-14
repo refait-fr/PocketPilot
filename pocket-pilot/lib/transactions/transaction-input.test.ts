@@ -86,6 +86,38 @@ test("centralise et valide les catégories autorisées", () => {
   );
 });
 
+test("accepte les catégories personnelles fournies et refuse les autres", () => {
+  const base = {
+    amount: "10",
+    description: "",
+    transactionDate: "2026-08-24",
+  };
+
+  const accepted = validateTransactionInput({
+    ...base,
+    category: "Perso",
+    customCategories: ["Perso"],
+  });
+
+  assert.equal(accepted.valid, true);
+  if (accepted.valid) {
+    assert.equal(accepted.data.category, "Perso");
+  }
+
+  assert.equal(
+    validateTransactionInput({ ...base, category: "Perso" }).valid,
+    false,
+  );
+  assert.equal(
+    validateTransactionInput({
+      ...base,
+      category: "Voyage",
+      customCategories: ["Perso"],
+    }).valid,
+    false,
+  );
+});
+
 test("refuse les dates calendaires impossibles", () => {
   assert.equal(isValidTransactionDate("2024-02-29"), true);
 

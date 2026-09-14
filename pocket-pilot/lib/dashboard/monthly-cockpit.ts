@@ -46,7 +46,22 @@ export type MonthlyInsight =
       name: string;
       progressPercent: number;
       tone: "positive";
+    }
+  | {
+      amountCents: number;
+      entryKind: "income" | "expense";
+      kind: "upcoming-start";
+      label: string;
+      startDate: string;
+      tone: "warning";
     };
+
+export type UpcomingRecurringStart = {
+  amountCents: unknown;
+  entryKind: "income" | "expense";
+  label: unknown;
+  startDate: unknown;
+};
 
 type DatedTransaction = {
   amountCents: unknown;
@@ -213,14 +228,124 @@ export function rankCategoryBudgets(
   });
 }
 
+const UPCOMING_START_WINDOW_DAYS = 30;
+
+function parseInsightIsoDate(value: unknown, fieldName: string): string {
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} est invalide.`);
+  }
+
+  const match = ISO_DATE_PATTERN.exec(value);
+
+  if (!match) {
+    throw new Error(`${fieldName} est invalide.`);
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    throw new Error(`${fieldName} est impossible.`);
+  }
+
+  return value;
+}
+
+function addInsightDays(isoDate: string, days: number): string {
+  const time = new Date(`${isoDate}T00:00:00Z`).getTime();
+
+  return new Date(time + days * 86_400_000).toISOString().slice(0, 10);
+}
+
+function selectNextRecurringStart({
+  todayIso,
+  upcomingStarts,
+}: {
+  todayIso: string;
+  upcomingStarts: readonly UpcomingRecurringStart[];
+}): MonthlyInsight | null {
+  const today = parseInsightIsoDate(todayIso, "La date du jour");
+  const windowEnd = addInsightDays(today, UPCOMING_START_WINDOW_DAYS);
+  const candidates: {
+    amountCents: number;
+    entryKind: "income" | "expense";
+    label: string;
+    startDate: string;
+  }[] = [];
+
+  for (const entry of upcomingStarts) {
+    if (entry.entryKind !== "income" && entry.entryKind !== "expense") {
+      throw new Error("La nature de l’échéance est invalide.");
+    }
+
+    if (typeof entry.label !== "string" || entry.label.trim().length === 0) {
+      throw new Error("Le libellé de l’échéance est invalide.");
+    }
+
+    const startDate = parseInsightIsoDate(
+      entry.startDate,
+      "La date de début de l’échéance",
+    );
+    const amountCents = readSignedCents(
+      entry.amountCents,
+      "Le montant de l’échéance",
+    );
+
+    if (amountCents <= 0) {
+      throw new Error("Le montant de l’échéance doit être positif.");
+    }
+
+    // Fenêtre (aujourd’hui exclu, J+30 inclus) en comparaison ISO sûre.
+    if (startDate > today && startDate <= windowEnd) {
+      candidates.push({
+        amountCents,
+        entryKind: entry.entryKind,
+        label: entry.label.trim(),
+        startDate,
+      });
+    }
+  }
+
+  candidates.sort(
+    (first, second) =>
+      first.startDate.localeCompare(second.startDate) ||
+      first.label.localeCompare(second.label, "fr"),
+  );
+
+  const next = candidates[0];
+
+  if (!next) {
+    return null;
+  }
+
+  return {
+    amountCents: next.amountCents,
+    entryKind: next.entryKind,
+    kind: "upcoming-start",
+    label: next.label,
+    startDate: next.startDate,
+    tone: "warning",
+  };
+}
+
 export function buildMonthlyInsights({
   categoryBudgets,
   featuredGoal,
   realAvailableCents,
+  todayIso,
+  upcomingStarts = [],
 }: {
   categoryBudgets: readonly CategoryBudgetUsage[];
   featuredGoal: DashboardGoal | null;
   realAvailableCents: unknown;
+  todayIso?: string;
+  upcomingStarts?: readonly UpcomingRecurringStart[];
 }): MonthlyInsight[] {
   const available = readSignedCents(realAvailableCents, "Le reste réel");
   const insights: MonthlyInsight[] = [
@@ -249,6 +374,18 @@ export function buildMonthlyInsights({
       percentageConsumed: mostConsumedBudget.percentageConsumed,
       tone: "warning",
     });
+  }
+
+  if (upcomingStarts.length > 0) {
+    if (todayIso === undefined) {
+      throw new Error("La date du jour est requise pour les échéances.");
+    }
+
+    const nextStart = selectNextRecurringStart({ todayIso, upcomingStarts });
+
+    if (nextStart) {
+      insights.push(nextStart);
+    }
   }
 
   if (featuredGoal) {

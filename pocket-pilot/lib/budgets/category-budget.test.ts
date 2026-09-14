@@ -99,6 +99,34 @@ test("refuse une catégorie inconnue et un budget non positif", () => {
   assert.equal(validateCategoryBudgetInput({ category: "Shopping", monthlyBudget: "0" }).valid, false);
 });
 
+test("accepte les catégories personnelles fournies pour un budget", () => {
+  const accepted = validateCategoryBudgetInput({
+    category: "Perso",
+    customCategories: ["Perso"],
+    monthlyBudget: "100",
+  });
+
+  assert.equal(accepted.valid, true);
+  if (accepted.valid) {
+    assert.equal(accepted.data.category, "Perso");
+  }
+
+  assert.equal(
+    validateCategoryBudgetInput({ category: "Perso", monthlyBudget: "100" }).valid,
+    false,
+  );
+});
+
+test("totalise les dépenses des catégories personnelles comme les défauts", () => {
+  const usages = calculateCategoryBudgetUsages(
+    [{ category: "Perso", id: "budget-perso", monthlyBudgetCents: 10_000 }],
+    [{ amountCents: 2_500, category: "Perso" }],
+  );
+
+  assert.equal(usages[0]?.spentCents, 2_500);
+  assert.equal(usages[0]?.remainingCents, 7_500);
+});
+
 test("détecte les doublons et les overflows de transactions", () => {
   assert.throws(
     () => calculateCategoryBudgetUsages([shoppingBudget, { ...shoppingBudget, id: "duplicate" }], []),

@@ -13,10 +13,8 @@ import {
   parseCalendarMonthParam,
 } from "@/lib/finance/calendar-month";
 import { readStoredCents } from "@/lib/finance/money";
-import {
-  isTransactionCategory,
-  TRANSACTION_CATEGORIES,
-} from "@/lib/transactions/categories";
+import { getAllowedCategories, isAllowedCategory } from "@/lib/transactions/allowed-categories";
+import { fetchUserCategoryNames } from "@/lib/transactions/user-categories";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
 
 export default async function BudgetsPage({
@@ -33,6 +31,8 @@ export default async function BudgetsPage({
     redirect(`/budgets?month=${formatCalendarMonthParam(currentMonth)}`);
   }
 
+  const customCategoryNames = await fetchUserCategoryNames({ supabase, userId });
+  const allowedCategories = getAllowedCategories(customCategoryNames);
   const range = getCalendarMonthRange(selectedMonth);
   const [budgetsResult, transactionsResult] = await Promise.all([
     supabase
@@ -52,7 +52,7 @@ export default async function BudgetsPage({
   }
 
   const budgets = (budgetsResult.data ?? []).map((budget) => {
-    if (typeof budget.id !== "string" || !isTransactionCategory(budget.category)) {
+    if (typeof budget.id !== "string" || !isAllowedCategory(budget.category, customCategoryNames)) {
       throw new Error("Un budget contient des données invalides.");
     }
     return {
@@ -64,13 +64,19 @@ export default async function BudgetsPage({
       }),
     };
   });
-  budgets.sort(
-    (first, second) =>
-      TRANSACTION_CATEGORIES.indexOf(first.category) -
-      TRANSACTION_CATEGORIES.indexOf(second.category),
-  );
+  const categoryOrder = new Map(allowedCategories.map((category, index) => [category, index]));
+  budgets.sort((first, second) => {
+    const firstIndex = categoryOrder.get(first.category) ?? allowedCategories.length;
+    const secondIndex = categoryOrder.get(second.category) ?? allowedCategories.length;
+
+    if (firstIndex !== secondIndex) {
+      return firstIndex - secondIndex;
+    }
+
+    return first.category.localeCompare(second.category, "fr");
+  });
   const transactions = (transactionsResult.data ?? []).map((transaction) => {
-    if (!isTransactionCategory(transaction.category)) {
+    if (!isAllowedCategory(transaction.category, customCategoryNames)) {
       throw new Error("Une transaction contient une catégorie invalide.");
     }
     return {
@@ -94,6 +100,7 @@ export default async function BudgetsPage({
       title="Budgets par catégorie"
     >
       <BudgetManagement
+        allowedCategories={allowedCategories}
         budgets={usages}
         currencyCode={profile.currencyCode}
         isCurrentMonth={isSameCalendarMonth(selectedMonth, currentMonth)}

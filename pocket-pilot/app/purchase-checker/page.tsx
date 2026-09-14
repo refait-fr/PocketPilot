@@ -2,6 +2,8 @@ import { AppShell } from "@/app/_components/app-shell";
 import { PurchaseChecker } from "@/app/purchase-checker/purchase-checker";
 import { loadCurrentMonthOverview } from "@/lib/dashboard/current-month-overview";
 import { getCalendarDateInTimeZone } from "@/lib/finance/calendar-month";
+import { getAllowedCategories } from "@/lib/transactions/allowed-categories";
+import { fetchUserCategoryNames } from "@/lib/transactions/user-categories";
 import { requireAuthenticatedProfile } from "@/lib/supabase/require-authenticated-profile";
 
 export default async function PurchaseCheckerPage() {
@@ -21,6 +23,7 @@ export default async function PurchaseCheckerPage() {
       title="Purchase Checker"
     >
       <PurchaseChecker
+        allowedCategories={getAllowedCategories(await fetchUserCategoryNames({ supabase, userId }))}
         categoryBudgets={overview.categoryBudgetUsages}
         currentDate={getCalendarDateInTimeZone(new Date(), profile.timeZone)}
         currentRealAvailableCents={overview.snapshot.realAvailableCents}

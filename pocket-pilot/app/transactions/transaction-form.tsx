@@ -7,7 +7,6 @@ import type {
   TransactionActionState,
   TransactionFormAction,
 } from "@/app/transactions/transaction-types";
-import { TRANSACTION_CATEGORIES } from "@/lib/transactions/categories";
 import {
   MAX_TRANSACTION_DESCRIPTION_LENGTH,
   type TransactionInputValues,
@@ -15,6 +14,7 @@ import {
 
 type TransactionFormProps = {
   action: TransactionFormAction;
+  allowedCategories: readonly string[];
   cancelEditing?: () => void;
   defaultValues: TransactionInputValues;
   maximumTransactionDate: string;
@@ -41,6 +41,7 @@ function SubmitButton({ mode }: { mode: TransactionFormProps["mode"] }) {
 
 export function TransactionForm({
   action,
+  allowedCategories,
   cancelEditing,
   defaultValues,
   maximumTransactionDate,
@@ -113,7 +114,7 @@ export function TransactionForm({
             name="category"
             required
           >
-            {TRANSACTION_CATEGORIES.map((category) => (
+            {allowedCategories.map((category) => (
               <option key={category} value={category}>{category}</option>
             ))}
           </select>
