@@ -106,6 +106,10 @@ button, a, input, select, summary { -webkit-tap-highlight-color: transparent; }
 .ui-button-quiet:hover { background: var(--surface-strong); color: var(--foreground); }
 .ui-button-danger { background: transparent; color: var(--danger); }
 .ui-button-danger:hover { background: var(--danger-soft); }
+.ui-button-primary:active,
+.ui-button-secondary:active,
+.ui-button-quiet:active,
+.ui-button-danger:active { transform: scale(0.97); transition-duration: 100ms; }
 button:disabled { cursor: wait; opacity: 0.62; transform: none !important; }
 
 .ui-feedback-error,

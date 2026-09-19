@@ -46,7 +46,7 @@ export function CreationDisclosure({
             id={panelId}
             initial={{ height: 0, opacity: 0 }}
             key="panel"
-            transition={{ duration: 0.22, ease: "easeOut" }}
+            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
           >
             <div className="management-form-panel">
               <p className="ui-kicker">{eyebrow}</p>

@@ -17,10 +17,10 @@ export function TransitionPanel({
       <motion.div
         animate={{ opacity: 1, y: 0 }}
         className={className}
-        exit={{ opacity: 0, y: -8 }}
+        exit={{ opacity: 0, y: 10 }}
         initial={{ opacity: 0, y: 10 }}
         key={panelKey}
-        transition={{ duration: 0.18, ease: "easeOut" }}
+        transition={{ type: "spring", bounce: 0, duration: 0.35 }}
       >
         {children}
       </motion.div>

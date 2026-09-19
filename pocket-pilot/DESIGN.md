@@ -17,5 +17,7 @@ Fixed light theme is an explicit identity choice (daylight finance use, paper me
 - Budget bars grow on first scroll into view: gauges read as gauges, values unchanged.
 - ScrollProgress shows a 3px ledger-green bar on landing only: orientation on a long page.
 - Panels, tables, plan list and chart stay static: calm ledger, motion never loops, amounts always settle on the exact centime.
+- Apple-design pass: press feedback on all buttons (`:active` scale 0.97, 100ms), critically damped springs (bounce 0) on disclosure/panels/digits, symmetric enter/exit paths, count-up restarts from the displayed value, translucent landing header kept, `prefers-reduced-transparency` solid fallback added.
+- Conscious deviations: app chrome stays opaque paper (ledger identity over translucent materials), height/width layout animations kept short and infrequent (no gesture scrub), Manrope kept over system font (recorded above).
 - No gradient/glow color treatment: the lavender hero glow becomes monochrome paper light.
 - Manrope kept: rounded enough for households, serious enough for money.

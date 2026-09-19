@@ -13,7 +13,7 @@ function DigitColumn({ digit }: { digit: string }) {
         animate={{ y: `${-target}em` }}
         className="rolling-digit-strip"
         initial={{ y: "0em" }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ type: "spring", bounce: 0, duration: 0.5 }}
       >
         {DIGITS.split("").map((candidate) => (
           <span key={candidate}>{candidate}</span>

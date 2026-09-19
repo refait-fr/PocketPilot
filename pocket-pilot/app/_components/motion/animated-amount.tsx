@@ -23,13 +23,15 @@ export function AnimatedAmount({
 }) {
   const reduceMotion = useReducedMotion();
   const [displayCents, setDisplayCents] = useState(valueCents);
-  const previousRef = useRef<number | null>(null);
+  const displayedRef = useRef(valueCents);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
-    const from = previousRef.current ?? 0;
-    previousRef.current = valueCents;
+    const from = mountedRef.current ? displayedRef.current : 0;
+    mountedRef.current = true;
 
     if (reduceMotion || from === valueCents) {
+      displayedRef.current = valueCents;
       setDisplayCents(valueCents);
       return;
     }
@@ -39,9 +41,9 @@ export function AnimatedAmount({
 
     function tick(now: number) {
       const elapsed = Math.min(1, (now - startedAt) / DURATION_MS);
-      setDisplayCents(
-        interpolateCents(from, valueCents, easeOutExpo(elapsed)),
-      );
+      const current = interpolateCents(from, valueCents, easeOutExpo(elapsed));
+      displayedRef.current = current;
+      setDisplayCents(current);
       if (elapsed < 1) {
         frame = requestAnimationFrame(tick);
       }

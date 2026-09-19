@@ -113,7 +113,7 @@ export function PurchaseTransactionConfirmation({
         exit={{ height: 0, opacity: 0 }}
         initial={{ height: 0, opacity: 0 }}
         key="confirm-form"
-        transition={{ duration: 0.22, ease: "easeOut" }}
+        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
       >
     <form
       action={formAction}

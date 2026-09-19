@@ -57,6 +57,7 @@
   transition: transform 160ms ease, background 160ms ease, color 160ms ease;
 }
 .landing-button:hover { transform: translateY(-2px); }
+.landing-button:active { transform: scale(0.97); transition-duration: 100ms; }
 .landing-button-dark { background: #1d4a34; color: #fff; }
 .landing-button-dark:hover { background: #123323; }
 .landing-button-light { background: #fffdf7; color: #123323; }
@@ -311,6 +312,11 @@
   .landing, .landing * { scroll-behavior: auto !important; }
   .landing *, .landing *::before, .landing *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   .landing-hero-preview .landing-dashboard-preview { transform: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .landing-header.is-scrolled { background: #fffdf7; backdrop-filter: none; }
+  .landing-hero-glow { display: none; }
 }
 
 .landing-proof { display: grid; gap: 0.6rem; margin-top: 2.2rem !important; }
