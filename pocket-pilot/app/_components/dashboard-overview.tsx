@@ -1,7 +1,13 @@
-import type { CSSProperties } from "react";
+"use client";
+
+import { motion } from "motion/react";
+import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 
 import { AppIcon } from "@/app/_components/app-icon";
+import { AnimatedAmount } from "@/app/_components/motion/animated-amount";
+import { staggerContainer, staggerItem } from "@/app/_components/motion/motion-variants";
+import { RollingDigits } from "@/app/_components/motion/rolling-digits";
 import { MonthlyBalanceChart } from "@/app/_components/monthly-balance-chart";
 import type { CategoryBudgetUsage } from "@/lib/budgets/category-budget";
 import {
@@ -67,17 +73,17 @@ function MetricCard({
   detail: string;
   icon: Parameters<typeof AppIcon>[0]["name"];
   label: string;
-  value: string;
+  value: ReactNode;
 }) {
   return (
-    <article className="dashboard-metric-card">
+    <motion.article className="dashboard-metric-card" variants={staggerItem}>
       <div className="dashboard-metric-icon" aria-hidden="true">
         <AppIcon name={icon} />
       </div>
       <p>{label}</p>
       <strong className="font-amount">{value}</strong>
       <small>{detail}</small>
-    </article>
+    </motion.article>
   );
 }
 
@@ -237,34 +243,34 @@ export function DashboardOverview({
   return (
     <div className="dashboard-layout">
       <InsightBanners currencyCode={currencyCode} insights={insights} />
-      <section className="dashboard-kpi-grid" aria-label="Synthèse financière du mois">
+      <motion.section animate="show" aria-label="Synthèse financière du mois" className="dashboard-kpi-grid" initial="hidden" variants={staggerContainer}>
         <MetricCard
           detail="Disponible après votre plan et vos dépenses."
           icon="wallet"
           label="Reste réel"
-          value={formatCents(snapshot.realAvailableCents, currencyCode)}
+          value={<AnimatedAmount currencyCode={currencyCode} valueCents={snapshot.realAvailableCents} />}
         />
         <MetricCard
           detail={`Sur ${formatCents(snapshot.totalIncomeCents, currencyCode)} de revenus`}
           icon="transaction"
           label="Dépensé ce mois"
-          value={formatCents(snapshot.totalTransactionsCents, currencyCode)}
+          value={<AnimatedAmount currencyCode={currencyCode} valueCents={snapshot.totalTransactionsCents} />}
         />
         <MetricCard
           detail="Allocation effective ce mois-ci"
           icon="goal"
           label="Épargne prévue"
-          value={formatCents(snapshot.totalGoalAllocationsCents, currencyCode)}
+          value={<AnimatedAmount currencyCode={currencyCode} valueCents={snapshot.totalGoalAllocationsCents} />}
         />
-        <article className="dashboard-purchase-card">
+        <motion.article className="dashboard-purchase-card" variants={staggerItem}>
           <div className="dashboard-purchase-icon" aria-hidden="true"><AppIcon name="check" /></div>
           <div>
             <h2>Purchase Checker</h2>
             <p>Mesurez l’impact d’un achat sur votre reste réel.</p>
           </div>
           <Link href="/purchase-checker">Vérifier un achat</Link>
-        </article>
-      </section>
+        </motion.article>
+      </motion.section>
 
       <div className="dashboard-content-grid">
         <div className="dashboard-primary-column">
@@ -318,7 +324,7 @@ export function DashboardOverview({
               <>
                 <div className="dashboard-goal-summary">
                   <div className="goal-orbit" style={{ "--goal-progress": `${featuredGoal.progressPercent * 3.6}deg` } as CSSProperties}>
-                    <div><strong>{featuredGoal.progressPercent} %</strong><span>atteint</span></div>
+                    <div><strong><RollingDigits value={featuredGoal.progressPercent} /> %</strong><span>atteint</span></div>
                   </div>
                   <div>
                     <h3>{featuredGoal.name}</h3>
@@ -348,7 +354,7 @@ export function DashboardOverview({
                       <div><h3>{budget.category}</h3><span>{formatCents(budget.spentCents, currencyCode)} sur {formatCents(budget.monthlyBudgetCents, currencyCode)}</span></div>
                       <StatusBadge status={budget.status} />
                     </div>
-                    <div aria-label={`${budget.percentageConsumed} % du budget ${budget.category} consommé`} aria-valuemax={100} aria-valuemin={0} aria-valuenow={budget.progressPercent} className="ui-progress" role="progressbar"><span className={budget.status === "exceeded" ? "is-danger" : budget.status === "near" || budget.status === "reached" ? "is-warning" : ""} style={{ width: `${budget.progressPercent}%` }} /></div>
+                    <div aria-label={`${budget.percentageConsumed} % du budget ${budget.category} consommé`} aria-valuemax={100} aria-valuemin={0} aria-valuenow={budget.progressPercent} className="ui-progress" role="progressbar"><motion.span className={budget.status === "exceeded" ? "is-danger" : budget.status === "near" || budget.status === "reached" ? "is-warning" : ""} initial={{ width: "0%" }} transition={{ duration: 0.7, ease: "easeOut" }} viewport={{ margin: "-40px", once: true }} whileInView={{ width: `${budget.progressPercent}%` }} /></div>
                     <p className="dashboard-budget-status">
                       {budget.remainingCents < 0
                         ? `Dépassé de ${formatCents(Math.abs(budget.remainingCents), currencyCode)}`

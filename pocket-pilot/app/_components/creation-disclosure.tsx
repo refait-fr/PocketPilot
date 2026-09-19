@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useId, useState } from "react";
 
@@ -36,12 +37,26 @@ export function CreationDisclosure({
         </span>
         <span aria-hidden="true" className="creation-summary-icon">＋</span>
       </button>
-      <div className="management-form-panel" hidden={!isOpen} id={panelId}>
-        <p className="ui-kicker">{eyebrow}</p>
-        <h2>{title}</h2>
-        <p className="creation-description">{description}</p>
-        {children}
-      </div>
+      <AnimatePresence initial={false}>
+        {isOpen ? (
+          <motion.div
+            animate={{ height: "auto", opacity: 1 }}
+            className="motion-expand"
+            exit={{ height: 0, opacity: 0 }}
+            id={panelId}
+            initial={{ height: 0, opacity: 0 }}
+            key="panel"
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            <div className="management-form-panel">
+              <p className="ui-kicker">{eyebrow}</p>
+              <h2>{title}</h2>
+              <p className="creation-description">{description}</p>
+              {children}
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </section>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppIcon } from "@/app/_components/app-icon";
 import { LandingAnimations } from "@/app/_components/landing/landing-animations";
 import { LandingDashboardPreview } from "@/app/_components/landing/landing-dashboard-preview";
+import { ScrollProgress } from "@/app/_components/motion/scroll-progress";
 import { PocketPilotLogo } from "@/app/_components/pocketpilot-logo";
 
 const marginSteps = [
@@ -39,6 +40,7 @@ export function LandingPage() {
     <main className="landing" data-landing-root>
       <a className="skip-link" href="#landing-content">Aller au contenu</a>
       <LandingAnimations />
+      <ScrollProgress />
 
       <header className="landing-header" data-landing-header>
         <BrandLink />

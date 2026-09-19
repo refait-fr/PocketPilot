@@ -1,5 +1,5 @@
 # Design Read
-Reading this as: a household money cockpit for French users, in a "registre de comptable moderne" (modern ledger book) style, dial ENERGY 2 / RHYTHM 2 / MOTION 1.
+Reading this as: a household money cockpit for French users, in a "registre de comptable moderne" (modern ledger book) style, dial ENERGY 2 / RHYTHM 2 / MOTION 2.
 Fixed light theme is an explicit identity choice (daylight finance use, paper metaphor; `color-scheme: light` kept).
 
 ## Decisions (R-31, one line each)
@@ -9,6 +9,13 @@ Fixed light theme is an explicit identity choice (daylight finance use, paper me
 - Kicker with a leading rule + double-rule under plan totals: the accounting-book motif, repeated.
 - Tabular numerals for every amount: columns must align like a ledger.
 - Chart line in ledger green: the curve is the month's handwriting.
-- MOTION 1: hover states and existing reveals only, no new animation, `prefers-reduced-motion` kept.
+- MOTION 2: restrained functional motion only, each with a written purpose below, `MotionConfig reducedMotion="user"` plus the global `prefers-reduced-motion` kill kept.
+- AnimatedAmount counts the three dashboard KPIs and the Checker result: the eye lands on the key figure first.
+- RollingDigits rolls the goal percent only: progress reads as movement, currency keeps tabular count-up (digit slots break on fr-FR grouping).
+- TransitionPanel cross-fades Checker empty/result states: continuity between decision moments, `aria-live` kept.
+- CreationDisclosure expands by height instead of `hidden` toggle: no brutal layout jump, keyboard and `aria-expanded` unchanged.
+- Budget bars grow on first scroll into view: gauges read as gauges, values unchanged.
+- ScrollProgress shows a 3px ledger-green bar on landing only: orientation on a long page.
+- Panels, tables, plan list and chart stay static: calm ledger, motion never loops, amounts always settle on the exact centime.
 - No gradient/glow color treatment: the lavender hero glow becomes monochrome paper light.
 - Manrope kept: rounded enough for households, serious enough for money.

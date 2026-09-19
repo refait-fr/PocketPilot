@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -105,6 +106,15 @@ export function PurchaseTransactionConfirmation({
   }
 
   return (
+    <AnimatePresence initial={false}>
+      <motion.div
+        animate={{ height: "auto", opacity: 1 }}
+        className="motion-expand"
+        exit={{ height: 0, opacity: 0 }}
+        initial={{ height: 0, opacity: 0 }}
+        key="confirm-form"
+        transition={{ duration: 0.22, ease: "easeOut" }}
+      >
     <form
       action={formAction}
       className="grid gap-4 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-muted)] p-5"
@@ -171,5 +181,7 @@ export function PurchaseTransactionConfirmation({
         </button>
       </div>
     </form>
+      </motion.div>
+    </AnimatePresence>
   );
 }

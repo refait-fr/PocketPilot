@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 
+import { AnimatedAmount } from "@/app/_components/motion/animated-amount";
+import { TransitionPanel } from "@/app/_components/motion/transition-panel";
 import { PurchaseTransactionConfirmation } from "@/app/purchase-checker/purchase-transaction-confirmation";
 import type { CategoryBudgetUsage } from "@/lib/budgets/category-budget";
 import { formatCents } from "@/lib/finance/format-cents";
@@ -202,13 +204,14 @@ export function PurchaseChecker({
         aria-live="polite"
         className={`purchase-result-panel ${result ? "has-result" : ""}`}
       >
+        <TransitionPanel panelKey={result && presentation ? `result-${result.name}-${result.priceCents}` : "empty"}>
         {result && presentation ? (
           <div>
             <p className={`ui-badge ${presentation.tone}`}>
               {presentation.label}
             </p>
             <p className="font-amount mt-6 break-words text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold leading-none tracking-[-0.07em]">
-              {formatCents(result.priceCents, currencyCode)}
+              <AnimatedAmount currencyCode={currencyCode} valueCents={result.priceCents} />
             </p>
             <h2 className="font-display mt-3 text-2xl font-semibold tracking-[-0.04em]">
               {result.name}
@@ -224,7 +227,7 @@ export function PurchaseChecker({
               </div>
               <div className="border-t border-[var(--line)] p-4 sm:border-t-0">
                 <dt className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">Reste après achat</dt>
-                <dd className="font-amount mt-2 break-words text-xl font-extrabold">{formatCents(result.remainingAfterPurchaseCents, currencyCode)}</dd>
+                <dd className="font-amount mt-2 break-words text-xl font-extrabold"><AnimatedAmount currencyCode={currencyCode} valueCents={result.remainingAfterPurchaseCents} /></dd>
               </div>
             </dl>
             {impactBars ? (
@@ -285,6 +288,7 @@ export function PurchaseChecker({
             </div>
           </div>
         )}
+        </TransitionPanel>
       </section>
     </div>
   );
