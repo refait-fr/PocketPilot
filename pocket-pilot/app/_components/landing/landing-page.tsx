@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppIcon } from "@/app/_components/app-icon";
 import { LandingAnimations } from "@/app/_components/landing/landing-animations";
 import { LandingDashboardPreview } from "@/app/_components/landing/landing-dashboard-preview";
+import { LandingCheckerDemo } from "@/app/_components/landing/landing-checker-demo";
 import { ScrollProgress } from "@/app/_components/motion/scroll-progress";
 import { PocketPilotLogo } from "@/app/_components/pocketpilot-logo";
 
@@ -67,6 +68,11 @@ export function LandingPage() {
               <a className="landing-text-link" href="#how-it-works">Voir comment ça marche <span aria-hidden="true">↓</span></a>
             </div>
             <p className="landing-demo-note js-hero-reveal">Gratuit pour commencer · Saisie manuelle · Aucune connexion bancaire</p>
+            <ul className="landing-proof js-hero-reveal" aria-label="Ce que PocketPilot ne fait pas">
+              <li><strong>Manuelle</strong><span>chaque écriture est saisie par vous</span></li>
+              <li><strong>Isolée</strong><span>vos données restent liées à votre compte</span></li>
+              <li><strong>Réversible</strong><span>suppression définitive depuis les réglages</span></li>
+            </ul>
           </div>
           <div className="landing-hero-preview js-hero-preview">
             <LandingDashboardPreview />
@@ -100,9 +106,12 @@ export function LandingPage() {
             <h2 id="cockpit-title">Tout le mois,<br />en un seul écran.</h2>
             <p>Marge réelle, dépenses récentes, plafonds par catégorie et prochain objectif restent liés au lieu de vivre dans des tableurs séparés.</p>
           </div>
-          <div className="landing-cockpit-stage" data-cockpit-stage>
-            <LandingDashboardPreview compact />
-          </div>
+          <nav className="landing-route-index" aria-label="Les quatre écrans du produit" data-reveal>
+            <Link href="/dashboard"><strong>Tableau de bord</strong><span>la synthèse du mois en cours</span></Link>
+            <Link href="/purchase-checker"><strong>Purchase Checker</strong><span>l’impact d’un achat avant de payer</span></Link>
+            <Link href="/budgets"><strong>Budgets</strong><span>des plafonds par catégorie, sans blocage</span></Link>
+            <Link href="/goals"><strong>Objectifs</strong><span>l’épargne prévue dans le plan mensuel</span></Link>
+          </nav>
         </section>
 
         <section className="landing-spending" aria-labelledby="spending-title">
@@ -150,14 +159,7 @@ export function LandingPage() {
               <h2 id="purchase-title">Avant d’acheter,<br />mesurez l’impact.</h2>
               <p>Testez un achat face à votre marge réelle actuelle. Le résultat est déterministe, privé à votre session et jamais généré par IA.</p>
             </div>
-            <div className="landing-purchase-calculator" data-purchase-calculator>
-              <p>Vérification illustrative</p>
-              <div data-purchase-step><span>Marge réelle actuelle</span><strong>628 €</strong></div>
-              <div data-purchase-step><span>Achat</span><strong>−149 €</strong></div>
-              <div className="landing-purchase-rule" aria-hidden="true" />
-              <div className="landing-purchase-result" data-purchase-result><span>Reste après achat</span><strong>479 €</strong></div>
-              <span className="landing-comfort-badge" data-purchase-badge>Confortable</span>
-            </div>
+            <LandingCheckerDemo />
           </div>
         </section>
 

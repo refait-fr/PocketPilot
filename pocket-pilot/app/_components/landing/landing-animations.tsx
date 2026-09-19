@@ -72,28 +72,6 @@ export function LandingAnimations() {
             })
             .from("[data-margin-result]", { opacity: 0, scale: 0.92, y: 24 });
 
-          const cockpit = gsap.timeline({
-            scrollTrigger: {
-              end: "bottom 52%",
-              scrub: 0.8,
-              start: "top 80%",
-              trigger: "[data-cockpit-stage]",
-            },
-          });
-          cockpit
-            .from("[data-cockpit-stage] [data-demo-card]", {
-              opacity: 0.35,
-              scale: 0.96,
-              stagger: 0.08,
-              y: 34,
-            })
-            .fromTo(
-              "[data-cockpit-stage] [data-demo-line]",
-              { strokeDasharray: 1, strokeDashoffset: 1 },
-              { strokeDashoffset: 0 },
-              0.08,
-            );
-
           gsap.from("[data-transaction-row]", {
             opacity: 0,
             scrollTrigger: {
