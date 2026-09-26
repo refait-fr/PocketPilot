@@ -65,7 +65,7 @@ export function BudgetManagement({
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[var(--ink-soft)]">Commencez par une catégorie que vous souhaitez surveiller ce mois-ci.</p>
           </div>
         ) : (
-          <ul className="grid gap-3">
+          <ul className="grid gap-3 premium-list-breathe premium-fab-space">
             {budgets.map((budget) => <BudgetRow budget={budget} currencyCode={currencyCode} key={budget.id} />)}
           </ul>
         )}

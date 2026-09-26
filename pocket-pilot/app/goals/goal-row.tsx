@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import { deleteGoal, updateGoal } from "@/app/goals/actions";
 import { GoalForm } from "@/app/goals/goal-form";
 import type { GoalActionState, GoalView } from "@/app/goals/goal-types";
+import { ProgressRing } from "@/app/_components/premium/progress-ring";
 import { formatCents } from "@/lib/finance/format-cents";
 import {
   FIRST_ALLOCATION_CONVENTION,
@@ -88,14 +89,20 @@ export function GoalRow({
 
   return (
     <li
-      className={`ui-panel-flat overflow-hidden ${
+      className={`ui-panel-flat premium-list-breathe overflow-hidden ${
         goal.isReached ? "border-[#a7d6c7]" : ""
       }`}
     >
       <div className="p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="flex min-w-0 items-start gap-4">
+            <ProgressRing
+              label={`${goal.progressPercent} % de l’objectif ${goal.name} atteint`}
+              percentage={goal.progressPercent}
+              size={88}
+            />
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
               <h3 className="break-words font-display text-xl font-semibold tracking-[-0.03em]">
                 {goal.name}
               </h3>
@@ -112,7 +119,8 @@ export function GoalRow({
             <p className="goal-remaining font-amount mt-3">
               <span>Il vous manque</span>
               <strong>{formatCents(goal.remainingAmountCents, currencyCode)}</strong>
-            </p>
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2 sm:justify-end">
@@ -133,25 +141,6 @@ export function GoalRow({
           </div>
         </div>
 
-        <div className="mt-5">
-          <div className="mb-2 flex items-center justify-between gap-4 text-xs font-bold">
-            <span>Progression</span>
-            <span>{goal.progressPercent} %</span>
-          </div>
-          <div
-            aria-label={`Progression de ${goal.name}`}
-            aria-valuemax={100}
-            aria-valuemin={0}
-            aria-valuenow={goal.progressPercent}
-            className="ui-progress h-3"
-            role="progressbar"
-          >
-            <div
-              className="transition-[width] duration-500 ease-out"
-              style={{ width: `${goal.progressPercent}%` }}
-            />
-          </div>
-        </div>
 
         <p className="goal-guidance">
           {goal.isReached

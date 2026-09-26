@@ -2,9 +2,11 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { AppIcon } from "@/app/_components/app-icon";
+import { AppHeader } from "@/app/_components/premium/app-header";
 import { PocketPilotLogo } from "@/app/_components/pocketpilot-logo";
 import { SignOutButton } from "@/app/_components/sign-out-button";
 import { signOut } from "@/app/auth/actions";
+import { resolveActiveTab } from "@/lib/design/navigation";
 
 const primaryNavigation = [
   { href: "/dashboard", icon: "home", label: "Vue d’ensemble" },
@@ -121,13 +123,17 @@ function MobileMenu({ activePath, currencyCode }: { activePath?: AppPath; curren
 
 export function AppShell({ activePath, children, description, eyebrow, profile, title }: AppShellProps) {
   const isDashboard = activePath === "/dashboard";
+  // État actif réel de la bottom nav : dérivé du chemin, pas d’un état
+  // figé — /goals active « Objectifs », jamais « Home » (correction n°4).
+  // Les écrans sans onglet (settings, incomes…) n’activent rien.
+  const resolvedTab = activePath ? resolveActiveTab(activePath) : null;
 
   return (
     <div className="app-frame">
       <a href="#main" className="skip-link">Aller au contenu principal</a>
       <DesktopSidebar activePath={activePath} currencyCode={profile.currencyCode} />
       <div className="app-workspace">
-        <header className="app-header"><Brand /><MobileMenu activePath={activePath} currencyCode={profile.currencyCode} /></header>
+        <header className="app-header"><AppHeader currencyCode={profile.currencyCode} /><MobileMenu activePath={activePath} currencyCode={profile.currencyCode} /></header>
         <main className={`app-main ${isDashboard ? "is-dashboard" : ""}`} id="main" tabIndex={-1}>
           <div className="page-heading">
             <div>
@@ -147,7 +153,7 @@ export function AppShell({ activePath, children, description, eyebrow, profile, 
         </main>
       </div>
       <nav aria-label="Navigation principale mobile" className="mobile-tab-bar">
-        <ul>{mobileNavigation.map((item) => <li key={item.href}><NavigationLink activePath={activePath} {...item} /></li>)}</ul>
+        <ul>{mobileNavigation.map((item) => <li key={item.href}><NavigationLink activePath={resolvedTab ?? undefined} {...item} /></li>)}</ul>
       </nav>
     </div>
   );

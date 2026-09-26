@@ -8,7 +8,7 @@ import {
 import { isAllowedCategory } from "../transactions/allowed-categories.ts";
 
 export const CATEGORY_BUDGET_THRESHOLDS = {
-  nearPercent: 75,
+  nearPercent: 85,
   reachedPercent: 100,
 } as const;
 

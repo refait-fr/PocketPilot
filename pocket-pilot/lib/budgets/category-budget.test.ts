@@ -35,8 +35,8 @@ test("calcule le restant et le pourcentage entier consommé", () => {
 });
 
 test("classe les statuts ok, proche, atteint et dépassé aux bornes", () => {
-  assert.equal(calculateCategoryBudgetUsage({ budget: shoppingBudget, spentCents: 7_499 }).status, "ok");
-  assert.equal(calculateCategoryBudgetUsage({ budget: shoppingBudget, spentCents: 7_500 }).status, "near");
+  assert.equal(calculateCategoryBudgetUsage({ budget: shoppingBudget, spentCents: 8_499 }).status, "ok");
+  assert.equal(calculateCategoryBudgetUsage({ budget: shoppingBudget, spentCents: 8_500 }).status, "near");
   assert.equal(calculateCategoryBudgetUsage({ budget: shoppingBudget, spentCents: 9_999 }).status, "near");
   assert.equal(calculateCategoryBudgetUsage({ budget: shoppingBudget, spentCents: 10_000 }).status, "reached");
   assert.equal(calculateCategoryBudgetUsage({ budget: shoppingBudget, spentCents: 10_001 }).status, "exceeded");

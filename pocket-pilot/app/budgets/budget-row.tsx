@@ -9,14 +9,15 @@ import {
 } from "@/app/budgets/actions";
 import { BudgetForm } from "@/app/budgets/budget-form";
 import type { BudgetActionState, BudgetView } from "@/app/budgets/budget-types";
+import { BudgetProgressBar } from "@/app/_components/premium/budget-progress-bar";
+import { getBudgetTone } from "@/lib/design/budget-tone";
 import { formatCategoryBudgetCentsForInput } from "@/lib/budgets/category-budget";
 import { formatCents } from "@/lib/finance/format-cents";
 
 const statusLabels = {
-  exceeded: "Dépassé",
-  near: "Proche",
+  danger: "Dépassé",
   ok: "Dans le budget",
-  reached: "Atteint",
+  warning: "Proche",
 } as const;
 
 const initialDeleteState: BudgetActionState = {
@@ -65,6 +66,8 @@ export function BudgetRow({ budget, currencyCode }: { budget: BudgetView; curren
     );
   }
 
+  const tone = getBudgetTone(Number(budget.percentageConsumed));
+
   return (
     <li className="budget-tracker-row ui-panel-flat p-4 sm:p-5">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
@@ -72,13 +75,13 @@ export function BudgetRow({ budget, currencyCode }: { budget: BudgetView; curren
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-extrabold">{budget.category}</h3>
             <span className={`ui-badge ${
-              budget.status === "exceeded"
+              tone === "danger"
                 ? "bg-[var(--danger-soft)] text-[var(--danger)]"
-                : budget.status === "near" || budget.status === "reached"
+                : tone === "warning"
                   ? "bg-[var(--warning-soft)] text-[var(--warning)]"
                   : "bg-[var(--positive-soft)] text-[var(--positive)]"
             }`}>
-              {statusLabels[budget.status]}
+              {statusLabels[tone]}
             </span>
           </div>
           <p className="font-amount mt-3 text-lg font-extrabold">
@@ -87,19 +90,7 @@ export function BudgetRow({ budget, currencyCode }: { budget: BudgetView; curren
           <p className={`mt-1 text-sm font-bold ${budget.remainingCents < 0 ? "text-red-700" : "text-[var(--ink-soft)]"}`}>
             {budget.remainingCents < 0 ? `${formatCents(Math.abs(budget.remainingCents), currencyCode)} de dépassement` : `${formatCents(budget.remainingCents, currencyCode)} restants`}
           </p>
-          <div
-            aria-label={`${budget.percentageConsumed} % du budget ${budget.category} consommé`}
-            aria-valuemax={100}
-            aria-valuemin={0}
-            aria-valuenow={budget.progressPercent}
-            className="ui-progress mt-4"
-            role="progressbar"
-          >
-            <span
-              className={budget.status === "exceeded" ? "is-danger" : budget.status === "near" || budget.status === "reached" ? "is-warning" : ""}
-              style={{ width: `${budget.progressPercent}%` }}
-            />
-          </div>
+          <BudgetProgressBar category={budget.category} percentageConsumed={budget.percentageConsumed} progressPercent={budget.progressPercent} />
           <p className="mt-2 text-xs font-bold text-[var(--ink-soft)]">{budget.percentageConsumed} % consommé</p>
         </div>
 

@@ -1,6 +1,31 @@
 # Design Read
-Reading this as: a household money cockpit for French users, in a "registre de comptable moderne" (modern ledger book) style, dial ENERGY 2 / RHYTHM 2 / MOTION 2.
-Fixed light theme is an explicit identity choice (daylight finance use, paper metaphor; `color-scheme: light` kept).
+Reading this as: a household money cockpit for French users, direction premium dark (mockup IA de référence), dial ENERGY 2 / RHYTHM 2 / MOTION 2.
+Le chrome applicatif connecté utilise le thème premium dark ci-dessous ; la landing et l’auth gardent leur identité claire (papier), hors périmètre du redesign.
+
+## Thème premium dark (direction mockup IA, pas pixel-perfect)
+- Fond charbon profond (#16181d, jamais #000000), cartes glass légèrement plus claires (blanc 4 %) avec bordure fine semi-transparente, aucune ombre lourde.
+- Accent vert emerald unique (#10b981, #34d399 en texte) : CTA, montants positifs, progression — aucune couleur multiple qui se bat.
+- Coins arrondis cohérents : 16px sur les cards (12px resserré), pills sur les badges.
+- Typographie Manrope géométrique : gros chiffres bold tabulaires (font-amount), labels en gris moyen (#a7adb9).
+- Barres fines : fond gris neutre (#333945), remplissage vert ; badges sémantiques vert < 85 %, ambre 85–100 %, rouge > 100 %.
+
+## Corrections appliquées par rapport au mockup (bugs de génération)
+1. Header unique partagé (AppHeader : logo + notifications + profil) sur tous les écrans authentifiés via AppShell — jamais de titre nu.
+2. FAB (+) avec z-index 60 et safe-space ≥ 80px + safe-area en bas de liste (premium-fab-space) — ne chevauche jamais le contenu ; masqué sur desktop (sidebar présente).
+3. Respiration en fin de liste (premium-list-breathe) : tout le contenu scrollable jusqu’au bout, aucune carte coupée par le bord ou la nav.
+4. Bottom nav à état réel (resolveActiveTab) : /goals active « Objectifs », jamais « Home » ; les écrans sans onglet (settings, incomes, expenses, projection) n’activent rien. « Savings Goals » reste l’écran /goals existant, accessible via l’onglet dédié « Objectifs » — aucun écran séparé créé.
+5. Objectifs : indicateur unique = anneau circulaire SVG avec % au centre (ProgressRing) ; barre linéaire redondante supprimée sur GoalRow (le dashboard utilisait déjà un anneau).
+6. Badges/barres budget sémantiques (getBudgetTone) : vert < 85 %, ambre 85–100 %, rouge > 100 % ; seuil métier `near` aligné de 75 % → 85 % pour un système unique (tests unitaires + E2E mis à jour).
+7. Icônes de catégorie neutres et cohérentes (CategoryIcon : fond gris + initiale, getCategoryInitial) — aucun traitement isolé ; système documenté ici : neutre unique, pas de couleur par catégorie.
+
+## Composants premium (imports directs, pas de barrel)
+- PremiumCard (glass) : dashboard, budgets, objectifs.
+- ProgressRing (anneau SVG, géométrie testée) : objectifs.
+- BudgetProgressBar (sémantique) : budget breakdown + dashboard.
+- AppHeader (logo + cloche décorative « bientôt disponible » + profil) : tous les écrans via AppShell.
+- Fab (+, vers /transactions/rapide sur l’écran Transactions) : safe-space géré en CSS.
+- CategoryIcon (neutre) : transactions récentes du dashboard.
+- Logique testée TDD (lib/design/) : budget-tone, progress-ring, navigation, category-initial (16 tests).
 
 ## Decisions (R-31, one line each)
 - Warm parchment canvas (#ece8dc) + paper cards (#fffdf7): a ledger page, not a sterile grey default.

@@ -67,16 +67,16 @@ test("les budgets par catégorie suivent les transactions du mois", async ({
   await expect(budgetRow(page, "Shopping")).toContainText(/40,00\s*€\s*sur\s*100,00\s*€/);
   await expect(budgetRow(page, "Shopping").getByText("Dans le budget")).toBeVisible();
 
-  await createTransaction(page, "35,00", "Shopping 35 E2E");
+  await createTransaction(page, "45,00", "Shopping 45 E2E");
   await page.getByRole("link", { name: "Budgets" }).click();
-  await expect(budgetRow(page, "Shopping")).toContainText("75 % consommé");
+  await expect(budgetRow(page, "Shopping")).toContainText("85 % consommé");
   await expect(budgetRow(page, "Shopping").getByText("Proche", { exact: true })).toBeVisible();
 
   await createTransaction(page, "30,00", "Shopping 30 E2E");
   await page.getByRole("link", { name: "Budgets" }).click();
-  await expect(budgetRow(page, "Shopping")).toContainText("105 % consommé");
+  await expect(budgetRow(page, "Shopping")).toContainText("115 % consommé");
   await expect(budgetRow(page, "Shopping")).toContainText(
-    /5,00\s*€\s*de dépassement/,
+    /15,00\s*€\s*de dépassement/,
   );
   await expect(budgetRow(page, "Shopping").getByText("Dépassé", { exact: true })).toBeVisible();
 
@@ -88,7 +88,7 @@ test("les budgets par catégorie suivent les transactions du mois", async ({
     page.getByRole("heading", { exact: true, name: "Shopping" }),
   ).toBeVisible();
   await expect(page.getByText("Budget dépassé")).toBeVisible();
-  await expect(page.getByText(/Dépassé de 5,00\s*€/)).toBeVisible();
+  await expect(page.getByText(/Dépassé de 15,00\s*€/)).toBeVisible();
 
   await page
     .getByRole("link", { exact: true, name: "Vérifier un achat" })
@@ -99,7 +99,7 @@ test("les budgets par catégorie suivent les transactions du mois", async ({
   await page.getByRole("button", { name: "Ajouter comme transaction" }).click();
   const confirmation = formForButton(page, "Confirmer l’ajout");
   await confirmation.getByLabel("Catégorie").selectOption("Shopping");
-  await expect(confirmation).toContainText(/de 105,00\s*€ \/ 100,00\s*€ à 115,00\s*€ \/ 100,00\s*€/);
+  await expect(confirmation).toContainText(/de 115,00\s*€ \/ 100,00\s*€ à 125,00\s*€ \/ 100,00\s*€/);
   await confirmation.getByRole("button", { name: "Annuler" }).click();
 
   await page.getByRole("link", { name: "Transactions" }).click();
@@ -110,12 +110,12 @@ test("les budgets par catégorie suivent les transactions du mois", async ({
   await editTransaction.getByRole("button", { name: "Annuler" }).click();
 
   await page.getByRole("link", { name: "Budgets" }).click();
-  await expect(budgetRow(page, "Shopping")).toContainText("75 % consommé");
+  await expect(budgetRow(page, "Shopping")).toContainText("85 % consommé");
   await expect(budgetRow(page, "Shopping").getByText("Proche", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Transactions" }).click();
-  await listRow(page, "Shopping 35 E2E").getByRole("button", { name: "Supprimer" }).click();
-  await listRow(page, "Shopping 35 E2E").getByRole("button", { name: "Confirmer la suppression" }).click();
+  await listRow(page, "Shopping 45 E2E").getByRole("button", { name: "Supprimer" }).click();
+  await listRow(page, "Shopping 45 E2E").getByRole("button", { name: "Confirmer la suppression" }).click();
   await page.getByRole("link", { name: "Budgets" }).click();
   await expect(budgetRow(page, "Shopping")).toContainText(/40,00\s*€\s*sur\s*100,00\s*€/);
 

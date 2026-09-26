@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { CreationDisclosure } from "@/app/_components/creation-disclosure";
+import { Fab } from "@/app/_components/premium/fab";
 import { createTransaction } from "@/app/transactions/actions";
 import { TransactionForm } from "@/app/transactions/transaction-form";
 import { TransactionRow } from "@/app/transactions/transaction-row";
@@ -154,7 +155,7 @@ export function TransactionManagement({
             </p>
           </div>
         ) : (
-          <ul className="ui-divider-list ui-panel dense-finance-list overflow-hidden">
+          <ul className="ui-divider-list ui-panel dense-finance-list premium-list-breathe premium-fab-space overflow-hidden">
             {transactions.map((transaction) => (
               <TransactionRow
                 allowedCategories={allowedCategories}
@@ -176,6 +177,7 @@ export function TransactionManagement({
       >
         <TransactionForm action={createTransaction} allowedCategories={allowedCategories} defaultValues={defaultValues} maximumTransactionDate={maximumTransactionDate} mode="create" />
       </CreationDisclosure>
+      <Fab href="/transactions/rapide" label="Ajout rapide d’une dépense" />
     </div>
   );
 }

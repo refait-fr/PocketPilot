@@ -48,7 +48,7 @@ export function GoalManagement({
             </p>
           </div>
         ) : (
-          <ul className="grid gap-3">
+          <ul className="grid gap-3 premium-list-breathe premium-fab-space">
             {goals.map((goal) => (
               <GoalRow
                 currencyCode={currencyCode}

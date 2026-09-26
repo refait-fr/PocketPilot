@@ -1,14 +1,18 @@
 "use client";
 
 import { motion } from "motion/react";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { AppIcon } from "@/app/_components/app-icon";
 import { AnimatedAmount } from "@/app/_components/motion/animated-amount";
 import { staggerContainer, staggerItem } from "@/app/_components/motion/motion-variants";
-import { RollingDigits } from "@/app/_components/motion/rolling-digits";
 import { MonthlyBalanceChart } from "@/app/_components/monthly-balance-chart";
+import { BudgetProgressBar } from "@/app/_components/premium/budget-progress-bar";
+import { CategoryIcon } from "@/app/_components/premium/category-icon";
+import { PremiumCard } from "@/app/_components/premium/premium-card";
+import { ProgressRing } from "@/app/_components/premium/progress-ring";
+import { getBudgetTone } from "@/lib/design/budget-tone";
 import type { CategoryBudgetUsage } from "@/lib/budgets/category-budget";
 import {
   buildMonthlyInsights,
@@ -87,13 +91,15 @@ function MetricCard({
   );
 }
 
-function StatusBadge({ status }: { status: CategoryBudgetUsage["status"] }) {
+function StatusBadge({ percentageConsumed }: { percentageConsumed: string }) {
+  // Badge sémantique : vert < 85 %, ambre 85–100 %, rouge > 100 %
+  // (correction mockup n°6 : jamais tout en vert par défaut).
+  const tone = getBudgetTone(Number(percentageConsumed));
   const presentation = {
-    exceeded: { label: "Budget dépassé", tone: "ui-badge-danger" },
-    near: { label: "À surveiller", tone: "ui-badge-warning" },
+    danger: { label: "Budget dépassé", tone: "ui-badge-danger" },
     ok: { label: "Maîtrisé", tone: "ui-badge-positive" },
-    reached: { label: "Limite atteinte", tone: "ui-badge-warning" },
-  }[status];
+    warning: { label: "À surveiller", tone: "ui-badge-warning" },
+  }[tone];
 
   return <span className={`ui-badge ${presentation.tone}`}>{presentation.label}</span>;
 }
@@ -274,7 +280,7 @@ export function DashboardOverview({
 
       <div className="dashboard-content-grid">
         <div className="dashboard-primary-column">
-          <section className="ui-panel dashboard-chart-card" aria-labelledby="balance-chart-heading">
+          <PremiumCard className="dashboard-chart-card" labelledBy="balance-chart-heading">
             <DashboardSectionHeader id="balance-chart-heading" title="Reste réel au fil du mois" />
             <p className="dashboard-section-note">
               Le solde quotidien tient compte des transactions enregistrées.
@@ -287,9 +293,9 @@ export function DashboardOverview({
               currentDay={currentDay}
               points={balanceTrend}
             />
-          </section>
+          </PremiumCard>
 
-          <section className="ui-panel dashboard-transactions-card" aria-labelledby="recent-transactions-title">
+          <PremiumCard className="dashboard-transactions-card" labelledBy="recent-transactions-title">
             <DashboardSectionHeader href="/transactions" id="recent-transactions-title" linkLabel="Voir toutes" title="Transactions récentes" />
             {recentTransactions.length === 0 ? (
               <div className="dashboard-table-empty">
@@ -297,35 +303,36 @@ export function DashboardOverview({
                 <span>Les dépenses ponctuelles apparaîtront ici.</span>
               </div>
             ) : (
-              <div className="dashboard-table-scroll">
-                <table className="dashboard-transactions-table">
-                  <caption className="sr-only">Transactions les plus récentes du mois en cours</caption>
-                  <thead><tr><th>Date</th><th>Description</th><th>Catégorie</th><th>Montant</th></tr></thead>
-                  <tbody>
-                    {recentTransactions.map((transaction) => (
-                      <tr key={transaction.id}>
-                        <td>{formatTransactionDate(transaction.transactionDate)}</td>
-                        <td><strong>{transaction.description}</strong></td>
-                        <td><span className="transaction-category-dot" aria-hidden="true" />{transaction.category}</td>
-                        <td className="font-amount">−{formatCents(transaction.amountCents, currencyCode)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <ul className="ui-divider-list premium-list-breathe">
+                {recentTransactions.map((transaction) => (
+                  <li className="finance-list-row" key={transaction.id}>
+                    <div className="transaction-main min-w-0">
+                      <CategoryIcon category={transaction.category} />
+                      <div className="min-w-0">
+                        <h3 className="break-words text-sm font-extrabold">{transaction.description || transaction.category}</h3>
+                        <p className="premium-label">{formatTransactionDate(transaction.transactionDate)}</p>
+                      </div>
+                      <p className="transaction-amount font-amount break-words text-base font-extrabold">
+                        {formatCents(transaction.amountCents, currencyCode)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             )}
-          </section>
+          </PremiumCard>
         </div>
 
         <aside className="dashboard-secondary-column" aria-label="Repères complémentaires">
-          <section className="ui-panel dashboard-goal-card">
-            <DashboardSectionHeader href="/goals" linkLabel="Voir tout" title="Objectif principal" />
+          <PremiumCard className="dashboard-goal-card" labelledBy="dashboard-goal-title">
+            <DashboardSectionHeader href="/goals" linkLabel="Voir tout" title="Objectif principal" id="dashboard-goal-title" />
             {featuredGoal ? (
               <>
                 <div className="dashboard-goal-summary">
-                  <div className="goal-orbit" style={{ "--goal-progress": `${featuredGoal.progressPercent * 3.6}deg` } as CSSProperties}>
-                    <div><strong><RollingDigits value={featuredGoal.progressPercent} /> %</strong><span>atteint</span></div>
-                  </div>
+                  <ProgressRing
+                    label={`${featuredGoal.progressPercent} % de l'objectif ${featuredGoal.name} atteint`}
+                    percentage={featuredGoal.progressPercent}
+                  />
                   <div>
                     <h3>{featuredGoal.name}</h3>
                     <p>{formatCents(featuredGoal.currentAmountCents, currencyCode)} sur {formatCents(featuredGoal.targetAmountCents, currencyCode)}</p>
@@ -340,21 +347,25 @@ export function DashboardOverview({
             ) : (
               <div className="dashboard-module-empty"><p>Aucun objectif d’épargne</p><Link href="/goals">Créer un objectif</Link></div>
             )}
-          </section>
+          </PremiumCard>
 
-          <section className="ui-panel dashboard-budgets-card">
-            <DashboardSectionHeader href="/budgets" linkLabel="Voir tout" title="Budgets à surveiller" />
+          <PremiumCard className="dashboard-budgets-card" labelledBy="dashboard-budgets-title">
+            <DashboardSectionHeader href="/budgets" linkLabel="Voir tout" title="Budgets à surveiller" id="dashboard-budgets-title" />
             {visibleBudgets.length === 0 ? (
               <div className="dashboard-module-empty"><p>Aucun budget configuré</p><Link href="/budgets">Créer un budget</Link></div>
             ) : (
-              <ul>
+              <ul className="premium-list-breathe">
                 {visibleBudgets.map((budget) => (
                   <li key={budget.id}>
                     <div className="dashboard-budget-heading">
                       <div><h3>{budget.category}</h3><span>{formatCents(budget.spentCents, currencyCode)} sur {formatCents(budget.monthlyBudgetCents, currencyCode)}</span></div>
-                      <StatusBadge status={budget.status} />
+                      <StatusBadge percentageConsumed={budget.percentageConsumed} />
                     </div>
-                    <div aria-label={`${budget.percentageConsumed} % du budget ${budget.category} consommé`} aria-valuemax={100} aria-valuemin={0} aria-valuenow={budget.progressPercent} className="ui-progress" role="progressbar"><motion.span className={budget.status === "exceeded" ? "is-danger" : budget.status === "near" || budget.status === "reached" ? "is-warning" : ""} initial={{ width: "0%" }} transition={{ duration: 0.7, ease: "easeOut" }} viewport={{ margin: "-40px", once: true }} whileInView={{ width: `${budget.progressPercent}%` }} /></div>
+                    <BudgetProgressBar
+                      category={budget.category}
+                      percentageConsumed={budget.percentageConsumed}
+                      progressPercent={budget.progressPercent}
+                    />
                     <p className="dashboard-budget-status">
                       {budget.remainingCents < 0
                         ? `Dépassé de ${formatCents(Math.abs(budget.remainingCents), currencyCode)}`
@@ -364,10 +375,10 @@ export function DashboardOverview({
                 ))}
               </ul>
             )}
-          </section>
+          </PremiumCard>
 
-          <article className="ui-panel dashboard-plan-card">
-            <DashboardSectionHeader title="Plan mensuel" />
+          <PremiumCard className="dashboard-plan-card" labelledBy="dashboard-plan-title">
+            <DashboardSectionHeader title="Plan mensuel" id="dashboard-plan-title" />
             <dl className="dashboard-detail-list">
               <div><dt>Budget disponible</dt><dd className="font-amount">{formatCents(snapshot.availableCents, currencyCode)}</dd><small>Après charges fixes et épargne prévue.</small></div>
               <div><dt>Revenus mensuels</dt><dd className="font-amount">{formatCents(snapshot.totalIncomeCents, currencyCode)}</dd><small>{recurringIncomeDetail}{oneTimeIncomeCount > 0 ? ` Dont ${oneTimeIncomeCount} ponctuel${oneTimeIncomeCount > 1 ? "s" : ""}.` : ""}{upcomingIncomeCount > 0 ? ` ${upcomingIncomeCount} à venir.` : ""}</small></div>
@@ -381,7 +392,7 @@ export function DashboardOverview({
                 {expenseCount === 0 ? <Link className="ui-button-secondary min-h-10 px-3 py-2 text-xs" href="/expenses">Ajouter une charge fixe</Link> : null}
               </div>
             ) : null}
-          </article>
+          </PremiumCard>
         </aside>
       </div>
     </div>
