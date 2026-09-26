@@ -4,3 +4,10 @@
 /*-anonymous-mobile.png
 /pocketpilot-auth-desktop.png
 /pocketpilot-auth-mobile.png
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# État local Supabase CLI à la racine (référence distante éphémère, non versionnée)
+supabase/.temp/

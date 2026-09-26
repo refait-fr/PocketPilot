@@ -39,6 +39,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Snapshot ponctuel du schéma distant (fichier local de travail, non versionné)
+/remote_schema_before_sync.sql
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 
 import { LandingPage } from "@/app/_components/landing/landing-page";
 
-const title = "PocketPilot : Know what you really have left";
+const title = "PocketPilot : Sachez ce qu'il vous reste vraiment";
 const description =
-  "PocketPilot turns your income, expenses, budgets and goals into one clear view of what you really have left this month.";
+  "PocketPilot transforme vos revenus, charges, budgets et objectifs en une vision claire de ce qu'il vous reste vraiment ce mois-ci.";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
